@@ -1,13 +1,27 @@
 {
   "name": "exchange-web",
+  "description": "WEB application for Exchange project",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview"
   },
+  "author": {
+    "name": "Peter Dyumin",
+    "url": "https://github.com/peterdee"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peterdee/exchange-web"
+  },
+  "license": "MIT",
   "dependencies": {
     "common-styles": "github:julyskies/common-styles",
     "socket.io-client": "^4.7.1",

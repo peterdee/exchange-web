@@ -2,6 +2,7 @@ export const EVENTS = {
   close: 'close',
   connect: 'connect',
   disconnect: 'disconnect',
+  downloadFile: 'download-file',
   listFile: 'list-file',
-  requestAvailableFiles: 'request-available-files',
+  requestListedFiles: 'request-listed-files',
 };

@@ -90,7 +90,9 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
   if (itemType === 'File') {
     files = (filtered as File[]);
   }
-  const hashes = await Promise.all(files.map((file: File) => getHash(file)));
+  const hashes = await Promise.all(files.map(
+    (file: File): Promise<string> => getHash(file),
+  ));
   files.forEach((file: File, index: number): void => {
     const alreadyListed = state.listedFiles.filter(
       (item: ListedFile): boolean => item.id === hashes[index]
@@ -113,10 +115,10 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
         {
           createdAt: entry.createdAt,
           id: entry.id,
-          name: entry.file.name,
+          name: entry.name,
           ownerId: entry.ownerId,
           private: entry.private,
-          size: entry.file.size,
+          size: entry.size,
         },
       );
     }
@@ -124,22 +126,29 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
 };
 
 const handleListFile = (data: ListedFile): void => {
-  console.log('INCOMING listFile', data);
   state.listedFiles.push({
     ...data,
     isOwner: false,
   });
 };
 
-const handleRequestAvailableFiles = (data: any): void => {
-  console.log(data);
+const handleRequestListedFiles = (data: ListedFile[]): null | void => {
+  if (!data) {
+    return null;
+  }
+  data.forEach((item: ListedFile): void => {
+    state.listedFiles.push({
+      ...item,
+      isOwner: false,
+    });
+  });
 };
 
 onBeforeUnmount((): void => {
   if (state.connected) {
     const { connection } = state;
     connection.off(EVENTS.listFile, handleListFile);
-    connection.off(EVENTS.requestAvailableFiles, handleRequestAvailableFiles);
+    connection.off(EVENTS.requestListedFiles, handleRequestListedFiles);
     connection.emit(EVENTS.close);
   }
 });
@@ -166,10 +175,10 @@ onMounted((): void => {
   connection.on(
     EVENTS.connect,
     (): void => {
-      connection.emit(EVENTS.requestAvailableFiles);
+      connection.emit(EVENTS.requestListedFiles);
 
       connection.on(EVENTS.listFile, handleListFile);
-      connection.on(EVENTS.requestAvailableFiles, handleRequestAvailableFiles);
+      connection.on(EVENTS.requestListedFiles, handleRequestListedFiles);
 
       state.connected = true;
       state.connection = connection;
