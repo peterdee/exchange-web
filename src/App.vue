@@ -6,7 +6,10 @@ import {
   reactive,
 } from 'vue';
 
-import { encodeArrayBuffer } from './utilities/base64';
+import {
+  decodeStringToBlob,
+  encodeArrayBufferToString,
+} from './utilities/base64';
 import { EVENTS, MESSAGES } from './configuration';
 import getHash from './utilities/get-hash';
 
@@ -14,9 +17,12 @@ interface ChunkData {
   chunk: string;
   currentChunk: number;
   fileId: string;
+  fileName: string;
+  fileSize: string;
   ownerId: string;
   targetId: string;
   totalChunks: number;
+  type: string;
 }
 
 type ChunkRequest = Pick<ChunkData, 'fileId' | 'ownerId' | 'targetId'> & {
@@ -27,8 +33,11 @@ interface DownloadedItem {
   chunks: string[];
   downloadCompleted: boolean;
   fileId: string;
+  fileName: string;
+  fileSize: string;
   ownerId: string;
   totalChunks: number;
+  type: string;
 }
 
 interface ListedFile {
@@ -100,7 +109,7 @@ const handleDownloadFile = async (
       },
     );
   }
-  const encoded = await encodeArrayBuffer(file.file as File);
+  const encoded = await encodeArrayBufferToString(file.file as File);
   const chunks: string[] = [];
   let chunk = '';
   for (let i = 0; i < encoded.length; i += 1) {
@@ -132,9 +141,12 @@ const handleDownloadFile = async (
       chunk: chunks[0],
       currentChunk: 1,
       fileId,
+      fileName: file.name,
+      fileSize: file.size,
       ownerId: file.ownerId,
       targetId,
       totalChunks: chunks.length,
+      type: file.file?.type,
     },
   );
 };
@@ -259,9 +271,12 @@ const handleRequestFileChunk = (data: ChunkRequest): Socket | void => {
       chunk: chunks[chunkIndex],
       currentChunk: chunkIndex,
       fileId,
+      fileName: file.name,
+      fileSize: file.size,
       ownerId: file.ownerId,
       targetId,
       totalChunks: chunks.length,
+      type: file.file?.type,
     },
   );
 };
@@ -284,9 +299,12 @@ const handleUploadFileChunk = (data: ChunkData): Socket | void => {
     chunk,
     currentChunk,
     fileId,
+    fileName,
+    fileSize,
     ownerId,
     targetId,
     totalChunks,
+    type,
   } = data;
   const [downloadedFileEntry = null] = state.downloads.filter(
     (item: DownloadedItem): boolean => item.fileId === fileId,
@@ -296,8 +314,11 @@ const handleUploadFileChunk = (data: ChunkData): Socket | void => {
       chunks: [chunk],
       downloadCompleted: currentChunk === totalChunks,
       fileId,
+      fileName,
+      fileSize,
       ownerId,
       totalChunks,
+      type,
     };
     state.downloads.push(newEntry);
   } else {
@@ -325,8 +346,27 @@ const handleUploadFileChunk = (data: ChunkData): Socket | void => {
       },
     );
   } else {
-    // TODO: create file from chunks & download it
-    console.log('download completed', state.downloads);
+    let completeFile: DownloadedItem;
+    if (downloadedFileEntry) {
+      completeFile = downloadedFileEntry;
+    } else {
+      [completeFile] = state.downloads.filter(
+        (item: DownloadedItem): boolean => item.fileId === fileId,
+      );
+    }
+    const base64String = completeFile.chunks.reduce(
+      (string: string, chunk: string): string => `${string}${chunk}`,
+      '',
+    );
+    console.log('download completed');
+    const blob = decodeStringToBlob(base64String, completeFile.type);
+    const url = URL.createObjectURL(blob);
+    const downloadLink = window.document.createElement('a');
+    downloadLink.href = url;
+    downloadLink.download = completeFile.fileName;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
   }
 };
 
@@ -387,14 +427,14 @@ onMounted((): void => {
       Connecting...
     </template>
     <div
-      class="f d-col"
+      class="f d-col w-100"
       v-if="state.connected"
     >
-      <h1>
+      <h3 class="mh-auto">
         Connection state: {{ state.connected }}
-      </h1>
+      </h3>
       <div
-        class="drop-zone"
+        class="mh-auto drop-zone"
         @dragover.prevent
         @drop.prevent="handleFileDrop"
       >
@@ -421,9 +461,8 @@ onMounted((): void => {
 
 <style scoped>
 .drop-zone {
-  background-color: var(--muted-light);
   border: calc(var(--spacer-quarter) / 4) dotted var(--text);
   height: calc(var(--spacer) * 40);
-  width: calc(var(--spacer) * 40);
+  width: calc(100% - var(--spacer) * 4);
 }
 </style>
