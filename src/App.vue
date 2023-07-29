@@ -41,7 +41,7 @@ interface DownloadedItem {
 }
 
 interface ListedFile {
-  chunks?: string[];
+  chunks: string[];
   createdAt: number;
   file?: File;
   id: string;
@@ -96,56 +96,17 @@ const handleDownloadFile = async (
       }
     );
   }
-  if (file.chunks && Array.isArray(file.chunks) && file.chunks.length > 0) {
-    return state.connection.emit(
-      EVENTS.uploadFileChunk,
-      {
-        chunk: file.chunks[0],
-        currentChunk: 1,
-        fileId,
-        ownerId: file.ownerId,
-        targetId,
-        totalChunks: file.chunks.length,
-      },
-    );
-  }
-  const encoded = await encodeArrayBufferToString(file.file as File);
-  const chunks: string[] = [];
-  let chunk = '';
-  for (let i = 0; i < encoded.length; i += 1) {
-    chunk += encoded[i];
-    if (chunk.length === CHUNK_LENGTH) {
-      chunks.push(chunk);
-      chunk = '';
-    }
-  }
-  chunks.push(chunk);
-  state.listedFiles = state.listedFiles.reduce(
-    (array: ListedFile[], item: ListedFile): ListedFile[] => {
-      if (item.id !== fileId) {
-        array.push(item);
-        return array;
-      }
-      const updatedItem = {
-        ...item,
-        chunks,
-      };
-      array.push(updatedItem);
-      return array;
-    },
-    [],
-  );
   return state.connection.emit(
     EVENTS.uploadFileChunk,
     {
-      chunk: chunks[0],
+      chunk: file.chunks[0],
       currentChunk: 1,
       fileId,
       fileName: file.name,
       fileSize: file.size,
       ownerId: file.ownerId,
       targetId,
-      totalChunks: chunks.length,
+      totalChunks: file.chunks.length,
       type: file.file?.type,
     },
   );
@@ -213,13 +174,15 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
   const hashes = await Promise.all(files.map(
     (file: File): Promise<string> => getHash(file),
   ));
+  const encoded = await Promise.all(files.map(encodeArrayBufferToString));
   files.forEach((file: File, index: number): void => {
     const alreadyListed = state.listedFiles.filter(
       (item: ListedFile): boolean => item.id === hashes[index]
         && item.file?.name === file.name && item.file?.size === file.size,
     );
     if (alreadyListed.length === 0) {
-      const entry = {
+      const entry: ListedFile = {
+        chunks: [],
         createdAt: Date.now(),
         file,
         id: hashes[index],
@@ -228,6 +191,17 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
         ownerId: state.connection.id,
         private: false,
         size: file.size,
+      }
+      let chunk = '';
+      for (let i = 0; i < encoded.length; i += 1) {
+        chunk += encoded[i];
+        if (chunk.length === CHUNK_LENGTH) {
+          entry.chunks.push(chunk);
+          chunk = '';
+        }
+      }
+      if (chunk) {
+        entry.chunks.push(chunk);
       }
       state.listedFiles.push(entry);
       state.connection.emit(
