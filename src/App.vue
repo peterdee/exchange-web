@@ -12,6 +12,7 @@ import {
 } from './utilities/base64';
 import { EVENTS, MESSAGES } from './configuration';
 import getHash from './utilities/get-hash';
+import { getValue } from './utilities/storage';
 
 interface ChunkData {
   chunk: string;
@@ -55,6 +56,7 @@ interface ListedFile {
 interface AppState {
   connected: boolean;
   connection: Socket;
+  deviceName: string;
   downloads: DownloadedItem[];
   listedFiles: ListedFile[];
 }
@@ -66,6 +68,7 @@ const SUPPORTS_WEBKIT_GET_AS_ENTRY = 'webkitGetAsEntry' in DataTransferItem.prot
 const state = reactive<AppState>({
   connected: false,
   connection: {} as Socket,
+  deviceName: '',
   downloads: [],
   listedFiles: [],
 });
@@ -363,6 +366,12 @@ onMounted((): void => {
     if (faviconLink) {
       faviconLink.href = 'favicon-light.svg';
     }
+  }
+
+  // TODO: logic to set up device name
+  const deviceName = getValue<string>('deviceName');
+  if (deviceName) {
+    state.deviceName = deviceName;
   }
 
   const connection = io(
