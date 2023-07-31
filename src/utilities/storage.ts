@@ -1,4 +1,4 @@
-export type StorageKey = 'deviceName';
+export type StorageKey = 'deviceName' | 'deviceNameSet';
 
 interface StoredItem<T> {
   value: T;

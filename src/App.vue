@@ -10,9 +10,11 @@ import {
   decodeStringToBlob,
   encodeArrayBufferToString,
 } from './utilities/base64';
+import DeviceNameModalComponent from './components/DeviceNameModal.vue';
 import { EVENTS, MESSAGES } from './configuration';
 import getHash from './utilities/get-hash';
-import { getValue } from './utilities/storage';
+import { getValue, setValue } from './utilities/storage';
+import type { ListedFile } from './types';
 
 interface ChunkData {
   chunk: string;
@@ -41,24 +43,13 @@ interface DownloadedItem {
   type: string;
 }
 
-interface ListedFile {
-  chunks: string[];
-  createdAt: number;
-  file?: File;
-  id: string;
-  isOwner?: boolean;
-  name: string;
-  ownerId: string;
-  private: boolean;
-  size: number;
-}
-
 interface AppState {
   connected: boolean;
   connection: Socket;
   deviceName: string;
   downloads: DownloadedItem[];
   listedFiles: ListedFile[];
+  setShowDeviceNameModal: boolean;
 }
 
 const CHUNK_LENGTH = 1024 * 128;
@@ -71,6 +62,7 @@ const state = reactive<AppState>({
   deviceName: '',
   downloads: [],
   listedFiles: [],
+  setShowDeviceNameModal: false,
 });
 
 const downloadFile = (fileId: string, ownerId: string): Socket => {
@@ -82,6 +74,12 @@ const downloadFile = (fileId: string, ownerId: string): Socket => {
     },
   );
 };
+
+const handleDeviceName = (value: string): void => {
+  state.deviceName = value;
+  setValue<string>('deviceName', value);
+  return setValue<boolean>('deviceNameSet', true);
+}
 
 const handleDownloadFile = async (
   data: { fileId: string, targetId: string },
@@ -368,9 +366,13 @@ onMounted((): void => {
     }
   }
 
-  // TODO: logic to set up device name
   const deviceName = getValue<string>('deviceName');
-  if (deviceName) {
+  const deviceNameSet = getValue<boolean>('deviceNameSet');
+  if (!deviceName || !deviceNameSet) {
+    state.deviceName = `${Math.random() * Date.now()}`.split('.').join('');
+    state.setShowDeviceNameModal = true;
+    setValue('deviceName', state.deviceName);
+  } else {
     state.deviceName = deviceName;
   }
 
@@ -409,12 +411,16 @@ onMounted((): void => {
     <template v-if="!state.connected">
       Connecting...
     </template>
+    <DeviceNameModalComponent
+      v-if="state.setShowDeviceNameModal"
+      @handle-device-name="handleDeviceName"
+    />
     <div
       class="f d-col w-100"
       v-if="state.connected"
     >
       <h3 class="mh-auto">
-        Connection state: {{ state.connected }}
+        Connected: {{ state.connected }}
       </h3>
       <div
         class="mh-auto drop-zone"
