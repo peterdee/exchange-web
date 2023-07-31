@@ -6,42 +6,27 @@ import {
   reactive,
 } from 'vue';
 
+import type {
+  ChunkData,
+  ChunkRequest,
+  DownloadedItem,
+  ListedFile,
+} from './types';
 import {
-  decodeStringToBlob,
-  encodeArrayBufferToString,
+  decodeBase64ToBlob,
+  encodeFileToBase64,
 } from './utilities/base64';
 import DeviceNameModalComponent from './components/DeviceNameModal.vue';
-import { EVENTS, MESSAGES } from './configuration';
+import DownloadIconComponent from './components/DownloadIcon.vue';
+import {
+  EVENTS,
+  MESSAGES,
+  WS_URL,
+} from './configuration';
+import formatFileSize from './utilities/format-file-size';
 import getHash from './utilities/get-hash';
 import { getValue, setValue } from './utilities/storage';
-import type { ListedFile } from './types';
-
-interface ChunkData {
-  chunk: string;
-  currentChunk: number;
-  fileId: string;
-  fileName: string;
-  fileSize: string;
-  ownerId: string;
-  targetId: string;
-  totalChunks: number;
-  type: string;
-}
-
-type ChunkRequest = Pick<ChunkData, 'fileId' | 'ownerId' | 'targetId'> & {
-  chunkIndex: number;
-}
-
-interface DownloadedItem {
-  chunks: string[];
-  downloadCompleted: boolean;
-  fileId: string;
-  fileName: string;
-  fileSize: string;
-  ownerId: string;
-  totalChunks: number;
-  type: string;
-}
+import StyledButtonComponent from './components/StyledButton.vue';
 
 interface AppState {
   connected: boolean;
@@ -175,7 +160,7 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
   const hashes = await Promise.all(files.map(
     (file: File): Promise<string> => getHash(file),
   ));
-  const encoded = await Promise.all(files.map(encodeArrayBufferToString));
+  const encoded = await Promise.all(files.map(encodeFileToBase64));
   files.forEach((file: File, index: number): void => {
     const alreadyListed = state.listedFiles.filter(
       (item: ListedFile): boolean => item.id === hashes[index]
@@ -185,6 +170,7 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
       const entry: ListedFile = {
         chunks: [],
         createdAt: Date.now(),
+        deviceName: state.deviceName,
         file,
         id: hashes[index],
         isOwner: true,
@@ -209,6 +195,7 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
         EVENTS.listFile,
         {
           createdAt: entry.createdAt,
+          deviceName: entry.deviceName,
           id: entry.id,
           name: entry.name,
           ownerId: entry.ownerId,
@@ -334,7 +321,7 @@ const handleUploadFileChunk = (data: ChunkData): Socket | void => {
       '',
     );
     console.log('download completed');
-    const blob = decodeStringToBlob(base64String, completeFile.type);
+    const blob = decodeBase64ToBlob(base64String, completeFile.type);
     const url = URL.createObjectURL(blob);
     const downloadLink = window.document.createElement('a');
     downloadLink.href = url;
@@ -342,6 +329,7 @@ const handleUploadFileChunk = (data: ChunkData): Socket | void => {
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(url);
   }
 };
 
@@ -377,7 +365,7 @@ onMounted((): void => {
   }
 
   const connection = io(
-    'ws://localhost:9090',
+    WS_URL,
     {
       autoConnect: true,
       reconnection: true,
@@ -419,29 +407,31 @@ onMounted((): void => {
       class="f d-col w-100"
       v-if="state.connected"
     >
-      <h3 class="mh-auto">
-        Connected: {{ state.connected }}
-      </h3>
+      <div class="ml-2 mb-half ns title">
+        EXCHANGE
+      </div>
       <div
         class="mh-auto drop-zone"
         @dragover.prevent
         @drop.prevent="handleFileDrop"
       >
         <div
-          class="f j-space-between m-quarter"
+          class="f j-space-between ai-center m-quarter"
           v-for="file in state.listedFiles"
           :key="file.id"
         >
           <span>
-            {{ file.name }} ({{ file.size }})
+            {{ file.name }} (owner: {{ file.deviceName }}) (size: {{ formatFileSize(file.size) }})
           </span>
-          <button
+          <StyledButtonComponent
             v-if="!file.isOwner"
-            class="button"
-            @click="(): Socket => downloadFile(file.id, file.ownerId)"
+            title="Download"
+            :custom-styles="{ height: '32px' }"
+            :with-icon="true"
+            @handle-click="(): Socket => downloadFile(file.id, file.ownerId)"
           >
-            Download
-          </button>
+            <DownloadIconComponent :with-hover="true" />
+          </StyledButtonComponent>
         </div>
       </div>
     </div>
@@ -451,7 +441,13 @@ onMounted((): void => {
 <style scoped>
 .drop-zone {
   border: calc(var(--spacer-quarter) / 4) dotted var(--text);
-  height: calc(var(--spacer) * 40);
+  height: calc(100vh - var(--spacer) * 6);
+  overflow-y: scroll;
   width: calc(100% - var(--spacer) * 4);
+}
+.title {
+  color: var(--accent);
+  font-size: calc(var(--spacer) * 1.25);
+  font-weight: 300;
 }
 </style>

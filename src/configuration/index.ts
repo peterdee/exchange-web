@@ -1,3 +1,8 @@
+export const COLORS = {
+  accent: '#1e7878',
+  accentLight: '#53acac',
+}
+
 export const EVENTS = {
   close: 'close',
   connect: 'connect',
@@ -13,3 +18,7 @@ export const EVENTS = {
 export const MESSAGES = {
   fileNotFound: 'FILE_NOT_FOUND',
 };
+
+export const SPACER = 16;
+
+export const WS_URL = import.meta.env.VITE_WS_URL;

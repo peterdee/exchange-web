@@ -1,4 +1,4 @@
-export function decodeStringToBlob(string: string, type: string = ''): Blob {
+export function decodeBase64ToBlob(string: string, type: string = ''): Blob {
   const bytes = window.atob(string);
   const arrayBuffer = new ArrayBuffer(bytes.length);
   const uint8Array = new Uint8Array(arrayBuffer);
@@ -12,11 +12,11 @@ export function decodeStringToBlob(string: string, type: string = ''): Blob {
   return new Blob([uint8Array], options);
 }
 
-export function encodeArrayBufferToString(file: File): Promise<string> {
+export function encodeFileToBase64(file: File): Promise<string> {
   return new Promise<string>(
     (resolve): void => {
       const reader = new FileReader();
-      reader.onload = async (event: ProgressEvent<FileReader>) => {
+      reader.onload = (event: ProgressEvent<FileReader>): void => {
         const { target } = event;
         if (!target) {
           return resolve('');

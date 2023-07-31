@@ -59,6 +59,7 @@ const handleInput = (event: Event): void => {
     :disabled="props.disabled"
     :name="props.name"
     :placeholder="props.placeholder"
+    :style="{ ...customStyles }"
     :type="props.type"
     :value="props.value"
     @input="handleInput"

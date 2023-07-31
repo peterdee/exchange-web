@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const emit = defineEmits(['handle-click']);
+
 const props = defineProps({
   customStyles: {
     default: {},
@@ -15,10 +17,20 @@ const props = defineProps({
     required: false,
     type: Array<string>,
   },
+  title: {
+    default: '',
+    required: false,
+    type: String,
+  },
   type: {
     default: 'button',
     required: false,
     type: String,
+  },
+  withIcon: {
+    default: false,
+    required: false,
+    type: Boolean,
   },
 });
 
@@ -29,18 +41,26 @@ const additionalClasses = props.globalClasses.length > 0
 
 <template>
   <button
-    :class="`button ns styled-button ${additionalClasses}`"
+    :class="`button ns styled-button ${props.withIcon
+      ? 'icon-button'
+      : ''} ${additionalClasses}`"
     :disabled="props.disabled"
-    :styles="props.customStyles"
+    :style="{ ...customStyles }"
+    :title="props.title"
     :type="props.type === 'button'
       ? 'button'
       : 'submit'"
+    @click="emit('handle-click')"
   >
     <slot></slot>
   </button>
 </template>
 
 <style scoped>
+.icon-button {
+  background-color: transparent;
+  padding: 0;
+}
 .styled-button {
   font-size: var(--spacer);
   height: calc(var(--spacer) * 2.5);
