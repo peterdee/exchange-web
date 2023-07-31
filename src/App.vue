@@ -430,7 +430,7 @@ onMounted((): void => {
             :with-icon="true"
             @handle-click="(): Socket => downloadFile(file.id, file.ownerId)"
           >
-            <DownloadIconComponent :with-hover="true" />
+            <DownloadIconComponent />
           </StyledButtonComponent>
         </div>
       </div>

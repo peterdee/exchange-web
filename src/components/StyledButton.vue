@@ -59,7 +59,13 @@ const additionalClasses = props.globalClasses.length > 0
 <style scoped>
 .icon-button {
   background-color: transparent;
+  opacity: .6;
   padding: 0;
+  transition: opacity var(--transition) ease-out;
+}
+.icon-button:hover {
+  opacity: 1;
+  transition: opacity var(--transition) ease-in;
 }
 .styled-button {
   font-size: var(--spacer);
