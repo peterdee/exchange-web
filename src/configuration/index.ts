@@ -6,6 +6,7 @@ export const COLORS = {
 };
 
 export const EVENTS = {
+  clientDisconnect: 'client-disconnect',
   close: 'close',
   connect: 'connect',
   disconnect: 'disconnect',

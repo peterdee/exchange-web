@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { io, type Socket } from 'socket.io-client';
 import {
   onBeforeUnmount,
   onMounted,
   reactive,
 } from 'vue';
+import type { Socket } from 'socket.io-client';
 
 import type {
   ChunkData,
@@ -12,19 +12,15 @@ import type {
   DownloadedItem,
   ListedFile,
 } from './types';
-import {
-  EVENTS,
-  MESSAGES,
-  WS_URL,
-} from './configuration';
+import connection from './connection';
 import { decodeBase64ToBlob } from './utilities/base64';
+import { EVENTS, MESSAGES } from './configuration';
 import DeviceNameModalComponent from './components/DeviceNameModal.vue';
 import FileListComponent from './components/FileList.vue';
 import { getValue, setValue } from './utilities/storage';
 
 interface AppState {
   connected: boolean;
-  connection: Socket;
   deviceName: string;
   downloads: DownloadedItem[];
   listedFiles: ListedFile[];
@@ -33,7 +29,6 @@ interface AppState {
 
 const state = reactive<AppState>({
   connected: false,
-  connection: {} as Socket,
   deviceName: '',
   downloads: [],
   listedFiles: [],
@@ -43,12 +38,18 @@ const state = reactive<AppState>({
 const downloadFile = (
   { fileId, ownerId }: { fileId: string, ownerId: string },
 ): Socket => {
-  return state.connection.emit(
+  return connection.io.emit(
     EVENTS.downloadFile,
     {
       fileId,
       ownerId,
     },
+  );
+};
+
+const handleClientDisconnect = ({ id }: { id: string }): void => {
+  state.listedFiles = state.listedFiles.filter(
+    (entry: ListedFile): boolean => entry.ownerId !== id,
   );
 };
 
@@ -66,7 +67,7 @@ const handleDownloadFile = async (
     (item: ListedFile): boolean => item.id === fileId && !!item.isOwner,
   );
   if (!file) {
-    return state.connection.emit(
+    return connection.io.emit(
       EVENTS.downloadFileError,
       {
         info: MESSAGES.fileNotFound,
@@ -74,7 +75,7 @@ const handleDownloadFile = async (
       }
     );
   }
-  return state.connection.emit(
+  return connection.io.emit(
     EVENTS.uploadFileChunk,
     {
       chunk: file.chunks[0],
@@ -96,7 +97,7 @@ const handleDownloadFileError = (data: unknown): void => {
 
 const handleAddFile = (entry: ListedFile): Socket => {
   state.listedFiles.push(entry);
-  return state.connection.emit(
+  return connection.io.emit(
     EVENTS.listFile,
     {
       createdAt: entry.createdAt,
@@ -118,7 +119,6 @@ const handleListFile = (data: ListedFile): void => {
 };
 
 const handleRequestFileChunk = (data: ChunkRequest): Socket | void => {
-  console.log('request chunk', data);
   const {
     chunkIndex,
     fileId,
@@ -130,7 +130,7 @@ const handleRequestFileChunk = (data: ChunkRequest): Socket | void => {
     (item: ListedFile): boolean => item.id === fileId,
   );
   const { chunks = [] } = file;
-  return state.connection.emit(
+  return connection.io.emit(
     EVENTS.uploadFileChunk,
     {
       chunk: chunks[chunkIndex],
@@ -159,7 +159,6 @@ const handleRequestListedFiles = (data: ListedFile[]): null | void => {
 };
 
 const handleUploadFileChunk = (data: ChunkData): Socket | void => {
-  console.log(data);
   const {
     chunk,
     currentChunk,
@@ -201,7 +200,7 @@ const handleUploadFileChunk = (data: ChunkData): Socket | void => {
     );
   }
   if (currentChunk < totalChunks) {
-    return state.connection.emit(
+    return connection.io.emit(
       EVENTS.requestFileChunk,
       {
         chunkIndex: currentChunk + 1,
@@ -237,14 +236,15 @@ const handleUploadFileChunk = (data: ChunkData): Socket | void => {
 
 onBeforeUnmount((): void => {
   if (state.connected) {
-    const { connection } = state;
-    connection.off(EVENTS.downloadFile, handleDownloadFile);
-    connection.off(EVENTS.downloadFileError, handleDownloadFileError);
-    connection.off(EVENTS.listFile, handleListFile);
-    connection.off(EVENTS.requestFileChunk, handleRequestFileChunk);
-    connection.off(EVENTS.requestListedFiles, handleRequestListedFiles);
-    connection.off(EVENTS.uploadFileChunk, handleUploadFileChunk);
-    connection.emit(EVENTS.close);
+    const { io } = connection;
+    io.off(EVENTS.clientDisconnect, handleClientDisconnect);
+    io.off(EVENTS.downloadFile, handleDownloadFile);
+    io.off(EVENTS.downloadFileError, handleDownloadFileError);
+    io.off(EVENTS.listFile, handleListFile);
+    io.off(EVENTS.requestFileChunk, handleRequestFileChunk);
+    io.off(EVENTS.requestListedFiles, handleRequestListedFiles);
+    io.off(EVENTS.uploadFileChunk, handleUploadFileChunk);
+    io.emit(EVENTS.close);
   }
 });
 
@@ -266,31 +266,20 @@ onMounted((): void => {
     state.deviceName = deviceName;
   }
 
-  const connection = io(
-    WS_URL,
-    {
-      autoConnect: true,
-      reconnection: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 10000,
-    },
-  );
-
-  connection.on(
+  const { io } = connection;
+  io.open();
+  io.on(
     EVENTS.connect,
     (): void => {
-      connection.emit(EVENTS.requestListedFiles);
-
-      connection.on(EVENTS.downloadFile, handleDownloadFile);
-      connection.on(EVENTS.downloadFileError, handleDownloadFileError);
-      connection.on(EVENTS.listFile, handleListFile);
-      connection.on(EVENTS.requestFileChunk, handleRequestFileChunk);
-      connection.on(EVENTS.requestListedFiles, handleRequestListedFiles);
-      connection.on(EVENTS.uploadFileChunk, handleUploadFileChunk);
-
+      io.emit(EVENTS.requestListedFiles);
+      io.on(EVENTS.clientDisconnect, handleClientDisconnect);
+      io.on(EVENTS.downloadFile, handleDownloadFile);
+      io.on(EVENTS.downloadFileError, handleDownloadFileError);
+      io.on(EVENTS.listFile, handleListFile);
+      io.on(EVENTS.requestFileChunk, handleRequestFileChunk);
+      io.on(EVENTS.requestListedFiles, handleRequestListedFiles);
+      io.on(EVENTS.uploadFileChunk, handleUploadFileChunk);
       state.connected = true;
-      state.connection = connection;
     },
   );
 });
@@ -315,7 +304,7 @@ onMounted((): void => {
       <FileListComponent
         :device-name="state.deviceName"
         :listed-files="state.listedFiles"
-        :owner-id="state.connection.id"
+        :owner-id="connection.io.id"
         @handle-add-file="handleAddFile"
         @handle-download-file="downloadFile"
       />
