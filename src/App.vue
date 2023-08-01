@@ -13,20 +13,14 @@ import type {
   ListedFile,
 } from './types';
 import {
-  decodeBase64ToBlob,
-  encodeFileToBase64,
-} from './utilities/base64';
-import DeviceNameModalComponent from './components/DeviceNameModal.vue';
-import DownloadIconComponent from './components/DownloadIcon.vue';
-import {
   EVENTS,
   MESSAGES,
   WS_URL,
 } from './configuration';
-import formatFileSize from './utilities/format-file-size';
-import getHash from './utilities/get-hash';
+import { decodeBase64ToBlob } from './utilities/base64';
+import DeviceNameModalComponent from './components/DeviceNameModal.vue';
+import FileListComponent from './components/FileList.vue';
 import { getValue, setValue } from './utilities/storage';
-import StyledButtonComponent from './components/StyledButton.vue';
 
 interface AppState {
   connected: boolean;
@@ -37,10 +31,6 @@ interface AppState {
   setShowDeviceNameModal: boolean;
 }
 
-const CHUNK_LENGTH = 1024 * 128;
-const SUPPORTS_FS_ACCESS_API = 'getAsFileSystemHandle' in DataTransferItem.prototype;
-const SUPPORTS_WEBKIT_GET_AS_ENTRY = 'webkitGetAsEntry' in DataTransferItem.prototype;
-
 const state = reactive<AppState>({
   connected: false,
   connection: {} as Socket,
@@ -50,7 +40,9 @@ const state = reactive<AppState>({
   setShowDeviceNameModal: false,
 });
 
-const downloadFile = (fileId: string, ownerId: string): Socket => {
+const downloadFile = (
+  { fileId, ownerId }: { fileId: string, ownerId: string },
+): Socket => {
   return state.connection.emit(
     EVENTS.downloadFile,
     {
@@ -102,109 +94,20 @@ const handleDownloadFileError = (data: unknown): void => {
   console.log(data);
 };
 
-const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
-  const { dataTransfer } = event;
-  if (!dataTransfer) {
-    return null;
-  }
-  let itemType = 'FileSystemHandle';
-  const promises = [...dataTransfer.items]
-    .filter((item: DataTransferItem): boolean => item.kind === 'file')
-    .map((item: DataTransferItem) => {
-      if (SUPPORTS_FS_ACCESS_API && (item as any).getAsFileSystemHandle) {
-        return (item as any).getAsFileSystemHandle();
-      }
-      if (SUPPORTS_WEBKIT_GET_AS_ENTRY) {
-        itemType = 'FileSystemEntry';
-        return item.webkitGetAsEntry();
-      }
-      itemType = 'File';
-      return item.getAsFile();
-    });
-  const results = await Promise.all(promises);
-  const filtered = results.filter((item: unknown): boolean => {
-    if (itemType === 'FileSystemHandle'
-      && (item as FileSystemFileHandle).kind === 'file') {
-      return true;
-    }
-    if (itemType === 'FileSystemEntry'
-      && (item as FileSystemFileEntry).isFile) {
-      return true;
-    }
-    if (itemType === 'File') {
-      const { name = '', type = '' } = (item as File);
-      if (!(name.includes('.') && !!type)) {
-        return false;
-      }
-      return true;
-    }
-    return false;
-  });
-  let files: File[] = [];
-  if (itemType === 'FileSystemHandle') {
-    files = await Promise.all(filtered.map(
-      (item: unknown): Promise<File> => (item as FileSystemFileHandle).getFile(),
-    ));
-  }
-  if (itemType === 'FileSystemEntry') {
-    const promises = filtered.map(
-      (item: unknown): Promise<File> => new Promise<File>((resolve): void => {
-        (item as FileSystemFileEntry).file((file: File): void => resolve(file));
-      }),
-    );
-    files = await Promise.all(promises);
-  }
-  if (itemType === 'File') {
-    files = (filtered as File[]);
-  }
-  const hashes = await Promise.all(files.map(
-    (file: File): Promise<string> => getHash(file),
-  ));
-  const encoded = await Promise.all(files.map(encodeFileToBase64));
-  files.forEach((file: File, index: number): void => {
-    const alreadyListed = state.listedFiles.filter(
-      (item: ListedFile): boolean => item.id === hashes[index]
-        && item.file?.name === file.name && item.file?.size === file.size,
-    );
-    if (alreadyListed.length === 0) {
-      const entry: ListedFile = {
-        chunks: [],
-        createdAt: Date.now(),
-        deviceName: state.deviceName,
-        file,
-        id: hashes[index],
-        isOwner: true,
-        name: file.name,
-        ownerId: state.connection.id,
-        private: false,
-        size: file.size,
-      }
-      let chunk = '';
-      for (let i = 0; i < encoded.length; i += 1) {
-        chunk += encoded[i];
-        if (chunk.length === CHUNK_LENGTH) {
-          entry.chunks.push(chunk);
-          chunk = '';
-        }
-      }
-      if (chunk) {
-        entry.chunks.push(chunk);
-      }
-      state.listedFiles.push(entry);
-      state.connection.emit(
-        EVENTS.listFile,
-        {
-          createdAt: entry.createdAt,
-          deviceName: entry.deviceName,
-          id: entry.id,
-          name: entry.name,
-          ownerId: entry.ownerId,
-          private: entry.private,
-          size: entry.size,
-        },
-      );
-    }
-  });
+const handleAddFile = (entry: ListedFile): Socket => {
+  state.listedFiles.push(entry);
+  return state.connection.emit(
+    EVENTS.listFile,
+    {
+      createdAt: entry.createdAt,
+      deviceName: entry.deviceName,
+      id: entry.id,
+      name: entry.name,
+      ownerId: entry.ownerId,
+      private: entry.private,
+      size: entry.size,
+    },
+  );
 };
 
 const handleListFile = (data: ListedFile): void => {
@@ -320,7 +223,6 @@ const handleUploadFileChunk = (data: ChunkData): Socket | void => {
       (string: string, chunk: string): string => `${string}${chunk}`,
       '',
     );
-    console.log('download completed');
     const blob = decodeBase64ToBlob(base64String, completeFile.type);
     const url = URL.createObjectURL(blob);
     const downloadLink = window.document.createElement('a');
@@ -410,41 +312,18 @@ onMounted((): void => {
       <div class="ml-2 mb-half ns title">
         EXCHANGE
       </div>
-      <div
-        class="mh-auto drop-zone"
-        @dragover.prevent
-        @drop.prevent="handleFileDrop"
-      >
-        <div
-          class="f j-space-between ai-center m-quarter"
-          v-for="file in state.listedFiles"
-          :key="file.id"
-        >
-          <span>
-            {{ file.name }} (owner: {{ file.deviceName }}) (size: {{ formatFileSize(file.size) }})
-          </span>
-          <StyledButtonComponent
-            v-if="!file.isOwner"
-            title="Download"
-            :custom-styles="{ height: '32px' }"
-            :with-icon="true"
-            @handle-click="(): Socket => downloadFile(file.id, file.ownerId)"
-          >
-            <DownloadIconComponent />
-          </StyledButtonComponent>
-        </div>
-      </div>
+      <FileListComponent
+        :device-name="state.deviceName"
+        :listed-files="state.listedFiles"
+        :owner-id="state.connection.id"
+        @handle-add-file="handleAddFile"
+        @handle-download-file="downloadFile"
+      />
     </div>
   </div>
 </template>
 
 <style scoped>
-.drop-zone {
-  border: calc(var(--spacer-quarter) / 4) dotted var(--text);
-  height: calc(100vh - var(--spacer) * 6);
-  overflow-y: scroll;
-  width: calc(100% - var(--spacer) * 4);
-}
 .title {
   color: var(--accent);
   font-size: calc(var(--spacer) * 1.25);
