@@ -14,8 +14,8 @@ import type {
 } from './types';
 import connection from './connection';
 import { decodeBase64ToBlob } from './utilities/base64';
-import { EVENTS, MESSAGES } from './configuration';
 import DeviceNameModalComponent from './components/DeviceNameModal.vue';
+import { EVENTS, MESSAGES } from './configuration';
 import FileListComponent from './components/FileList.vue';
 import { getValue, setValue } from './utilities/storage';
 
@@ -34,6 +34,16 @@ const state = reactive<AppState>({
   listedFiles: [],
   setShowDeviceNameModal: false,
 });
+
+const deleteFile = ({ fileId }: { fileId: string }): Socket => {
+  state.listedFiles = state.listedFiles.filter(
+    (item: ListedFile): boolean => item.id !== fileId,
+  );
+  return connection.io.emit(
+    EVENTS.deleteFile,
+    { fileId },
+  );
+};
 
 const downloadFile = (
   { fileId, ownerId }: { fileId: string, ownerId: string },
@@ -234,10 +244,17 @@ const handleUploadFileChunk = (data: ChunkData): Socket | void => {
   }
 };
 
+const ioHandlerDeleteFile = ({ fileId }: { fileId: string}): void => {
+  state.listedFiles = state.listedFiles.filter(
+    (item: ListedFile): boolean => item.id !== fileId,
+  );
+};
+
 onBeforeUnmount((): void => {
   if (state.connected) {
     const { io } = connection;
     io.off(EVENTS.clientDisconnect, handleClientDisconnect);
+    io.off(EVENTS.deleteFile, ioHandlerDeleteFile);
     io.off(EVENTS.downloadFile, handleDownloadFile);
     io.off(EVENTS.downloadFileError, handleDownloadFileError);
     io.off(EVENTS.listFile, handleListFile);
@@ -273,6 +290,7 @@ onMounted((): void => {
     (): void => {
       io.emit(EVENTS.requestListedFiles);
       io.on(EVENTS.clientDisconnect, handleClientDisconnect);
+      io.on(EVENTS.deleteFile, ioHandlerDeleteFile);
       io.on(EVENTS.downloadFile, handleDownloadFile);
       io.on(EVENTS.downloadFileError, handleDownloadFileError);
       io.on(EVENTS.listFile, handleListFile);
@@ -306,6 +324,7 @@ onMounted((): void => {
         :listed-files="state.listedFiles"
         :owner-id="connection.io.id"
         @handle-add-file="handleAddFile"
+        @handle-delete-file="deleteFile"
         @handle-download-file="downloadFile"
       />
     </div>

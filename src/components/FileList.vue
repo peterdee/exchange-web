@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import { reactive } from 'vue';
+
 import {
   CHUNK_SIZE,
+  COLORS,
   SUPPORTS_FS_ACCESS_API,
   SUPPORTS_WEBKIT_GET_AS_ENTRY,
 } from '../configuration';
 import DownloadIconComponent from '../components/DownloadIcon.vue';
+import DeleteIconComponent from '../components/DeleteIcon.vue';
 import { encodeFileToBase64 } from '../utilities/base64';
 import formatFileSize from '../utilities/format-file-size';
 import getHash from '../utilities/get-hash';
@@ -13,6 +17,7 @@ import StyledButtonComponent from '../components/StyledButton.vue';
 
 const emit = defineEmits([
   'handle-add-file',
+  'handle-delete-file',
   'handle-download-file',
 ]);
 
@@ -22,7 +27,12 @@ const props = defineProps<{
   ownerId: string;
 }>();
 
+const state = reactive<{ drag: boolean }>({
+  drag: false,
+});
+
 const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
+  state.drag = false;
   const { dataTransfer } = event;
   if (!dataTransfer) {
     return null;
@@ -114,11 +124,17 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
     }
   });
 };
+
+const handleDrag = (): void => {
+  state.drag = !state.drag;
+};
 </script>
 
 <template>
   <div
-    class="f d-col mh-auto file-list"
+    :class="`f d-col mh-auto file-list ${state.drag ? 'drag' : ''}`"
+    @dragenter.prevent="handleDrag"
+    @dragleave.prevent="handleDrag"
     @dragover.prevent
     @drop.prevent="handleFileDrop"
   >
@@ -130,6 +146,18 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
       <span>
         {{ file.name }} (owner: {{ file.deviceName }}) (size: {{ formatFileSize(file.size) }})
       </span>
+      <StyledButtonComponent
+        v-if="file.isOwner"
+        title="Delete"
+        :custom-styles="{ height: '32px' }"
+        :with-icon="true"
+        @handle-click="(): void => emit(
+          'handle-delete-file',
+          { fileId: file.id },
+        )"
+      >
+        <DeleteIconComponent :color="COLORS.error" />
+      </StyledButtonComponent>
       <StyledButtonComponent
         v-if="!file.isOwner"
         title="Download"
@@ -150,10 +178,16 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
 </template>
 
 <style scoped>
-.file-list{
-  border: calc(var(--spacer-quarter) / 4) dotted var(--text);
+.file-list {
+  border: calc(var(--spacer-quarter) / 2) dotted var(--accent);
+  border-radius: var(--spacer-quarter);
   height: calc(100vh - var(--spacer) * 6);
   overflow-y: scroll;
   width: calc(100% - var(--spacer) * 4);
+  transition: box-shadow var(--transition) ease-out;
+}
+.drag {
+  box-shadow: 0 0 calc(var(--spacer) * 2) 0 var(--accent-light);
+  transition: box-shadow var(--transition) ease-in;
 }
 </style>
