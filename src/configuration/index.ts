@@ -4,6 +4,7 @@ export const COLORS = {
   accent: '#1e7878',
   accentLight: '#53acac',
   error: '#ee3020',
+  muted: '#999999', 
 };
 
 export const EVENTS = {
@@ -18,6 +19,7 @@ export const EVENTS = {
   requestFileChunk: 'request-file-chunk',
   requestListedFiles: 'request-listed-files',
   uploadFileChunk: 'upload-file-chunk',
+  updateFilePrivacy: 'update-file-privacy',
 };
 
 export const MESSAGES = {

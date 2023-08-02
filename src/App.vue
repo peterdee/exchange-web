@@ -11,18 +11,21 @@ import type {
   ChunkRequest,
   DownloadedItem,
   ListedFile,
+  UpdateFilePrivacy,
 } from './types';
 import connection from './connection';
 import { decodeBase64ToBlob } from './utilities/base64';
 import DeviceNameModalComponent from './components/DeviceNameModal.vue';
 import { EVENTS, MESSAGES } from './configuration';
 import FileListComponent from './components/FileList.vue';
+import FileOptionsModalComponent from './components/FileOptionsModal.vue';
 import { getValue, setValue } from './utilities/storage';
 
 interface AppState {
   connected: boolean;
   deviceName: string;
   downloads: DownloadedItem[];
+  fileOptionsFileId: string;
   listedFiles: ListedFile[];
   setShowDeviceNameModal: boolean;
 }
@@ -31,6 +34,7 @@ const state = reactive<AppState>({
   connected: false,
   deviceName: '',
   downloads: [],
+  fileOptionsFileId: '',
   listedFiles: [],
   setShowDeviceNameModal: false,
 });
@@ -119,6 +123,10 @@ const handleAddFile = (entry: ListedFile): Socket => {
       size: entry.size,
     },
   );
+};
+
+const handleFilePrivacy = (value: boolean): Socket => {
+  
 };
 
 const handleListFile = (data: ListedFile): void => {
@@ -250,6 +258,29 @@ const ioHandlerDeleteFile = ({ fileId }: { fileId: string}): void => {
   );
 };
 
+const ioHandlerUpdateFilePrivacy = (data: UpdateFilePrivacy): void => {
+  const {
+    fileId,
+    isPrivate,
+    ownerId,
+  } = data;
+  state.listedFiles = state.listedFiles.reduce(
+    (array: ListedFile[], item: ListedFile): ListedFile[] => {
+      if (item.id === fileId && item.ownerId === ownerId) {
+        const updatedItem: ListedFile = {
+          ...item,
+          private: isPrivate,
+        };
+        array.push(updatedItem);
+      } else {
+        array.push(item);
+      }
+      return array;
+    },
+    [],
+  );
+};
+
 onBeforeUnmount((): void => {
   if (state.connected) {
     const { io } = connection;
@@ -260,6 +291,7 @@ onBeforeUnmount((): void => {
     io.off(EVENTS.listFile, handleListFile);
     io.off(EVENTS.requestFileChunk, handleRequestFileChunk);
     io.off(EVENTS.requestListedFiles, handleRequestListedFiles);
+    io.off(EVENTS.updateFilePrivacy, ioHandlerUpdateFilePrivacy);
     io.off(EVENTS.uploadFileChunk, handleUploadFileChunk);
     io.emit(EVENTS.close);
   }
@@ -296,6 +328,7 @@ onMounted((): void => {
       io.on(EVENTS.listFile, handleListFile);
       io.on(EVENTS.requestFileChunk, handleRequestFileChunk);
       io.on(EVENTS.requestListedFiles, handleRequestListedFiles);
+      io.on(EVENTS.updateFilePrivacy, ioHandlerUpdateFilePrivacy);
       io.on(EVENTS.uploadFileChunk, handleUploadFileChunk);
       state.connected = true;
     },
@@ -311,6 +344,11 @@ onMounted((): void => {
     <DeviceNameModalComponent
       v-if="state.setShowDeviceNameModal"
       @handle-device-name="handleDeviceName"
+    />
+    <FileOptionsModalComponent
+      v-if="!!state.fileOptionsFileId"
+      :file-id="state.fileOptionsFileId"
+      @handle-file-privacy="handleFilePrivacy"
     />
     <div
       class="f d-col w-100"

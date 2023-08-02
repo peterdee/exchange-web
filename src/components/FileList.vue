@@ -13,7 +13,13 @@ import { encodeFileToBase64 } from '../utilities/base64';
 import formatFileSize from '../utilities/format-file-size';
 import getHash from '../utilities/get-hash';
 import type { ListedFile } from '../types';
+import MenuDotsIconComponent from '../components/MenuDotsIcon.vue';
 import StyledButtonComponent from '../components/StyledButton.vue';
+
+interface ComponentState {
+  deleteFileId: string;
+  drag: boolean;
+}
 
 const emit = defineEmits([
   'handle-add-file',
@@ -27,7 +33,8 @@ const props = defineProps<{
   ownerId: string;
 }>();
 
-const state = reactive<{ drag: boolean }>({
+const state = reactive<ComponentState>({
+  deleteFileId: '',
   drag: false,
 });
 
@@ -79,7 +86,7 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
   if (itemType === 'FileSystemEntry') {
     const promises = filtered.map(
       (item: unknown): Promise<File> => new Promise<File>((resolve): void => {
-        (item as FileSystemFileEntry).file((file: File): void => resolve(file));
+        (item as FileSystemFileEntry).file(resolve);
       }),
     );
     files = await Promise.all(promises);
@@ -125,6 +132,17 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
   });
 };
 
+const handleDelete = (fileId: string): void => {
+  state.deleteFileId = fileId;
+  setTimeout(
+    (): void => {
+      emit('handle-delete-file', { fileId });
+      state.deleteFileId = '';
+    },
+    240,
+  );
+};
+
 const handleDrag = (): void => {
   state.drag = !state.drag;
 };
@@ -139,40 +157,51 @@ const handleDrag = (): void => {
     @drop.prevent="handleFileDrop"
   >
     <div
-      class="f j-space-between ai-center m-quarter"
       v-for="file in props.listedFiles"
+      :class="`f j-space-between ai-center fade-in m-quarter ${state.deleteFileId === file.id
+        ? 'fade-out'
+        : ''}`"
       :key="file.id"
     >
       <span>
         {{ file.name }} (owner: {{ file.deviceName }}) (size: {{ formatFileSize(file.size) }})
       </span>
-      <StyledButtonComponent
-        v-if="file.isOwner"
-        title="Delete"
-        :custom-styles="{ height: '32px' }"
-        :with-icon="true"
-        @handle-click="(): void => emit(
-          'handle-delete-file',
-          { fileId: file.id },
-        )"
-      >
-        <DeleteIconComponent :color="COLORS.error" />
-      </StyledButtonComponent>
-      <StyledButtonComponent
-        v-if="!file.isOwner"
-        title="Download"
-        :custom-styles="{ height: '32px' }"
-        :with-icon="true"
-        @handle-click="(): void => emit(
-          'handle-download-file',
-          {
-            fileId: file.id,
-            ownerId: file.ownerId,
-          },
-        )"
-      >
-        <DownloadIconComponent />
-      </StyledButtonComponent>
+      <div class="f">
+        <StyledButtonComponent
+          title="Options"
+          :custom-styles="{ height: '32px' }"
+          :disabled="state.deleteFileId === file.id"
+          :global-classes="['mr-1']"
+          :with-icon="true"
+        >
+          <MenuDotsIconComponent :color="COLORS.muted" />
+        </StyledButtonComponent>
+        <StyledButtonComponent
+          v-if="file.isOwner"
+          title="Delete"
+          :custom-styles="{ height: '32px' }"
+          :disabled="state.deleteFileId === file.id"
+          :with-icon="true"
+          @handle-click="(): void => handleDelete(file.id)"
+        >
+          <DeleteIconComponent :color="COLORS.error" />
+        </StyledButtonComponent>
+        <StyledButtonComponent
+          v-if="!file.isOwner"
+          title="Download"
+          :custom-styles="{ height: '32px' }"
+          :with-icon="true"
+          @handle-click="(): void => emit(
+            'handle-download-file',
+            {
+              fileId: file.id,
+              ownerId: file.ownerId,
+            },
+          )"
+        >
+          <DownloadIconComponent />
+        </StyledButtonComponent>
+      </div>
     </div>
   </div>
 </template>

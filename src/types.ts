@@ -37,3 +37,9 @@ export interface ListedFile {
   private: boolean;
   size: number;
 }
+
+export interface UpdateFilePrivacy {
+  fileId: string;
+  isPrivate: boolean;
+  ownerId: string;
+}
