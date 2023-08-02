@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
+import type { ListedFile } from '../types';
 import StyledButtonComponent from './StyledButton.vue';
 import StyledInputComponent from './StyledInput.vue';
 
@@ -9,10 +10,12 @@ interface ComponentState {
   newPassword: string;
 }
 
-const emit = defineEmits(['handle-file-priacy']);
+// TODO: move all of the related logic into this modal
+
+const emit = defineEmits(['handle-file-privacy']);
 
 const props = defineProps<{
-  fileId: string;
+  listedFile: ListedFile;
 }>();
 
 const state = reactive<ComponentState>({
@@ -24,13 +27,13 @@ const handleInput = ({ value }: { value: string }): void => {
   state.newPassword = value;
 };
 
-// const handleSubmit = (): void => {
-//   state.isClosing = true;
-//   setTimeout(
-//     (): void => emit('handle-deviceP', state.deviceName),
-//     240,
-//   );
-// };
+const handleSubmit = (): void => {
+  state.isClosing = true;
+  setTimeout(
+    (): void => emit('handle-file-privacy', { fileId: props.listedFile.id, }),
+    240,
+  );
+};
 </script>
 
 <template>
@@ -44,25 +47,25 @@ const handleInput = ({ value }: { value: string }): void => {
         EXCHANGE
       </div>
       <div class="t-center ns subtitle">
-        Please set your device name to continue
+        Set file password
       </div>
       <form
         class="f d-col"
         @submit.prevent="handleSubmit"
       >
         <StyledInputComponent
-          name="deviceName"
-          placeholder="Device name"
-          type="text"
+          name="filePassword"
+          placeholder="File password"
+          type="password"
           @handle-input="handleInput"
-          :value="state.deviceName"
+          :value="state.newPassword"
         />
         <StyledButtonComponent
           type="submit"
-          :disabled="state.deviceName.length === 0"
+          :disabled="state.newPassword.length === 0"
           :globalClasses="['mt-1']"
         >
-          Continue
+          Set password
         </StyledButtonComponent>
       </form>
     </div>

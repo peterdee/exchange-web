@@ -125,8 +125,31 @@ const handleAddFile = (entry: ListedFile): Socket => {
   );
 };
 
-const handleFilePrivacy = (value: boolean): Socket => {
-  
+const handleFilePrivacy = (fileId: string, value: boolean): Socket => {
+  state.listedFiles = state.listedFiles.reduce(
+    (array: ListedFile[], item: ListedFile): ListedFile[] => {
+      if (item.id === fileId) {
+        const updatedItem: ListedFile = {
+          ...item,
+          private: value,
+        };
+        array.push(updatedItem);
+      } else {
+        array.push(item);
+      }
+      return array;
+    },
+    [],
+  );
+  // TODO: use acknowledgements, move this handler into the modal
+  return connection.io.emit(
+    EVENTS.updateFilePrivacy,
+    {
+      fileId,
+      isPrivate: value,
+      ownerId: connection.io.id,
+    },
+  );
 };
 
 const handleListFile = (data: ListedFile): void => {
@@ -347,7 +370,9 @@ onMounted((): void => {
     />
     <FileOptionsModalComponent
       v-if="!!state.fileOptionsFileId"
-      :file-id="state.fileOptionsFileId"
+      :listed-file="state.listedFiles.filter(
+        (item: ListedFile): boolean => item.id === state.fileOptionsFileId,
+      )[0]"
       @handle-file-privacy="handleFilePrivacy"
     />
     <div
