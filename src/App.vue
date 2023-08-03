@@ -61,53 +61,11 @@ const downloadFile = (
   );
 };
 
-const handleClientDisconnect = ({ id }: { id: string }): void => {
-  state.listedFiles = state.listedFiles.filter(
-    (entry: ListedFile): boolean => entry.ownerId !== id,
-  );
-};
-
 const handleDeviceName = (value: string): void => {
   state.deviceName = value;
   setValue<string>('deviceName', value);
   return setValue<boolean>('deviceNameSet', true);
 }
-
-const handleDownloadFile = async (
-  data: { fileId: string, targetId: string },
-): Promise<Socket | void> => {
-  const { fileId = '', targetId = '' } = data;
-  const [file] = state.listedFiles.filter(
-    (item: ListedFile): boolean => item.id === fileId && !!item.isOwner,
-  );
-  if (!file) {
-    return connection.io.emit(
-      EVENTS.downloadFileError,
-      {
-        info: MESSAGES.fileNotFound,
-        targetId,
-      }
-    );
-  }
-  return connection.io.emit(
-    EVENTS.uploadFileChunk,
-    {
-      chunk: file.chunks[0],
-      currentChunk: 1,
-      fileId,
-      fileName: file.name,
-      fileSize: file.size,
-      ownerId: file.ownerId,
-      targetId,
-      totalChunks: file.chunks.length,
-      type: file.file?.type,
-    },
-  );
-};
-
-const handleDownloadFileError = (data: unknown): void => {
-  console.log(data);
-};
 
 const handleAddFile = (entry: ListedFile): Socket => {
   state.listedFiles.push(entry);
@@ -152,14 +110,64 @@ const handleFilePrivacy = (fileId: string, value: boolean): Socket => {
   );
 };
 
-const handleListFile = (data: ListedFile): void => {
+const ioHandlerClientDisconnect = ({ id }: { id: string }): void => {
+  state.listedFiles = state.listedFiles.filter(
+    (entry: ListedFile): boolean => entry.ownerId !== id,
+  );
+};
+
+const ioHandlerDeleteFile = ({ fileId }: { fileId: string }): void => {
+  state.listedFiles = state.listedFiles.filter(
+    (item: ListedFile): boolean => item.id !== fileId,
+  );
+};
+
+const ioHandlerDownloadFile = async (
+  data: { fileId: string; targetId: string },
+): Promise<Socket | void> => {
+  const { fileId = '', targetId = '' } = data;
+  const [file] = state.listedFiles.filter(
+    (item: ListedFile): boolean => item.id === fileId && item.isOwner,
+  );
+  if (!file) {
+    return connection.io.emit(
+      EVENTS.downloadFileError,
+      {
+        info: MESSAGES.fileNotFound,
+        targetId,
+      }
+    );
+  }
+  return connection.io.emit(
+    EVENTS.uploadFileChunk,
+    {
+      chunk: file.chunks[0],
+      currentChunk: 1,
+      fileId,
+      fileName: file.name,
+      fileSize: file.size,
+      ownerId: file.ownerId,
+      targetId,
+      totalChunks: file.chunks.length,
+      type: file.file?.type,
+    },
+  );
+};
+
+// TODO: handle errors
+const ioHandlerDownloadFileError = (data: unknown): void => {
+  console.log(data);
+};
+
+const ioHandlerListFile = (data: ListedFile): void => {
   state.listedFiles.push({
     ...data,
     isOwner: false,
+    passwordHash: '',
   });
 };
 
-const handleRequestFileChunk = (data: ChunkRequest): Socket | void => {
+const ioHandlerRequestFileChunk = (data: ChunkRequest): Socket => {
   const {
     chunkIndex,
     fileId,
@@ -187,19 +195,42 @@ const handleRequestFileChunk = (data: ChunkRequest): Socket | void => {
   );
 };
 
-const handleRequestListedFiles = (data: ListedFile[]): null | void => {
-  if (!data) {
-    return null;
-  }
-  data.forEach((item: ListedFile): void => {
-    state.listedFiles.push({
-      ...item,
-      isOwner: false,
+const ioHandlerRequestListedFiles = (data: ListedFile[]): void => {
+  if (Array.isArray(data) && data.length > 0) {
+    data.forEach((item: ListedFile): void => {
+      state.listedFiles.push({
+        ...item,
+        isOwner: false,
+        passwordHash: '',
+      });
     });
-  });
+  }
 };
 
-const handleUploadFileChunk = (data: ChunkData): Socket | void => {
+const ioHandlerUpdateFilePrivacy = (data: UpdateFilePrivacy): void => {
+  const {
+    fileId,
+    isPrivate,
+    ownerId,
+  } = data;
+  state.listedFiles = state.listedFiles.reduce(
+    (array: ListedFile[], item: ListedFile): ListedFile[] => {
+      if (item.id === fileId && item.ownerId === ownerId) {
+        const updatedItem: ListedFile = {
+          ...item,
+          private: isPrivate,
+        };
+        array.push(updatedItem);
+      } else {
+        array.push(item);
+      }
+      return array;
+    },
+    [],
+  );
+};
+
+const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
   const {
     chunk,
     currentChunk,
@@ -271,51 +302,22 @@ const handleUploadFileChunk = (data: ChunkData): Socket | void => {
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
-    URL.revokeObjectURL(url);
+    return URL.revokeObjectURL(url);
   }
-};
-
-const ioHandlerDeleteFile = ({ fileId }: { fileId: string}): void => {
-  state.listedFiles = state.listedFiles.filter(
-    (item: ListedFile): boolean => item.id !== fileId,
-  );
-};
-
-const ioHandlerUpdateFilePrivacy = (data: UpdateFilePrivacy): void => {
-  const {
-    fileId,
-    isPrivate,
-    ownerId,
-  } = data;
-  state.listedFiles = state.listedFiles.reduce(
-    (array: ListedFile[], item: ListedFile): ListedFile[] => {
-      if (item.id === fileId && item.ownerId === ownerId) {
-        const updatedItem: ListedFile = {
-          ...item,
-          private: isPrivate,
-        };
-        array.push(updatedItem);
-      } else {
-        array.push(item);
-      }
-      return array;
-    },
-    [],
-  );
 };
 
 onBeforeUnmount((): void => {
   if (state.connected) {
     const { io } = connection;
-    io.off(EVENTS.clientDisconnect, handleClientDisconnect);
+    io.off(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
     io.off(EVENTS.deleteFile, ioHandlerDeleteFile);
-    io.off(EVENTS.downloadFile, handleDownloadFile);
-    io.off(EVENTS.downloadFileError, handleDownloadFileError);
-    io.off(EVENTS.listFile, handleListFile);
-    io.off(EVENTS.requestFileChunk, handleRequestFileChunk);
-    io.off(EVENTS.requestListedFiles, handleRequestListedFiles);
+    io.off(EVENTS.downloadFile, ioHandlerDownloadFile);
+    io.off(EVENTS.downloadFileError, ioHandlerDownloadFileError);
+    io.off(EVENTS.listFile, ioHandlerListFile);
+    io.off(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
+    io.off(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
     io.off(EVENTS.updateFilePrivacy, ioHandlerUpdateFilePrivacy);
-    io.off(EVENTS.uploadFileChunk, handleUploadFileChunk);
+    io.off(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
     io.emit(EVENTS.close);
   }
 });
@@ -344,15 +346,15 @@ onMounted((): void => {
     EVENTS.connect,
     (): void => {
       io.emit(EVENTS.requestListedFiles);
-      io.on(EVENTS.clientDisconnect, handleClientDisconnect);
+      io.on(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
       io.on(EVENTS.deleteFile, ioHandlerDeleteFile);
-      io.on(EVENTS.downloadFile, handleDownloadFile);
-      io.on(EVENTS.downloadFileError, handleDownloadFileError);
-      io.on(EVENTS.listFile, handleListFile);
-      io.on(EVENTS.requestFileChunk, handleRequestFileChunk);
-      io.on(EVENTS.requestListedFiles, handleRequestListedFiles);
+      io.on(EVENTS.downloadFile, ioHandlerDownloadFile);
+      io.on(EVENTS.downloadFileError, ioHandlerDownloadFileError);
+      io.on(EVENTS.listFile, ioHandlerListFile);
+      io.on(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
+      io.on(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
       io.on(EVENTS.updateFilePrivacy, ioHandlerUpdateFilePrivacy);
-      io.on(EVENTS.uploadFileChunk, handleUploadFileChunk);
+      io.on(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
       state.connected = true;
     },
   );

@@ -34,8 +34,10 @@ export interface ListedFile {
   isOwner: boolean;
   name: string;
   ownerId: string;
+  passwordHash: string;
   private: boolean;
   size: number;
+  withPassword: boolean;
 }
 
 export interface UpdateFilePrivacy {

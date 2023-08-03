@@ -113,8 +113,10 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
         isOwner: true,
         name: file.name,
         ownerId: props.ownerId,
+        passwordHash: '',
         private: false,
         size: file.size,
+        withPassword: false,
       };
       let chunk = '';
       for (let i = 0; i < encoded.length; i += 1) {
