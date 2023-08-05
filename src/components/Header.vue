@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { COLORS } from '../configuration';
 import LogoIconComponent from './LogoIcon.vue';
+import SettingsIconComponent from './SettingsIcon.vue';
+import StyledButtonComponent from './StyledButton.vue';
+import UplaodIconComponent from './UploadIcon.vue';
 
 const props = defineProps<{
   isMobile: boolean;
@@ -17,9 +20,28 @@ const props = defineProps<{
       <div class="f ai-center">
         <LogoIconComponent :color="COLORS.accent" />
       </div>
-      <div class="ml-1 ns title">
+      <div :class="`ns title ${props.isMobile ? 'ml-half' : 'ml-1'}`">
         EXCHANGE
       </div>
+    </div>
+    <div class="f ai-center ml-1">
+      <StyledButtonComponent
+        title="Add file"
+        :custom-styles="{ height: '32px' }"
+        :with-icon="true"
+        @handle-click="(): void => console.log('upload')"
+      >
+        <UplaodIconComponent />
+      </StyledButtonComponent>
+      <StyledButtonComponent
+        title="Settings"
+        :custom-styles="{ height: '32px' }"
+        :global-classes="[`${props.isMobile ? 'ml-half' : 'ml-1'}`]"
+        :with-icon="true"
+        @handle-click="(): void => console.log('upload')"
+      >
+        <SettingsIconComponent />
+      </StyledButtonComponent>
     </div>
   </header>
 </template>
