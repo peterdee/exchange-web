@@ -29,6 +29,7 @@ const emit = defineEmits([
 
 const props = defineProps<{
   deviceName: string;
+  isMobile: boolean;
   listedFiles: ListedFile[];
   ownerId: string;
 }>();
@@ -152,13 +153,24 @@ const handleDrag = (): void => {
 
 <template>
   <div
-    :class="`f d-col mh-auto file-list ${state.drag ? 'drag' : ''}`"
+    :class="`f d-col mh-auto file-list ${state.drag
+      ? 'drag'
+      : ''} ${props.listedFiles.length === 0
+      ? 'j-center'
+      : ''} ${props.isMobile ? 'list-mobile' : ''}`"
     @dragenter.prevent="handleDrag"
     @dragleave.prevent="handleDrag"
     @dragover.prevent
     @drop.prevent="handleFileDrop"
   >
     <div
+      v-if="props.listedFiles.length === 0"
+      class="t-center ns fade-in drop-files-text"
+    >
+      Drop files here...
+    </div>
+    <div
+      v-if="props.listedFiles.length > 0"
       v-for="file in props.listedFiles"
       :class="`f j-space-between ai-center fade-in m-quarter ${state.deleteFileId === file.id
         ? 'fade-out'
@@ -220,5 +232,13 @@ const handleDrag = (): void => {
 .drag {
   box-shadow: 0 0 calc(var(--spacer) * 2) 0 var(--accent-light);
   transition: box-shadow var(--transition) ease-in;
+}
+.drop-files-text {
+  color: var(--accent);
+  font-size: calc(var(--spacer) * 1.25);
+  font-weight: 300;
+}
+.list-mobile {
+  width: calc(100% - var(--spacer) * 2);
 }
 </style>

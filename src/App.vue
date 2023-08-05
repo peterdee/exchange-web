@@ -19,13 +19,17 @@ import DeviceNameModalComponent from './components/DeviceNameModal.vue';
 import { EVENTS, MESSAGES } from './configuration';
 import FileListComponent from './components/FileList.vue';
 import FileOptionsModalComponent from './components/FileOptionsModal.vue';
+import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
+import HeaderComponent from './components/Header.vue';
+import isMobile from './utilities/is-mobile';
 
 interface AppState {
   connected: boolean;
   deviceName: string;
   downloads: DownloadedItem[];
   fileOptionsFileId: string;
+  isMobile: boolean;
   listedFiles: ListedFile[];
   setShowDeviceNameModal: boolean;
 }
@@ -35,6 +39,7 @@ const state = reactive<AppState>({
   deviceName: '',
   downloads: [],
   fileOptionsFileId: '',
+  isMobile: false,
   listedFiles: [],
   setShowDeviceNameModal: false,
 });
@@ -323,12 +328,16 @@ onBeforeUnmount((): void => {
 });
 
 onMounted((): void => {
+  // set proper favicon
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     const faviconLink = document.querySelector<HTMLLinkElement>(`link[rel~='${'icon'}']`);
     if (faviconLink) {
       faviconLink.href = 'favicon-light.svg';
     }
   }
+
+  // check if device is mobile
+  state.isMobile = isMobile();
 
   const deviceName = getValue<string>('deviceName');
   const deviceNameSet = getValue<boolean>('deviceNameSet');
@@ -362,7 +371,7 @@ onMounted((): void => {
 </script>
 
 <template>
-  <div class="f ai-center j-center h-100vh">
+  <div class="f j-center h-100vh">
     <template v-if="!state.connected">
       Connecting...
     </template>
@@ -378,28 +387,27 @@ onMounted((): void => {
       @handle-file-privacy="handleFilePrivacy"
     />
     <div
-      class="f d-col w-100"
       v-if="state.connected"
+      class="f d-col w-100"
     >
-      <div class="ml-2 mb-half ns title">
-        EXCHANGE
-      </div>
+      <HeaderComponent
+        :is-mobile="state.isMobile"
+      />
       <FileListComponent
         :device-name="state.deviceName"
+        :is-mobile="state.isMobile"
         :listed-files="state.listedFiles"
         :owner-id="connection.io.id"
         @handle-add-file="handleAddFile"
         @handle-delete-file="deleteFile"
         @handle-download-file="downloadFile"
       />
+      <FooterComponent
+        :backend-status="state.connected
+          ? 'connected'
+          : 'inaccessible'"
+        :is-mobile="state.isMobile"
+      />
     </div>
   </div>
 </template>
-
-<style scoped>
-.title {
-  color: var(--accent);
-  font-size: calc(var(--spacer) * 1.25);
-  font-weight: 300;
-}
-</style>

@@ -1,3 +1,5 @@
+export type BackendStatus = 'connected' | 'connecting' | 'inaccessible';
+
 export interface ChunkData {
   chunk: string;
   currentChunk: number;
