@@ -68,6 +68,7 @@ const downloadFile = (
 
 const handleDeviceName = (value: string): void => {
   state.deviceName = value;
+  state.setShowDeviceNameModal = false;
   setValue<string>('deviceName', value);
   return setValue<boolean>('deviceNameSet', true);
 }

@@ -11,6 +11,7 @@ export const EVENTS = {
   clientDisconnect: 'client-disconnect',
   close: 'close',
   connect: 'connect',
+  deleteAllFiles: 'delete-all-files',
   deleteFile: 'delete-file',
   disconnect: 'disconnect',
   downloadFile: 'download-file',

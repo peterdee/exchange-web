@@ -185,7 +185,7 @@ const handleDrag = (): void => {
           title="Options"
           :custom-styles="{ height: '32px' }"
           :disabled="state.deleteFileId === file.id"
-          :global-classes="['mr-1']"
+          :global-classes="['mh-1']"
           :with-icon="true"
         >
           <MenuDotsIconComponent :color="COLORS.muted" />
