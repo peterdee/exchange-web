@@ -4,13 +4,14 @@ import { reactive } from 'vue';
 import {
   CHUNK_SIZE,
   COLORS,
-  SUPPORTS_FS_ACCESS_API,
-  SUPPORTS_WEBKIT_GET_AS_ENTRY,
+  EVENTS,
 } from '../configuration';
-import DownloadIconComponent from '../components/DownloadIcon.vue';
+import connection from '../connection';
 import DeleteIconComponent from '../components/DeleteIcon.vue';
+import DownloadIconComponent from '../components/DownloadIcon.vue';
 import { encodeFileToBase64 } from '../utilities/base64';
 import formatFileSize from '../utilities/format-file-size';
+import getFilesFromDroppedItems from '../utilities/get-files-from-dropped-items';
 import getHash from '../utilities/get-hash';
 import type { ListedFile } from '../types';
 import MenuDotsIconComponent from '../components/MenuDotsIcon.vue';
@@ -45,56 +46,9 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
   if (!dataTransfer) {
     return null;
   }
-  let itemType = 'FileSystemHandle';
-  const promises = [...dataTransfer.items]
-    .filter((item: DataTransferItem): boolean => item.kind === 'file')
-    .map((item: DataTransferItem) => {
-      if (SUPPORTS_FS_ACCESS_API && (item as any).getAsFileSystemHandle) {
-        return (item as any).getAsFileSystemHandle();
-      }
-      if (SUPPORTS_WEBKIT_GET_AS_ENTRY) {
-        itemType = 'FileSystemEntry';
-        return item.webkitGetAsEntry();
-      }
-      itemType = 'File';
-      return item.getAsFile();
-    });
-  const results = await Promise.all(promises);
-  const filtered = results.filter((item: unknown): boolean => {
-    if (itemType === 'FileSystemHandle'
-      && (item as FileSystemFileHandle).kind === 'file') {
-      return true;
-    }
-    if (itemType === 'FileSystemEntry'
-      && (item as FileSystemFileEntry).isFile) {
-      return true;
-    }
-    if (itemType === 'File') {
-      const { name = '', type = '' } = (item as File);
-      if (!(name.includes('.') && !!type)) {
-        return false;
-      }
-      return true;
-    }
-    return false;
-  });
-  let files: File[] = [];
-  if (itemType === 'FileSystemHandle') {
-    files = await Promise.all(filtered.map(
-      (item: unknown): Promise<File> => (item as FileSystemFileHandle).getFile(),
-    ));
-  }
-  if (itemType === 'FileSystemEntry') {
-    const promises = filtered.map(
-      (item: unknown): Promise<File> => new Promise<File>((resolve): void => {
-        (item as FileSystemFileEntry).file(resolve);
-      }),
-    );
-    files = await Promise.all(promises);
-  }
-  if (itemType === 'File') {
-    files = (filtered as File[]);
-  }
+  const files = await getFilesFromDroppedItems(dataTransfer);
+
+  // TODO: move the rest of this logic to the separate file
   const hashes = await Promise.all(files.map(
     (file: File): Promise<string> => getHash(file),
   ));
@@ -129,6 +83,20 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
       }
       if (chunk) {
         entry.chunks.push(chunk);
+      }
+      if (connection.io.connected) {
+        connection.io.emit(
+          EVENTS.listFile,
+          {
+            createdAt: entry.createdAt,
+            deviceName: entry.deviceName,
+            id: entry.id,
+            name: entry.name,
+            ownerId: entry.ownerId,
+            private: entry.private,
+            size: entry.size,
+          },
+        );
       }
       return emit('handle-add-file', entry);
     }
@@ -221,14 +189,6 @@ const handleDrag = (): void => {
 </template>
 
 <style scoped>
-.file-list {
-  border: calc(var(--spacer-quarter) / 2) dotted var(--accent);
-  border-radius: var(--spacer-quarter);
-  height: calc(100vh - var(--spacer) * 6);
-  overflow-y: scroll;
-  width: calc(100% - var(--spacer) * 4);
-  transition: box-shadow var(--transition) ease-out;
-}
 .drag {
   box-shadow: 0 0 calc(var(--spacer) * 2) 0 var(--accent-light);
   transition: box-shadow var(--transition) ease-in;
@@ -237,6 +197,14 @@ const handleDrag = (): void => {
   color: var(--accent);
   font-size: calc(var(--spacer) * 1.25);
   font-weight: 300;
+}
+.file-list {
+  border: calc(var(--spacer-quarter) / 2) dotted var(--accent);
+  border-radius: var(--spacer-quarter);
+  height: calc(100vh - var(--spacer) * 6);
+  overflow-y: scroll;
+  width: calc(100% - var(--spacer) * 4);
+  transition: box-shadow var(--transition) ease-out;
 }
 .list-mobile {
   width: calc(100% - var(--spacer) * 2);

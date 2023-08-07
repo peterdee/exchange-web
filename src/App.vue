@@ -70,20 +70,8 @@ const downloadFile = (
   );
 };
 
-const handleAddFile = (entry: ListedFile): Socket => {
+const handleAddFile = (entry: ListedFile): void => {
   state.listedFiles.push(entry);
-  return connection.io.emit(
-    EVENTS.listFile,
-    {
-      createdAt: entry.createdAt,
-      deviceName: entry.deviceName,
-      id: entry.id,
-      name: entry.name,
-      ownerId: entry.ownerId,
-      private: entry.private,
-      size: entry.size,
-    },
-  );
 };
 
 const handleDeleteAllFiles = (): void => {
@@ -127,10 +115,6 @@ const handleFilePrivacy = (fileId: string, value: boolean): Socket => {
 
 const handleUpdateDeviceName = (value: string): void => {
   state.showSettingsModal = false;
-  connection.io.emit(
-    EVENTS.updateDeviceName,
-    { newDeviceName: value, ownerId: connection.io.id } as UpdateDeviceName,
-  );
   return handleDeviceName(value);
 };
 
@@ -252,20 +236,12 @@ const ioHandlerUpdateFilePrivacy = (data: UpdateFilePrivacy): void => {
     isPrivate,
     ownerId,
   } = data;
-  state.listedFiles = state.listedFiles.reduce(
-    (array: ListedFile[], item: ListedFile): ListedFile[] => {
+  state.listedFiles.forEach(
+    (item: ListedFile): void => {
       if (item.id === fileId && item.ownerId === ownerId) {
-        const updatedItem: ListedFile = {
-          ...item,
-          private: isPrivate,
-        };
-        array.push(updatedItem);
-      } else {
-        array.push(item);
+        item.private = isPrivate;
       }
-      return array;
     },
-    [],
   );
 };
 
@@ -368,7 +344,6 @@ onBeforeUnmount((): void => {
 });
 
 onMounted((): void => {
-  // set proper favicon
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     const faviconLink = document.querySelector<HTMLLinkElement>(`link[rel~='${'icon'}']`);
     if (faviconLink) {
@@ -376,7 +351,6 @@ onMounted((): void => {
     }
   }
 
-  // check if device is mobile
   state.isMobile = isMobile();
 
   const deviceName = getValue<string>('deviceName');

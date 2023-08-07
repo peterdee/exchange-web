@@ -54,6 +54,15 @@ const handleDeleteAllFiles = (): void => {
 };
 
 const handleSubmit = (): void => {
+  if (connection.io.connected) {
+    connection.io.emit(
+      EVENTS.updateDeviceName,
+      {
+        newDeviceName: state.deviceName,
+        ownerId: connection.io.id,
+      },
+    );
+  }
   state.isClosing = true;
   setTimeout(
     (): void => emit('update-device-name', state.deviceName),
@@ -106,7 +115,7 @@ const handleSubmit = (): void => {
           :is-negative="true"
           @handle-click="handleDeleteAllFiles"
         >
-          Delte all shared files
+          Delte all of my shared files
         </StyledButtonComponent>
       </div>
       <div class="mv-1 divider" />
