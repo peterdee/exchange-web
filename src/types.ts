@@ -42,6 +42,11 @@ export interface ListedFile {
   withPassword: boolean;
 }
 
+export interface UpdateDeviceName {
+  newDeviceName: string;
+  ownerId: string;
+}
+
 export interface UpdateFilePrivacy {
   fileId: string;
   isPrivate: boolean;

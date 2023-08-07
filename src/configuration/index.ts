@@ -19,8 +19,9 @@ export const EVENTS = {
   listFile: 'list-file',
   requestFileChunk: 'request-file-chunk',
   requestListedFiles: 'request-listed-files',
-  uploadFileChunk: 'upload-file-chunk',
+  updateDeviceName: 'update-device-name',
   updateFilePrivacy: 'update-file-privacy',
+  uploadFileChunk: 'upload-file-chunk',
 };
 
 export const MESSAGES = {

@@ -1,4 +1,11 @@
 :root {
   --accent: #1e7878;
   --accent-light: #53acac;
+  --negative: #aa2111;
+}
+
+.divider {
+  background-color: var(--muted-light);
+  height: calc(var(--spacer-quarter) / 4);
+  width: 100%;
 }

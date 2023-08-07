@@ -8,6 +8,8 @@ import UplaodIconComponent from './UploadIcon.vue';
 const props = defineProps<{
   isMobile: boolean;
 }>();
+
+const emit = defineEmits(['toggle-settings-modal']);
 </script>
 
 <template>
@@ -38,7 +40,7 @@ const props = defineProps<{
         :custom-styles="{ height: '32px' }"
         :global-classes="[`${props.isMobile ? 'ml-half' : 'ml-1'}`]"
         :with-icon="true"
-        @handle-click="(): void => console.log('upload')"
+        @handle-click="emit('toggle-settings-modal')"
       >
         <SettingsIconComponent />
       </StyledButtonComponent>

@@ -11,6 +11,7 @@ import type {
   ChunkRequest,
   DownloadedItem,
   ListedFile,
+  UpdateDeviceName,
   UpdateFilePrivacy,
 } from './types';
 import connection from './connection';
@@ -23,6 +24,7 @@ import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
 import isMobile from './utilities/is-mobile';
+import SettingsModalComponent from './components/SettingsModal.vue';
 
 interface AppState {
   connected: boolean;
@@ -31,7 +33,8 @@ interface AppState {
   fileOptionsFileId: string;
   isMobile: boolean;
   listedFiles: ListedFile[];
-  setShowDeviceNameModal: boolean;
+  showDeviceNameModal: boolean;
+  showSettingsModal: boolean;
 }
 
 const state = reactive<AppState>({
@@ -41,7 +44,8 @@ const state = reactive<AppState>({
   fileOptionsFileId: '',
   isMobile: false,
   listedFiles: [],
-  setShowDeviceNameModal: false,
+  showDeviceNameModal: false,
+  showSettingsModal: false,
 });
 
 const deleteFile = ({ fileId }: { fileId: string }): Socket => {
@@ -66,13 +70,6 @@ const downloadFile = (
   );
 };
 
-const handleDeviceName = (value: string): void => {
-  state.deviceName = value;
-  state.setShowDeviceNameModal = false;
-  setValue<string>('deviceName', value);
-  return setValue<boolean>('deviceNameSet', true);
-}
-
 const handleAddFile = (entry: ListedFile): Socket => {
   state.listedFiles.push(entry);
   return connection.io.emit(
@@ -88,6 +85,18 @@ const handleAddFile = (entry: ListedFile): Socket => {
     },
   );
 };
+
+const handleDeleteAllFiles = (): void => {
+  state.listedFiles = [];
+  state.showSettingsModal = false;
+};
+
+const handleDeviceName = (value: string): void => {
+  state.deviceName = value;
+  state.showDeviceNameModal = false;
+  setValue<string>('deviceName', value);
+  return setValue<boolean>('deviceNameSet', true);
+}
 
 const handleFilePrivacy = (fileId: string, value: boolean): Socket => {
   state.listedFiles = state.listedFiles.reduce(
@@ -116,9 +125,24 @@ const handleFilePrivacy = (fileId: string, value: boolean): Socket => {
   );
 };
 
+const handleUpdateDeviceName = (value: string): void => {
+  state.showSettingsModal = false;
+  connection.io.emit(
+    EVENTS.updateDeviceName,
+    { newDeviceName: value, ownerId: connection.io.id } as UpdateDeviceName,
+  );
+  return handleDeviceName(value);
+};
+
 const ioHandlerClientDisconnect = ({ id }: { id: string }): void => {
   state.listedFiles = state.listedFiles.filter(
     (entry: ListedFile): boolean => entry.ownerId !== id,
+  );
+};
+
+const ioHandlerDeleteAllFiles = ({ ownerId = '' }: { ownerId: string }): void => {
+  state.listedFiles = state.listedFiles.filter(
+    (item: ListedFile): boolean => item.ownerId !== ownerId,
   );
 };
 
@@ -211,6 +235,15 @@ const ioHandlerRequestListedFiles = (data: ListedFile[]): void => {
       });
     });
   }
+};
+
+const ioHandlerUpdateDeviceName = (data: UpdateDeviceName): void => {
+  const { newDeviceName = '', ownerId = '' } = data;
+  state.listedFiles.forEach((item: ListedFile): void => {
+    if (item.ownerId === ownerId) {
+      item.deviceName = newDeviceName;
+    }
+  });
 };
 
 const ioHandlerUpdateFilePrivacy = (data: UpdateFilePrivacy): void => {
@@ -312,16 +345,22 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
   }
 };
 
+const toggleSettingsModal = (): void => {
+  state.showSettingsModal = !state.showSettingsModal;
+}
+
 onBeforeUnmount((): void => {
   if (state.connected) {
     const { io } = connection;
     io.off(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
+    io.off(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
     io.off(EVENTS.deleteFile, ioHandlerDeleteFile);
     io.off(EVENTS.downloadFile, ioHandlerDownloadFile);
     io.off(EVENTS.downloadFileError, ioHandlerDownloadFileError);
     io.off(EVENTS.listFile, ioHandlerListFile);
     io.off(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
     io.off(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
+    io.off(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
     io.off(EVENTS.updateFilePrivacy, ioHandlerUpdateFilePrivacy);
     io.off(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
     io.emit(EVENTS.close);
@@ -344,7 +383,7 @@ onMounted((): void => {
   const deviceNameSet = getValue<boolean>('deviceNameSet');
   if (!deviceName || !deviceNameSet) {
     state.deviceName = `${Math.random() * Date.now()}`.split('.').join('');
-    state.setShowDeviceNameModal = true;
+    state.showDeviceNameModal = true;
     setValue('deviceName', state.deviceName);
   } else {
     state.deviceName = deviceName;
@@ -357,12 +396,14 @@ onMounted((): void => {
     (): void => {
       io.emit(EVENTS.requestListedFiles);
       io.on(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
+      io.on(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
       io.on(EVENTS.deleteFile, ioHandlerDeleteFile);
       io.on(EVENTS.downloadFile, ioHandlerDownloadFile);
       io.on(EVENTS.downloadFileError, ioHandlerDownloadFileError);
       io.on(EVENTS.listFile, ioHandlerListFile);
       io.on(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
       io.on(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
+      io.on(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
       io.on(EVENTS.updateFilePrivacy, ioHandlerUpdateFilePrivacy);
       io.on(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
       state.connected = true;
@@ -377,7 +418,7 @@ onMounted((): void => {
       Connecting...
     </template>
     <DeviceNameModalComponent
-      v-if="state.setShowDeviceNameModal"
+      v-if="state.showDeviceNameModal"
       @handle-device-name="handleDeviceName"
     />
     <FileOptionsModalComponent
@@ -391,8 +432,20 @@ onMounted((): void => {
       v-if="state.connected"
       class="f d-col w-100"
     >
+      <SettingsModalComponent
+        v-if="state.showSettingsModal"
+        :device-name="state.deviceName"
+        :is-mobile="state.isMobile"
+        :shared-files="state.listedFiles.filter(
+          (item: ListedFile): boolean => item.ownerId === connection.io.id,
+        ).length"
+        @close-modal="toggleSettingsModal"
+        @delete-all-files="handleDeleteAllFiles"
+        @update-device-name="handleUpdateDeviceName"
+      />
       <HeaderComponent
         :is-mobile="state.isMobile"
+        @toggle-settings-modal="toggleSettingsModal"
       />
       <FileListComponent
         :device-name="state.deviceName"
