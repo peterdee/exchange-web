@@ -105,7 +105,7 @@ const handleSubmit = (): void => {
         <StyledButtonComponent
           type="submit"
           :disabled="!props.listedFile.withPassword || state.newPassword.length === 0"
-          :globalClasses="['mt-1']"
+          :globalClasses="['mt-half']"
         >
           Set password
         </StyledButtonComponent>

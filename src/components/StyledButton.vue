@@ -74,6 +74,10 @@ const additionalClasses = props.globalClasses.length > 0
   opacity: 1;
   transition: opacity var(--transition) ease-in;
 }
+.icon-button:disabled {
+  opacity: .6;
+  transition: opacity var(--transition) ease-in;
+}
 .negative {
   background-color: var(--error);
 }
