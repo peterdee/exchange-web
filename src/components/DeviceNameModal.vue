@@ -100,8 +100,4 @@ const handleSubmit = (): void => {
 .content-web {
   width: calc(var(--spacer) * 30);
 }
-.input-title {
-  font-size: calc(var(--spacer) * 1.25);
-  font-weight: 300;
-}
 </style>

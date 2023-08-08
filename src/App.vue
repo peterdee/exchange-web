@@ -19,7 +19,7 @@ import { decodeBase64ToBlob } from './utilities/base64';
 import DeviceNameModalComponent from './components/DeviceNameModal.vue';
 import { EVENTS, MESSAGES } from './configuration';
 import FileListComponent from './components/FileList.vue';
-import FileOptionsModalComponent from './components/FileOptionsModal.vue';
+import FileDetailsModalComponent from './components/FileDetailsModal.vue';
 import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
@@ -30,7 +30,7 @@ interface AppState {
   connected: boolean;
   deviceName: string;
   downloads: DownloadedItem[];
-  fileOptionsFileId: string;
+  fileDetailsFileId: string;
   isMobile: boolean;
   listedFiles: ListedFile[];
   showDeviceNameModal: boolean;
@@ -41,7 +41,7 @@ const state = reactive<AppState>({
   connected: false,
   deviceName: '',
   downloads: [],
-  fileOptionsFileId: '',
+  fileDetailsFileId: '',
   isMobile: false,
   listedFiles: [],
   showDeviceNameModal: false,
@@ -84,6 +84,10 @@ const handleDeviceName = (value: string): void => {
   state.showDeviceNameModal = false;
   setValue<string>('deviceName', value);
   return setValue<boolean>('deviceNameSet', true);
+}
+
+const handleFileDetails = (fileId: string): void => {
+  state.fileDetailsFileId = fileId;
 }
 
 const handleFilePrivacy = (fileId: string, value: boolean): Socket => {
@@ -321,6 +325,10 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
   }
 };
 
+const closeFileDetailsModal = (): void => {
+  state.fileDetailsFileId = '';
+}
+
 const toggleSettingsModal = (): void => {
   state.showSettingsModal = !state.showSettingsModal;
 }
@@ -399,11 +407,13 @@ onMounted((): void => {
       :is-mobile="state.isMobile"
       @handle-device-name="handleDeviceName"
     />
-    <FileOptionsModalComponent
-      v-if="!!state.fileOptionsFileId"
+    <FileDetailsModalComponent
+      v-if="!!state.fileDetailsFileId"
+      :is-mobile="state.isMobile"
       :listed-file="state.listedFiles.filter(
-        (item: ListedFile): boolean => item.id === state.fileOptionsFileId,
+        (item: ListedFile): boolean => item.id === state.fileDetailsFileId,
       )[0]"
+      @close-modal="closeFileDetailsModal"
       @handle-file-privacy="handleFilePrivacy"
     />
     <div
@@ -437,6 +447,7 @@ onMounted((): void => {
         @handle-add-file="handleAddFile"
         @handle-delete-file="deleteFile"
         @handle-download-file="downloadFile"
+        @handle-file-options="handleFileDetails"
       />
       <FooterComponent
         :backend-status="state.connected

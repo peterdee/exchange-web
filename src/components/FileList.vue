@@ -21,6 +21,7 @@ const emit = defineEmits([
   'handle-add-file',
   'handle-delete-file',
   'handle-download-file',
+  'handle-file-options',
 ]);
 
 const props = defineProps<{
@@ -119,6 +120,7 @@ const handleDrag = (): void => {
           :disabled="state.deleteFileId === file.id"
           :global-classes="['mh-1']"
           :with-icon="true"
+          @handle-click="(): void => emit('handle-file-options', file.id)"
         >
           <MenuDotsIconComponent :color="COLORS.muted" />
         </StyledButtonComponent>

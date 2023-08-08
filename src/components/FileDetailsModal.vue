@@ -1,38 +1,33 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import connection from '../connection';
 import DeleteIconComponent from './DeleteIcon.vue';
-import SettingsIconComponent from './SettingsIcon.vue';
-import { EVENTS, SPACER } from '../configuration';
+import FileIconComponent from './FileIcon.vue';
+import type { ListedFile } from '../types';
+import { SPACER } from '../configuration';
 import StyledButtonComponent from './StyledButton.vue';
 import StyledInputComponent from './StyledInput.vue';
+import StyledSwitchComponent from './StyledSwitch.vue';
 
 interface ComponentState {
-  deviceName: string;
   isClosing: boolean;
+  newPassword: string;
 }
 
 const emit = defineEmits([
   'close-modal',
-  'delete-all-files',
-  'update-device-name',
+  'handle-file-privacy',
 ]);
 
 const props = defineProps<{
-  deviceName: string;
   isMobile: boolean;
-  sharedFiles: number;
+  listedFile: ListedFile;
 }>();
 
 const state = reactive<ComponentState>({
-  deviceName: props.deviceName,
   isClosing: false,
+  newPassword: '',
 });
-
-const handleInput = ({ value }: { value: string }): void => {
-  state.deviceName = value;
-};
 
 const handleCloseModal = (): void => {
   state.isClosing = true;
@@ -42,30 +37,14 @@ const handleCloseModal = (): void => {
   );
 };
 
-const handleDeleteAllFiles = (): void => {
-  if (connection.io.connected) {
-    connection.io.emit(EVENTS.deleteAllFiles);
-  }
-  state.isClosing = true;
-  setTimeout(
-    (): void => emit('delete-all-files'),
-    240,
-  );
+const handleInput = ({ value }: { value: string }): void => {
+  state.newPassword = value;
 };
 
 const handleSubmit = (): void => {
-  if (connection.io.connected) {
-    connection.io.emit(
-      EVENTS.updateDeviceName,
-      {
-        newDeviceName: state.deviceName,
-        ownerId: connection.io.id,
-      },
-    );
-  }
   state.isClosing = true;
   setTimeout(
-    (): void => emit('update-device-name', state.deviceName),
+    (): void => emit('handle-file-privacy', { fileId: props.listedFile.id, }),
     240,
   );
 };
@@ -86,9 +65,9 @@ const handleSubmit = (): void => {
     >
       <div class="f ai-center j-space-between ns">
         <div class="f ai-center">
-          <SettingsIconComponent :size="SPACER * 2" />
+          <FileIconComponent :size="SPACER * 2" />
           <span class="mh-1 modal-title">
-            Settings
+            Details
           </span>
         </div>
         <StyledButtonComponent
@@ -103,44 +82,32 @@ const handleSubmit = (): void => {
           />
         </StyledButtonComponent>
       </div>
-      <div class="f d-col mt-half ns">
-        <span class="input-title">
-          Device name: {{ props.deviceName }}
-        </span>
-        <span class="mt-half input-title">
-          Shared files: {{ props.sharedFiles }}
-        </span>
-        <StyledButtonComponent
-          type="button"
-          :disabled="props.sharedFiles === 0 || !connection.io.connected"
-          :global-classes="['mt-half']"
-          :is-negative="true"
-          @handle-click="handleDeleteAllFiles"
-        >
-          Delte all of my shared files
-        </StyledButtonComponent>
-      </div>
-      <div class="mv-1 divider" />
-      <div class="ns input-title">
-        Update device name
-      </div>
+      <div class="divider mv-1" />
+      <StyledSwitchComponent
+        label="Protect file with password"
+        name="password"
+        :disabled="false"
+        :is-checked="props.listedFile.withPassword"
+        @toggle-switch="(): void => { props.listedFile.withPassword = !props.listedFile.withPassword }"
+      />
       <form
         class="f d-col mt-half"
         @submit.prevent="handleSubmit"
       >
         <StyledInputComponent
-          name="deviceName"
-          placeholder="Device name"
-          type="text"
-          :value="state.deviceName"
+          name="filePassword"
+          placeholder="File password"
+          type="password"
+          :disabled="!props.listedFile.withPassword"
+          :value="state.newPassword"
           @handle-input="handleInput"
         />
         <StyledButtonComponent
           type="submit"
-          :disabled="state.deviceName.length === 0"
-          :globalClasses="['mt-half']"
+          :disabled="!props.listedFile.withPassword || state.newPassword.length === 0"
+          :globalClasses="['mt-1']"
         >
-          Update
+          Set password
         </StyledButtonComponent>
       </form>
     </div>
@@ -160,8 +127,7 @@ const handleSubmit = (): void => {
 .content {
   background-color: rgba(255, 255, 255, 1);
   border-radius: var(--spacer-half);
-  min-height: calc(var(--spacer) * 17);
-  z-index: 11;
+  min-height: var(--spacer);
 }
 .content-mobile {
   max-width: calc(var(--spacer) * 30);
