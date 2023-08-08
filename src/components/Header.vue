@@ -1,18 +1,24 @@
 <script setup lang="ts">
-import { COLORS, SPACER } from '../configuration';
+import { COLORS, EVENTS, SPACER } from '../configuration';
+import connection from '../connection';
+import type { ListedFile } from '../types';
 import LogoIconComponent from './LogoIcon.vue';
+import prepareSharedFiles from '../utilities/prepare-shared-files';
 import SettingsIconComponent from './SettingsIcon.vue';
 import StyledButtonComponent from './StyledButton.vue';
 import UplaodIconComponent from './UploadIcon.vue';
 
-const props = defineProps<{
-  isMobile: boolean;
-}>();
-
 const emit = defineEmits([
-  'handle-files',
+  'handle-add-file',
   'toggle-settings-modal',
 ]);
+
+const props = defineProps<{
+  deviceName: string;
+  isMobile: boolean;
+  listedFiles: ListedFile[];
+  ownerId: string;
+}>();
 
 const handleUploadButton = (): void => {
   const element = window.document.createElement('input');
@@ -20,14 +26,36 @@ const handleUploadButton = (): void => {
   element.type = 'file';
   document.body.appendChild(element);
   element.click();
-  element.onchange = (event: Event): void => {
-    document.body.removeChild(element);
+  element.onchange = async (event: Event): Promise<void> => {
     const target = event.target as HTMLInputElement;
-    const { files } = target;
+    const { files: fileList } = target;
+    const files = [...fileList || []];
     if (files && Array.isArray(files) && files.length > 0) {
-      // TODO: handle file processing here
-      emit('handle-files', files);
+      const preparedFiles = await prepareSharedFiles(
+        files,
+        props.listedFiles,
+        props.deviceName,
+        props.ownerId,
+      );
+      preparedFiles.forEach((entry: ListedFile): void => {
+        if (connection.io.connected) {
+          connection.io.emit(
+            EVENTS.listFile,
+            {
+              createdAt: entry.createdAt,
+              deviceName: entry.deviceName,
+              id: entry.id,
+              name: entry.name,
+              ownerId: entry.ownerId,
+              private: entry.private,
+              size: entry.size,
+            },
+          );
+        }
+        emit('handle-add-file', entry);
+      });
     }
+    document.body.removeChild(element);
   };
 };
 </script>

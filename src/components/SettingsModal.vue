@@ -76,16 +76,18 @@ const handleSubmit = (): void => {
     :class="`f d-col j-center background ${state.isClosing
       ? 'fade-out'
       : 'fade-in'}`"
+    @mousedown="handleCloseModal"
   >
     <div
       :class="`f d-col mh-auto p-1 content ${props.isMobile
         ? 'content-mobile'
         : 'content-web'}`"
+      @mousedown.stop
     >
       <div class="f ai-center j-space-between ns">
         <div class="f ai-center">
           <SettingsIconComponent :size="SPACER * 2" />
-          <span class="mh-1 title">
+          <span class="mh-1 modal-title">
             Settings
           </span>
         </div>
@@ -159,8 +161,10 @@ const handleSubmit = (): void => {
   background-color: rgba(255, 255, 255, 1);
   border-radius: var(--spacer-half);
   min-height: calc(var(--spacer) * 17);
+  z-index: 11;
 }
 .content-mobile {
+  max-width: calc(var(--spacer) * 30);
   width: calc(100% - var(--spacer));
 }
 .content-web {
@@ -168,11 +172,6 @@ const handleSubmit = (): void => {
 }
 .input-title {
   font-size: calc(var(--spacer) * 1.25);
-  font-weight: 300;
-}
-.title {
-  color: var(--accent);
-  font-size: calc(var(--spacer) * 2);
   font-weight: 300;
 }
 </style>

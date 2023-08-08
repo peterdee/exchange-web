@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
+import LogoIconComponent from './LogoIcon.vue';
+import { SPACER } from '../configuration';
 import StyledButtonComponent from './StyledButton.vue';
 import StyledInputComponent from './StyledInput.vue';
 
@@ -10,6 +12,8 @@ interface ComponentState {
 }
 
 const emit = defineEmits(['handle-device-name']);
+
+const props = defineProps<{ isMobile: boolean }>();
 
 const state = reactive<ComponentState>({
   deviceName: '',
@@ -35,15 +39,22 @@ const handleSubmit = (): void => {
       ? 'fade-out'
       : 'fade-in'}`"
   >
-    <div class="f d-col mh-auto j-space-around p-1 content">
-      <div class="ns t-center title">
-        EXCHANGE
+    <div
+      :class="`f d-col mh-auto p-1 content ${props.isMobile
+        ? 'content-mobile'
+        : 'content-web'}`"
+    >
+      <div class="f ai-center">
+        <LogoIconComponent :size="SPACER * 2.25" />
+        <span class="mh-1 modal-title">
+          EXCHANGE
+        </span>
       </div>
-      <div class="t-center ns subtitle">
+      <div class="ns input-title">
         Please set your device name to continue
       </div>
       <form
-        class="f d-col"
+        class="f d-col mt-half"
         @submit.prevent="handleSubmit"
       >
         <StyledInputComponent
@@ -56,7 +67,7 @@ const handleSubmit = (): void => {
         <StyledButtonComponent
           type="submit"
           :disabled="state.deviceName.length === 0"
-          :globalClasses="['mt-1']"
+          :globalClasses="['mt-half']"
         >
           Continue
         </StyledButtonComponent>
@@ -79,16 +90,18 @@ const handleSubmit = (): void => {
 .content {
   background-color: rgba(255, 255, 255, 1);
   border-radius: var(--spacer-half);
-  height: calc(var(--spacer) * 17);
+  min-height: var(--spacer);
+  z-index: 11;
+}
+.content-mobile {
+  max-width: calc(var(--spacer) * 30);
+  width: calc(100% - var(--spacer));
+}
+.content-web {
   width: calc(var(--spacer) * 30);
 }
-.subtitle {
-  font-size: calc(var(--spacer) * 1.5);
+.input-title {
+  font-size: calc(var(--spacer) * 1.25);
   font-weight: 300;
-}
-.title {
-  color: var(--accent);
-  font-size: calc(var(--spacer) * 2.5);
-  font-weight: 200;
 }
 </style>

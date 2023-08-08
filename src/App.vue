@@ -388,11 +388,15 @@ onMounted((): void => {
 
 <template>
   <div class="f j-center h-100vh">
-    <template v-if="!state.connected">
+    <div
+      v-if="!state.connected"
+      class="f ai-center"
+    >
       Connecting...
-    </template>
+    </div>
     <DeviceNameModalComponent
       v-if="state.showDeviceNameModal"
+      :is-mobile="state.isMobile"
       @handle-device-name="handleDeviceName"
     />
     <FileOptionsModalComponent
@@ -418,7 +422,11 @@ onMounted((): void => {
         @update-device-name="handleUpdateDeviceName"
       />
       <HeaderComponent
+        :device-name="state.deviceName"
         :is-mobile="state.isMobile"
+        :listed-files="state.listedFiles"
+        :owner-id="connection.io.id"
+        @handle-add-file="handleAddFile"
         @toggle-settings-modal="toggleSettingsModal"
       />
       <FileListComponent

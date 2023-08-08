@@ -9,3 +9,9 @@
   height: calc(var(--spacer-quarter) / 4);
   width: 100%;
 }
+
+.modal-title {
+  color: var(--accent);
+  font-size: calc(var(--spacer) * 2);
+  font-weight: 300;
+}
