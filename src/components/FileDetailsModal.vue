@@ -100,6 +100,11 @@ const handleSubmit = (): void => {
         </StyledButtonComponent>
       </div>
       <div class="mt-half ns input-title">
+        Added: {{ `${formatDate(props.listedFile.createdAt)}${!props.listedFile.isOwner
+          ? ' (owner time)'
+          : ''}` }}
+      </div>
+      <div class="mt-half ns input-title">
         File name: {{ props.listedFile.name }}
       </div>
       <div class="mt-half ns input-title">
@@ -107,10 +112,7 @@ const handleSubmit = (): void => {
       </div>
       <template v-if="!props.listedFile.isOwner">
         <div class="mt-half ns input-title">
-          Shared on: {{ formatDate(props.listedFile.createdAt) }} (owner time)
-        </div>
-        <div class="mt-half ns input-title">
-          Shared by: {{ props.listedFile.deviceName }}
+          Owner: {{ props.listedFile.deviceName }}
         </div>
       </template>
       <div class="divider mv-1" />

@@ -44,6 +44,8 @@ const props = defineProps<{
 }
 .switch-label {
   cursor: pointer;
+  font-size: calc(var(--spacer) * 1.25);
+  font-weight: 300;
 }
 .slider {
   background-color: var(--muted-light);

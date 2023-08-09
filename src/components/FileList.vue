@@ -126,7 +126,7 @@ const handleDrag = (): void => {
         </StyledButtonComponent>
         <StyledButtonComponent
           v-if="file.isOwner"
-          title="Delete"
+          title="Delete file"
           :custom-styles="{ height: '32px' }"
           :disabled="state.deleteFileId === file.id"
           :with-icon="true"
