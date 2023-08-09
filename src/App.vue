@@ -414,6 +414,7 @@ onMounted((): void => {
         (item: ListedFile): boolean => item.id === state.fileDetailsFileId,
       )[0]"
       @close-modal="closeFileDetailsModal"
+      @download-file="downloadFile"
       @handle-file-privacy="handleFilePrivacy"
     />
     <div

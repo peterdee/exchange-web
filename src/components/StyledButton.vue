@@ -22,6 +22,11 @@ const props = defineProps({
     required: false,
     type: Boolean,
   },
+  isPositive: {
+    default: false,
+    required: false,
+    type: Boolean,
+  },
   title: {
     default: '',
     required: false,
@@ -48,6 +53,8 @@ const additionalClasses = props.globalClasses.length > 0
   <button
     :class="`button ns styled-button ${props.isNegative && !props.disabled
       ? 'negative'
+      : ''} ${props.isPositive && !props.disabled
+      ? 'positive'
       : ''} ${props.withIcon
       ? 'icon-button'
       : ''} ${additionalClasses}`"
@@ -83,6 +90,12 @@ const additionalClasses = props.globalClasses.length > 0
 }
 .negative:hover {
   background-color: var(--error-light);
+}
+.positive {
+  background-color: var(--success);
+}
+.positive:hover {
+  background-color: var(--success-light);
 }
 .styled-button {
   font-size: var(--spacer);

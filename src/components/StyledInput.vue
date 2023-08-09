@@ -2,8 +2,8 @@
 import { reactive } from 'vue';
 
 import { COLORS, SPACER } from '../configuration';
-import PasswordIconComponent from './PasswordIcon.vue';
-import PasswordShownIconComponent from './PasswordShownIcon.vue';
+import EyeClosedIconComponent from './EyeClosedIcon.vue';
+import EyeOpenedIconComponent from './EyeOpenedIcon.vue';
 import StyledButtonComponent from './StyledButton.vue';
 
 const emit = defineEmits(['handle-input']);
@@ -71,7 +71,7 @@ const togglePasswordVisibility = (): void => {
 <template>
   <div class="f ai-center">
     <input
-      :class="`input styled-input ${additionalClasses} ${props.type === 'password'
+      :class="`input w-100 styled-input ${additionalClasses} ${props.type === 'password'
         ? 'with-password'
         : ''}`"
       :disabled="props.disabled"
@@ -91,13 +91,13 @@ const togglePasswordVisibility = (): void => {
       :with-icon="true"
       @handle-click="togglePasswordVisibility"
     >
-      <PasswordIconComponent
+      <EyeClosedIconComponent
         v-if="!state.showPassword"
         :color="props.disabled
           ? COLORS.muted
           : COLORS.accent"
       />
-      <PasswordShownIconComponent
+      <EyeOpenedIconComponent
         v-if="state.showPassword"
         :color="props.disabled
           ? COLORS.muted

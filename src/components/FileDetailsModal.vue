@@ -3,6 +3,8 @@ import { reactive } from 'vue';
 
 import DeleteIconComponent from './DeleteIcon.vue';
 import FileIconComponent from './FileIcon.vue';
+import formatDate from '../utilities/format-date';
+import formatFileSize from '../utilities/format-file-size';
 import type { ListedFile } from '../types';
 import { SPACER } from '../configuration';
 import StyledButtonComponent from './StyledButton.vue';
@@ -16,6 +18,7 @@ interface ComponentState {
 
 const emit = defineEmits([
   'close-modal',
+  'download-file',
   'handle-file-privacy',
 ]);
 
@@ -33,6 +36,20 @@ const handleCloseModal = (): void => {
   state.isClosing = true;
   setTimeout(
     (): void => emit('close-modal'),
+    240,
+  );
+};
+
+const handleDownload = (): void => {
+  state.isClosing = true;
+  setTimeout(
+    (): void => emit(
+      'download-file',
+      {
+        fileId: props.listedFile.id,
+        ownerId: props.listedFile.ownerId,
+      },
+    ),
     240,
   );
 };
@@ -82,34 +99,66 @@ const handleSubmit = (): void => {
           />
         </StyledButtonComponent>
       </div>
+      <div class="mt-half ns input-title">
+        File name: {{ props.listedFile.name }}
+      </div>
+      <div class="mt-half ns input-title">
+        File size: {{ formatFileSize(props.listedFile.size) }}
+      </div>
+      <template v-if="!props.listedFile.isOwner">
+        <div class="mt-half ns input-title">
+          Shared on: {{ formatDate(props.listedFile.createdAt) }} (owner time)
+        </div>
+        <div class="mt-half ns input-title">
+          Shared by: {{ props.listedFile.deviceName }}
+        </div>
+      </template>
       <div class="divider mv-1" />
-      <StyledSwitchComponent
-        label="Protect file with password"
-        name="password"
-        :disabled="false"
-        :is-checked="props.listedFile.withPassword"
-        @toggle-switch="(): void => { props.listedFile.withPassword = !props.listedFile.withPassword }"
-      />
-      <form
-        class="f d-col mt-half"
-        @submit.prevent="handleSubmit"
-      >
-        <StyledInputComponent
-          name="filePassword"
-          placeholder="File password"
-          type="password"
-          :disabled="!props.listedFile.withPassword"
-          :value="state.newPassword"
-          @handle-input="handleInput"
-        />
+      <template v-if="!props.listedFile.isOwner">
+        <div class="ns input-title">
+          {{
+            props.listedFile.withPassword
+              ? 'This file is protected by password'
+              : 'This file is not protected by password'
+          }}
+        </div>
         <StyledButtonComponent
-          type="submit"
-          :disabled="!props.listedFile.withPassword || state.newPassword.length === 0"
           :globalClasses="['mt-half']"
+          :is-positive="true"
+          @handle-click="handleDownload"
         >
-          Set password
+          Download file
         </StyledButtonComponent>
-      </form>
+      </template>
+      <template v-if="props.listedFile.isOwner">
+        <StyledSwitchComponent
+          label="Protect file with password"
+          name="password"
+          :disabled="false"
+          :is-checked="props.listedFile.withPassword"
+          @toggle-switch="(): void => { props.listedFile.withPassword = !props.listedFile.withPassword }"
+        />
+        <form
+          class="f d-col mt-half"
+          @submit.prevent="handleSubmit"
+        >
+          <StyledInputComponent
+            name="filePassword"
+            placeholder="File password"
+            type="password"
+            :disabled="!props.listedFile.withPassword"
+            :value="state.newPassword"
+            @handle-input="handleInput"
+          />
+          <StyledButtonComponent
+            type="submit"
+            :disabled="!props.listedFile.withPassword || state.newPassword.length === 0"
+            :globalClasses="['mt-half']"
+          >
+            Set password
+          </StyledButtonComponent>
+        </form>
+      </template>
     </div>
   </div>
 </template>
