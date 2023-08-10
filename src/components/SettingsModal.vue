@@ -53,8 +53,9 @@ const handleDeleteAllFiles = (): void => {
   );
 };
 
-const handleSubmit = (): void => {
-  if (connection.io.connected) {
+const handleSubmit = (): null | void => {
+  if (connection.io.connected
+    && state.deviceName !== props.deviceName) {
     connection.io.emit(
       EVENTS.updateDeviceName,
       {
@@ -73,15 +74,15 @@ const handleSubmit = (): void => {
 
 <template>
   <div
-    :class="`f d-col j-center background ${state.isClosing
+    :class="`f d-col j-center modal-background ${state.isClosing
       ? 'fade-out'
       : 'fade-in'}`"
     @mousedown="handleCloseModal"
   >
     <div
-      :class="`f d-col mh-auto p-1 content ${props.isMobile
-        ? 'content-mobile'
-        : 'content-web'}`"
+      :class="`f d-col mh-auto p-1 modal-content ${props.isMobile
+        ? 'modal-content-mobile'
+        : 'modal-content-web'}`"
       @mousedown.stop
     >
       <div class="f ai-center j-space-between ns">
@@ -146,28 +147,3 @@ const handleSubmit = (): void => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.background {
-  background-color: rgba(0, 0, 0, .6);
-  height: 100%;
-  left: 0;
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 10;
-}
-.content {
-  background-color: rgba(255, 255, 255, 1);
-  border-radius: var(--spacer-half);
-  min-height: calc(var(--spacer) * 17);
-  z-index: 11;
-}
-.content-mobile {
-  max-width: calc(var(--spacer) * 30);
-  width: calc(100% - var(--spacer));
-}
-.content-web {
-  width: calc(var(--spacer) * 30);
-}
-</style>

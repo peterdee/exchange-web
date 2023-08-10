@@ -24,6 +24,7 @@ import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
 import isMobile from './utilities/is-mobile';
+import PasswordModalComponent from './components/PasswordModal.vue';
 import SettingsModalComponent from './components/SettingsModal.vue';
 
 interface AppState {
@@ -33,6 +34,7 @@ interface AppState {
   fileDetailsFileId: string;
   isMobile: boolean;
   listedFiles: ListedFile[];
+  passwordModalFileId: string;
   showDeviceNameModal: boolean;
   showSettingsModal: boolean;
 }
@@ -44,6 +46,7 @@ const state = reactive<AppState>({
   fileDetailsFileId: '',
   isMobile: false,
   listedFiles: [],
+  passwordModalFileId: '',
   showDeviceNameModal: false,
   showSettingsModal: false,
 });
@@ -90,31 +93,35 @@ const handleFileDetails = (fileId: string): void => {
   state.fileDetailsFileId = fileId;
 }
 
-const handleFilePrivacy = (fileId: string, value: boolean): Socket => {
-  state.listedFiles = state.listedFiles.reduce(
-    (array: ListedFile[], item: ListedFile): ListedFile[] => {
-      if (item.id === fileId) {
-        const updatedItem: ListedFile = {
-          ...item,
-          private: value,
-        };
-        array.push(updatedItem);
-      } else {
-        array.push(item);
-      }
-      return array;
-    },
-    [],
-  );
-  // TODO: use acknowledgements, move this handler into the modal
-  return connection.io.emit(
-    EVENTS.updateFilePrivacy,
-    {
-      fileId,
-      isPrivate: value,
-      ownerId: connection.io.id,
-    },
-  );
+// const handleFilePrivacy = (fileId: string, value: boolean): Socket => {
+//   state.listedFiles = state.listedFiles.reduce(
+//     (array: ListedFile[], item: ListedFile): ListedFile[] => {
+//       if (item.id === fileId) {
+//         const updatedItem: ListedFile = {
+//           ...item,
+//           private: value,
+//         };
+//         array.push(updatedItem);
+//       } else {
+//         array.push(item);
+//       }
+//       return array;
+//     },
+//     [],
+//   );
+//   // TODO: use acknowledgements, move this handler into the modal
+//   return connection.io.emit(
+//     EVENTS.updateFilePrivacy,
+//     {
+//       fileId,
+//       isPrivate: value,
+//       ownerId: connection.io.id,
+//     },
+//   );
+// };
+
+const handleShowPasswordModal = (fileId: string): void => {
+  state.passwordModalFileId = fileId;
 };
 
 const handleUpdateDeviceName = (value: string): void => {
@@ -415,7 +422,15 @@ onMounted((): void => {
       )[0]"
       @close-modal="closeFileDetailsModal"
       @download-file="downloadFile"
-      @handle-file-privacy="handleFilePrivacy"
+      @toggle-password-modal="handleShowPasswordModal"
+    />
+    <PasswordModalComponent
+      v-if="!!state.passwordModalFileId"
+      :is-mobile="state.isMobile"
+      :listed-file="state.listedFiles.filter(
+        (item: ListedFile): boolean => item.id === state.passwordModalFileId,
+      )[0]"
+      @close-modal="closeFileDetailsModal"
     />
     <div
       v-if="state.connected"

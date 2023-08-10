@@ -12,12 +12,12 @@ const props = defineProps<{
 <template>
   <div class="f ai-center j-space-between ns">
     <label
-      class="switch-label"
+      :class="`switch-label${!props.disabled ? ' pointer' : ''}`"
       :for="`switch-${name}`"
     >
       {{ props.label }}
     </label>
-    <label class="switch">
+    <label :class="`switch ${!props.disabled ? ' pointer' : ''}`">
       <input
         type="checkbox"
         :checked="props.isChecked"
@@ -25,12 +25,15 @@ const props = defineProps<{
         :id="`switch-${name}`"
         @input="emit('toggle-switch')"
       >
-      <span class="slider round"></span>
+      <span :class="`slider round${!props.disabled ? ' pointer' : ''}`"></span>
     </label>
   </div>
 </template>
 
 <style scoped>
+.pointer {
+  cursor: pointer;
+}
 .switch {
   display: inline-block;
   height: calc(var(--spacer) + var(--spacer-half));
@@ -43,14 +46,12 @@ const props = defineProps<{
   width: 0;
 }
 .switch-label {
-  cursor: pointer;
   font-size: calc(var(--spacer) * 1.25);
   font-weight: 300;
 }
 .slider {
   background-color: var(--muted-light);
   bottom: 0;
-  cursor: pointer;
   left: 0;
   position: absolute;
   right: 0;

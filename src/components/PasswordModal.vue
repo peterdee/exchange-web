@@ -2,6 +2,7 @@
 import { reactive } from 'vue';
 
 import DeleteIconComponent from './DeleteIcon.vue';
+import type { ListedFile } from '../types';
 import LockIconComponent from './LockIcon.vue';
 import { SPACER } from '../configuration';
 import StyledButtonComponent from './StyledButton.vue';
@@ -10,6 +11,7 @@ import StyledInputComponent from './StyledInput.vue';
 interface ComponentState {
   isClosing: boolean;
   newPassword: string;
+  oldPassword: string;
 }
 
 const emit = defineEmits([
@@ -19,11 +21,13 @@ const emit = defineEmits([
 
 const props = defineProps<{
   isMobile: boolean;
+  listedFile: ListedFile;
 }>();
 
 const state = reactive<ComponentState>({
   isClosing: false,
   newPassword: '',
+  oldPassword: '',
 });
 
 const handleCloseModal = (): void => {
@@ -49,22 +53,22 @@ const handleSubmit = (): void => {
 
 <template>
   <div
-    :class="`f d-col j-center background ${state.isClosing
+    :class="`f d-col j-center modal-background ${state.isClosing
       ? 'fade-out'
       : 'fade-in'}`"
     @mousedown="handleCloseModal"
   >
     <div
-      :class="`f d-col mh-auto p-1 content ${props.isMobile
-        ? 'content-mobile'
-        : 'content-web'}`"
+      :class="`f d-col mh-auto p-1 modal-content ${props.isMobile
+        ? 'modal-content-mobile'
+        : 'modal-content-web'}`"
       @mousedown.stop
     >
       <div class="f ai-center j-space-between ns">
         <div class="f ai-center">
           <LockIconComponent :size="SPACER * 2" />
           <span class="mh-1 modal-title">
-            Details
+            Password
           </span>
         </div>
         <StyledButtonComponent
@@ -79,7 +83,13 @@ const handleSubmit = (): void => {
           />
         </StyledButtonComponent>
       </div>
-      <div class="divider mv-1" />
+      <div class="ns mt-half input-title">
+        {{
+          `${props.listedFile.withPassword
+            ? 'Update'
+            : 'Add'} password for file ${props.listedFile.name}`
+        }}
+      </div>
       <form
         class="f d-col mt-half"
         @submit.prevent="handleSubmit"
@@ -102,27 +112,3 @@ const handleSubmit = (): void => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.background {
-  background-color: rgba(0, 0, 0, .6);
-  height: 100%;
-  left: 0;
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 10;
-}
-.content {
-  background-color: rgba(255, 255, 255, 1);
-  border-radius: var(--spacer-half);
-  min-height: var(--spacer);
-}
-.content-mobile {
-  max-width: calc(var(--spacer) * 30);
-  width: calc(100% - var(--spacer));
-}
-.content-web {
-  width: calc(var(--spacer) * 30);
-}
-</style>

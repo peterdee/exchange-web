@@ -52,6 +52,12 @@ const additionalClasses = props.globalClasses.length > 0
   ? props.globalClasses.join(' ')
   : '';
 
+const inputType = props.type !== 'password'
+  ? props.type
+  : state.showPassword && props.type === 'password'
+    ? 'text'
+    : props.type;
+
 const handleInput = (event: Event): void => {
   const { name = '', value = '' } = event.target as HTMLInputElement;
   return emit(
@@ -78,7 +84,7 @@ const togglePasswordVisibility = (): void => {
       :name="props.name"
       :placeholder="props.placeholder"
       :style="{ ...customStyles }"
-      :type="props.type"
+      :type="inputType"
       :value="props.value"
       @input="handleInput"
     />

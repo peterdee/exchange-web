@@ -8,18 +8,17 @@ import formatFileSize from '../utilities/format-file-size';
 import type { ListedFile } from '../types';
 import { SPACER } from '../configuration';
 import StyledButtonComponent from './StyledButton.vue';
-import StyledInputComponent from './StyledInput.vue';
-import StyledSwitchComponent from './StyledSwitch.vue';
 
 interface ComponentState {
   isClosing: boolean;
   newPassword: string;
+  showPasswordModal: boolean;
 }
 
 const emit = defineEmits([
   'close-modal',
   'download-file',
-  'handle-file-privacy',
+  'toggle-password-modal',
 ]);
 
 const props = defineProps<{
@@ -30,6 +29,7 @@ const props = defineProps<{
 const state = reactive<ComponentState>({
   isClosing: false,
   newPassword: '',
+  showPasswordModal: false,
 });
 
 const handleCloseModal = (): void => {
@@ -54,30 +54,23 @@ const handleDownload = (): void => {
   );
 };
 
-const handleInput = ({ value }: { value: string }): void => {
-  state.newPassword = value;
-};
-
-const handleSubmit = (): void => {
-  state.isClosing = true;
-  setTimeout(
-    (): void => emit('handle-file-privacy', { fileId: props.listedFile.id, }),
-    240,
-  );
+const handleShowPasswordModal = (): void => {
+  emit('toggle-password-modal', props.listedFile.id);
+  return handleCloseModal();
 };
 </script>
 
 <template>
   <div
-    :class="`f d-col j-center background ${state.isClosing
+    :class="`f d-col j-center modal-background ${state.isClosing
       ? 'fade-out'
       : 'fade-in'}`"
     @mousedown="handleCloseModal"
   >
     <div
-      :class="`f d-col mh-auto p-1 content ${props.isMobile
-        ? 'content-mobile'
-        : 'content-web'}`"
+      :class="`f d-col mh-auto p-1 modal-content ${props.isMobile
+        ? 'modal-content-mobile'
+        : 'modal-content-web'}`"
       @mousedown.stop
     >
       <div class="f ai-center j-space-between ns">
@@ -133,58 +126,42 @@ const handleSubmit = (): void => {
         </StyledButtonComponent>
       </template>
       <template v-if="props.listedFile.isOwner">
-        <StyledSwitchComponent
-          label="Protect file with password"
-          name="password"
-          :disabled="false"
-          :is-checked="props.listedFile.withPassword"
-          @toggle-switch="(): void => { props.listedFile.withPassword = !props.listedFile.withPassword }"
-        />
-        <form
-          class="f d-col mt-half"
-          @submit.prevent="handleSubmit"
-        >
-          <StyledInputComponent
-            name="filePassword"
-            placeholder="File password"
-            type="password"
-            :disabled="!props.listedFile.withPassword"
-            :value="state.newPassword"
-            @handle-input="handleInput"
-          />
-          <StyledButtonComponent
-            type="submit"
-            :disabled="!props.listedFile.withPassword || state.newPassword.length === 0"
-            :globalClasses="['mt-half']"
+        <div class="f ns input-title">
+          <span>
+            Password protection:
+          </span>
+          <span 
+            :class="`ml-half ${props.listedFile.withPassword
+              ? 'ok'
+              : 'error'}`"
           >
-            Set password
-          </StyledButtonComponent>
-        </form>
+            {{ 
+              props.listedFile.withPassword
+                ? ' enabled'
+                : ' disabled'
+            }}
+          </span>
+        </div>
+        <StyledButtonComponent
+          :globalClasses="['mt-half']"
+          @handle-click="handleShowPasswordModal"
+        >
+          {{
+            props.listedFile.withPassword
+              ? 'Edit password'
+              : 'Add password'
+          }}
+        </StyledButtonComponent>
       </template>
     </div>
   </div>
 </template>
 
 <style scoped>
-.background {
-  background-color: rgba(0, 0, 0, .6);
-  height: 100%;
-  left: 0;
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 10;
+.error {
+  color: var(--error);
 }
-.content {
-  background-color: rgba(255, 255, 255, 1);
-  border-radius: var(--spacer-half);
-  min-height: var(--spacer);
-}
-.content-mobile {
-  max-width: calc(var(--spacer) * 30);
-  width: calc(100% - var(--spacer));
-}
-.content-web {
-  width: calc(var(--spacer) * 30);
+.ok {
+  color: var(--success);
 }
 </style>

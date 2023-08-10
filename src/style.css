@@ -15,6 +15,28 @@
   font-weight: 300;
 }
 
+.modal-background {
+  background-color: rgba(0, 0, 0, .6);
+  height: 100%;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 10;
+}
+.modal-content {
+  background-color: var(--background);
+  border-radius: var(--spacer-half);
+  min-height: var(--spacer);
+  z-index: 11;
+}
+.modal-content-mobile {
+  max-width: calc(var(--spacer) * 30);
+  width: calc(100% - var(--spacer));
+}
+.modal-content-web {
+  width: calc(var(--spacer) * 30);
+}
 .modal-title {
   color: var(--accent);
   font-size: calc(var(--spacer) * 2);

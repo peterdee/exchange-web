@@ -35,14 +35,14 @@ const handleSubmit = (): void => {
 
 <template>
   <div
-    :class="`f d-col j-center background ${state.isClosing
+    :class="`f d-col j-center modal-background blur ${state.isClosing
       ? 'fade-out'
       : 'fade-in'}`"
   >
     <div
-      :class="`f d-col mh-auto p-1 content ${props.isMobile
-        ? 'content-mobile'
-        : 'content-web'}`"
+      :class="`f d-col mh-auto p-1 modal-content ${props.isMobile
+        ? 'modal-content-mobile'
+        : 'modal-content-web'}`"
     >
       <div class="f ai-center">
         <LogoIconComponent :size="SPACER * 2.25" />
@@ -50,7 +50,7 @@ const handleSubmit = (): void => {
           EXCHANGE
         </span>
       </div>
-      <div class="ns input-title">
+      <div class="ns mt-half input-title">
         Please set your device name to continue
       </div>
       <form
@@ -77,27 +77,7 @@ const handleSubmit = (): void => {
 </template>
 
 <style scoped>
-.background {
+.blur {
   backdrop-filter: blur(var(--spacer));
-  background-color: rgba(0, 0, 0, .6);
-  height: 100%;
-  left: 0;
-  position: fixed;
-  top: 0;
-  width: 100%;
-  z-index: 10;
-}
-.content {
-  background-color: rgba(255, 255, 255, 1);
-  border-radius: var(--spacer-half);
-  min-height: var(--spacer);
-  z-index: 11;
-}
-.content-mobile {
-  max-width: calc(var(--spacer) * 30);
-  width: calc(100% - var(--spacer));
-}
-.content-web {
-  width: calc(var(--spacer) * 30);
 }
 </style>
