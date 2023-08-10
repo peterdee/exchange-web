@@ -8,6 +8,8 @@ export const COLORS = {
 };
 
 export const EVENTS = {
+  addPassword: 'add-password',
+  changePassword: 'change-password',
   clientDisconnect: 'client-disconnect',
   close: 'close',
   connect: 'connect',
@@ -17,6 +19,7 @@ export const EVENTS = {
   downloadFile: 'download-file',
   downloadFileError: 'download-file-error',
   listFile: 'list-file',
+  removePassword: 'remove-password',
   requestFileChunk: 'request-file-chunk',
   requestListedFiles: 'request-listed-files',
   updateDeviceName: 'update-device-name',

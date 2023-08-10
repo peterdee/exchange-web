@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
+import connection from '../connection';
 import DeleteIconComponent from './DeleteIcon.vue';
 import type { ListedFile } from '../types';
 import LockIconComponent from './LockIcon.vue';
-import { SPACER } from '../configuration';
+import { EVENTS, SPACER } from '../configuration';
 import StyledButtonComponent from './StyledButton.vue';
 import StyledInputComponent from './StyledInput.vue';
 
@@ -16,7 +17,6 @@ interface ComponentState {
 
 const emit = defineEmits([
   'close-modal',
-  'handle-file-privacy',
 ]);
 
 const props = defineProps<{
@@ -38,16 +38,29 @@ const handleCloseModal = (): void => {
   );
 };
 
-const handleInput = ({ value }: { value: string }): void => {
+const handleInput = ({ value = '' }: { value: string }): void => {
   state.newPassword = value;
 };
 
+const handleRemovePassword = (): void => {
+  props.listedFile.withPassword = false;
+  if (connection.io.connected) {
+    connection.io.emit(
+      EVENTS.removePassword,
+      {
+        fileId: props.listedFile.id,
+        ownerId: connection.io.id,
+      },
+    );
+  }
+  return handleCloseModal();
+};
+
+// TODO: use ACK to check old password
 const handleSubmit = (): void => {
-  state.isClosing = true;
-  setTimeout(
-    (): void => {},
-    240,
-  );
+  props.listedFile.withPassword = true;
+
+  return handleCloseModal();
 };
 </script>
 
@@ -86,7 +99,7 @@ const handleSubmit = (): void => {
       <div class="ns mt-half input-title">
         {{
           `${props.listedFile.withPassword
-            ? 'Update'
+            ? 'Change'
             : 'Add'} password for file ${props.listedFile.name}`
         }}
       </div>
@@ -96,8 +109,8 @@ const handleSubmit = (): void => {
       >
         <StyledInputComponent
           name="filePassword"
-          placeholder="File password"
           type="password"
+          placeholder="File password"
           :value="state.newPassword"
           @handle-input="handleInput"
         />
@@ -106,9 +119,18 @@ const handleSubmit = (): void => {
           :disabled="state.newPassword.length === 0"
           :globalClasses="['mt-half']"
         >
-          Set password
+          Submit
         </StyledButtonComponent>
       </form>
+      <template v-if="!props.listedFile.withPassword">
+        <div class="mv-1 divider" />
+        <StyledButtonComponent
+          :is-negative="true"
+          @handle-click="handleRemovePassword"
+        >
+          Remove password protection
+        </StyledButtonComponent>
+      </template>
     </div>
   </div>
 </template>
