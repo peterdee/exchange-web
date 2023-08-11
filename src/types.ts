@@ -1,5 +1,11 @@
 export type BackendStatus = 'connected' | 'connecting' | 'inaccessible';
 
+export interface AcknowledgementMessage<T = null> {
+  data?: T;
+  info: string;
+  status: number;
+}
+
 export interface ChunkData {
   chunk: string;
   currentChunk: number;
@@ -36,8 +42,6 @@ export interface ListedFile {
   isOwner: boolean;
   name: string;
   ownerId: string;
-  passwordHash: string;
-  private: boolean;
   size: number;
   withPassword: boolean;
 }

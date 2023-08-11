@@ -47,7 +47,6 @@ const handleUploadButton = (): void => {
               id: entry.id,
               name: entry.name,
               ownerId: entry.ownerId,
-              private: entry.private,
               size: entry.size,
             },
           );

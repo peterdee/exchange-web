@@ -52,11 +52,13 @@ const additionalClasses = props.globalClasses.length > 0
   ? props.globalClasses.join(' ')
   : '';
 
-const inputType = props.type !== 'password'
-  ? props.type
-  : state.showPassword && props.type === 'password'
-    ? 'text'
-    : props.type;
+const getInputType = (): string => {
+  return props.type !== 'password'
+    ? props.type
+    : state.showPassword && props.type === 'password'
+      ? 'text'
+      : props.type;
+};
 
 const handleInput = (event: Event): void => {
   const { name = '', value = '' } = event.target as HTMLInputElement;
@@ -84,14 +86,14 @@ const togglePasswordVisibility = (): void => {
       :name="props.name"
       :placeholder="props.placeholder"
       :style="{ ...customStyles }"
-      :type="inputType"
+      :type="getInputType()"
       :value="props.value"
       @input="handleInput"
     />
     <StyledButtonComponent
       v-if="props.type === 'password'"
       :custom-styles="{ height: `${SPACER * 2}px` }"
-      :disabled="props.disabled"
+      :disabled="props.disabled || props.value.length === 0"
       :global-classes="['ml-half']"
       :title="state.showPassword ? 'Hide password' : 'Show password'"
       :with-icon="true"
@@ -99,13 +101,13 @@ const togglePasswordVisibility = (): void => {
     >
       <EyeClosedIconComponent
         v-if="!state.showPassword"
-        :color="props.disabled
+        :color="props.disabled || props.value.length === 0
           ? COLORS.muted
           : COLORS.accent"
       />
       <EyeOpenedIconComponent
         v-if="state.showPassword"
-        :color="props.disabled
+        :color="props.disabled || props.value.length === 0
           ? COLORS.muted
           : COLORS.accent"
       />

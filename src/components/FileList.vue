@@ -59,7 +59,6 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
           id: entry.id,
           name: entry.name,
           ownerId: entry.ownerId,
-          private: entry.private,
           size: entry.size,
         },
       );

@@ -1,23 +1,23 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
+import type { AcknowledgementMessage, ListedFile } from '../types';
 import connection from '../connection';
 import DeleteIconComponent from './DeleteIcon.vue';
-import type { ListedFile } from '../types';
-import LockIconComponent from './LockIcon.vue';
 import { EVENTS, SPACER } from '../configuration';
+import LockIconComponent from './LockIcon.vue';
+import sleep from '../utilities/sleep';
 import StyledButtonComponent from './StyledButton.vue';
 import StyledInputComponent from './StyledInput.vue';
 
 interface ComponentState {
   isClosing: boolean;
-  newPassword: string;
-  oldPassword: string;
+  isLoading: boolean;
+  password: string;
+  passwordError: boolean;
 }
 
-const emit = defineEmits([
-  'close-modal',
-]);
+const emit = defineEmits(['close-modal']);
 
 const props = defineProps<{
   isMobile: boolean;
@@ -26,24 +26,33 @@ const props = defineProps<{
 
 const state = reactive<ComponentState>({
   isClosing: false,
-  newPassword: '',
-  oldPassword: '',
+  isLoading: false,
+  password: '',
+  passwordError: false,
 });
 
-const handleCloseModal = (): void => {
+const handleCloseModal = (delayedAction?: () => void): void => {
   state.isClosing = true;
   setTimeout(
-    (): void => emit('close-modal'),
+    (): void => {
+      if (delayedAction) {
+        delayedAction();
+      }
+      emit('close-modal');
+    },
     240,
   );
 };
 
 const handleInput = ({ value = '' }: { value: string }): void => {
-  state.newPassword = value;
+  state.password = value;
+  state.passwordError = false;
 };
 
-const handleRemovePassword = (): void => {
-  props.listedFile.withPassword = false;
+const handleRemovePassword = async (): Promise<void> => {
+  state.isLoading = true;
+  await sleep();
+  let changesDone = false;
   if (connection.io.connected) {
     connection.io.emit(
       EVENTS.removePassword,
@@ -52,15 +61,48 @@ const handleRemovePassword = (): void => {
         ownerId: connection.io.id,
       },
     );
+    changesDone = true;
   }
-  return handleCloseModal();
+  const delayedAction = () => {
+    if (changesDone) {
+      props.listedFile.withPassword = false;
+    }
+  };
+  return handleCloseModal(delayedAction);
 };
 
-// TODO: use ACK to check old password
-const handleSubmit = (): void => {
-  props.listedFile.withPassword = true;
-
-  return handleCloseModal();
+const handleSubmit = async (): Promise<null | void> => {
+  const trimmedPassword = (state.password || '').trim();
+  if (!trimmedPassword) {
+    return null;
+  }
+  state.isLoading = true;
+  await sleep();
+  let changesDone = false;
+  if (connection.io.connected) {
+    connection.io.emit(
+      EVENTS.changePassword,
+      {
+        fileId: props.listedFile.id,
+        ownerId: connection.io.id,
+        password: trimmedPassword,
+      },
+      (response: AcknowledgementMessage): void => {
+        const { status } = response;
+        if (status && status === 200) {
+          changesDone = true;
+        } else {
+          state.passwordError = true;
+        }
+      },
+    );
+  }
+  const delayedAction = () => {
+    if (changesDone) {
+      props.listedFile.withPassword = true;
+    }
+  };
+  return handleCloseModal(delayedAction);
 };
 </script>
 
@@ -69,7 +111,7 @@ const handleSubmit = (): void => {
     :class="`f d-col j-center modal-background ${state.isClosing
       ? 'fade-out'
       : 'fade-in'}`"
-    @mousedown="handleCloseModal"
+    @mousedown="(): void => handleCloseModal()"
   >
     <div
       :class="`f d-col mh-auto p-1 modal-content ${props.isMobile
@@ -111,21 +153,30 @@ const handleSubmit = (): void => {
           name="filePassword"
           type="password"
           placeholder="File password"
-          :value="state.newPassword"
+          :value="state.password"
           @handle-input="handleInput"
         />
         <StyledButtonComponent
           type="submit"
-          :disabled="state.newPassword.length === 0"
+          :disabled="!state.password || !state.password.trim() || state.isLoading"
           :globalClasses="['mt-half']"
+          :is-loading="state.isLoading"
+          :with-spinner="true"
         >
-          Submit
+          {{
+            `${props.listedFile.withPassword
+              ? 'Change'
+              : 'Add'} password`
+          }}
         </StyledButtonComponent>
       </form>
-      <template v-if="!props.listedFile.withPassword">
+      <template v-if="props.listedFile.withPassword">
         <div class="mv-1 divider" />
         <StyledButtonComponent
+          :disabled="state.isLoading"
+          :is-loading="state.isLoading"
           :is-negative="true"
+          :with-spinner="true"
           @handle-click="handleRemovePassword"
         >
           Remove password protection

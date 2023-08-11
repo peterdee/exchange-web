@@ -8,7 +8,6 @@ export const COLORS = {
 };
 
 export const EVENTS = {
-  addPassword: 'add-password',
   changePassword: 'change-password',
   clientDisconnect: 'client-disconnect',
   close: 'close',

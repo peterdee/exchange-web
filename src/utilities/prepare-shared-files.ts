@@ -29,8 +29,6 @@ export default async function prepareSharedFiles(
         isOwner: true,
         name: file.name,
         ownerId,
-        passwordHash: '',
-        private: false,
         size: file.size,
         withPassword: false,
       };

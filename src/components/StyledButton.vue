@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import StyledSpinnerComponent from './StyledSpinner.vue';
+
 const emit = defineEmits(['handle-click']);
 
 const props = defineProps({
@@ -16,6 +18,11 @@ const props = defineProps({
     default: [],
     required: false,
     type: Array<string>,
+  },
+  isLoading: {
+    default: false,
+    required: false,
+    type: Boolean,
   },
   isNegative: {
     default: false,
@@ -38,6 +45,11 @@ const props = defineProps({
     type: String,
   },
   withIcon: {
+    default: false,
+    required: false,
+    type: Boolean,
+  },
+  withSpinner: {
     default: false,
     required: false,
     type: Boolean,
@@ -66,7 +78,10 @@ const additionalClasses = props.globalClasses.length > 0
       : 'submit'"
     @click="emit('handle-click')"
   >
-    <slot></slot>
+    <template v-if="!(props.withSpinner && props.isLoading)">
+      <slot></slot>
+    </template>
+    <StyledSpinnerComponent v-if="props.withSpinner && props.isLoading" />
   </button>
 </template>
 

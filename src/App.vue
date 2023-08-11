@@ -12,7 +12,6 @@ import type {
   DownloadedItem,
   ListedFile,
   UpdateDeviceName,
-  UpdateFilePrivacy,
 } from './types';
 import connection from './connection';
 import { decodeBase64ToBlob } from './utilities/base64';
@@ -93,33 +92,6 @@ const handleFileDetails = (fileId: string): void => {
   state.fileDetailsFileId = fileId;
 }
 
-// const handleFilePrivacy = (fileId: string, value: boolean): Socket => {
-//   state.listedFiles = state.listedFiles.reduce(
-//     (array: ListedFile[], item: ListedFile): ListedFile[] => {
-//       if (item.id === fileId) {
-//         const updatedItem: ListedFile = {
-//           ...item,
-//           private: value,
-//         };
-//         array.push(updatedItem);
-//       } else {
-//         array.push(item);
-//       }
-//       return array;
-//     },
-//     [],
-//   );
-//   // TODO: use acknowledgements, move this handler into the modal
-//   return connection.io.emit(
-//     EVENTS.updateFilePrivacy,
-//     {
-//       fileId,
-//       isPrivate: value,
-//       ownerId: connection.io.id,
-//     },
-//   );
-// };
-
 const handleShowPasswordModal = (fileId: string): void => {
   state.passwordModalFileId = fileId;
 };
@@ -188,7 +160,6 @@ const ioHandlerListFile = (data: ListedFile): void => {
   state.listedFiles.push({
     ...data,
     isOwner: false,
-    passwordHash: '',
   });
 };
 
@@ -226,7 +197,6 @@ const ioHandlerRequestListedFiles = (data: ListedFile[]): void => {
       state.listedFiles.push({
         ...item,
         isOwner: false,
-        passwordHash: '',
       });
     });
   }
@@ -239,21 +209,6 @@ const ioHandlerUpdateDeviceName = (data: UpdateDeviceName): void => {
       item.deviceName = newDeviceName;
     }
   });
-};
-
-const ioHandlerUpdateFilePrivacy = (data: UpdateFilePrivacy): void => {
-  const {
-    fileId,
-    isPrivate,
-    ownerId,
-  } = data;
-  state.listedFiles.forEach(
-    (item: ListedFile): void => {
-      if (item.id === fileId && item.ownerId === ownerId) {
-        item.private = isPrivate;
-      }
-    },
-  );
 };
 
 const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
@@ -336,6 +291,10 @@ const closeFileDetailsModal = (): void => {
   state.fileDetailsFileId = '';
 }
 
+const closePasswordModal = (): void => {
+  state.passwordModalFileId = '';
+}
+
 const toggleSettingsModal = (): void => {
   state.showSettingsModal = !state.showSettingsModal;
 }
@@ -352,7 +311,6 @@ onBeforeUnmount((): void => {
     io.off(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
     io.off(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
     io.off(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
-    io.off(EVENTS.updateFilePrivacy, ioHandlerUpdateFilePrivacy);
     io.off(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
     io.emit(EVENTS.close);
   }
@@ -393,7 +351,6 @@ onMounted((): void => {
       io.on(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
       io.on(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
       io.on(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
-      io.on(EVENTS.updateFilePrivacy, ioHandlerUpdateFilePrivacy);
       io.on(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
       state.connected = true;
     },
@@ -430,7 +387,7 @@ onMounted((): void => {
       :listed-file="state.listedFiles.filter(
         (item: ListedFile): boolean => item.id === state.passwordModalFileId,
       )[0]"
-      @close-modal="closeFileDetailsModal"
+      @close-modal="closePasswordModal"
     />
     <div
       v-if="state.connected"
