@@ -9,8 +9,8 @@ import getFilesFromDroppedItems from '../utilities/get-files-from-dropped-items'
 import type { ListedFile } from '../types';
 import LockIconComponent from './icons/LockIcon.vue';
 import MenuDotsIconComponent from './icons/MenuDotsIcon.vue';
-import StyledButtonComponent from './elements/StyledButton.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
+import StyledButtonComponent from './elements/StyledButton.vue';
 
 interface ComponentState {
   deleteFileId: string;
@@ -21,7 +21,7 @@ const emit = defineEmits([
   'handle-add-file',
   'handle-delete-file',
   'handle-download-file',
-  'handle-file-options',
+  'handle-open-file-details',
 ]);
 
 const props = defineProps<{
@@ -104,9 +104,11 @@ const handleDrag = (): void => {
     <div
       v-if="props.listedFiles.length > 0"
       v-for="file in props.listedFiles"
-      :class="`f j-space-between ai-center fade-in m-quarter ${state.deleteFileId === file.id
+      :class="`f j-space-between ai-center fade-in ${state.deleteFileId === file.id
         ? 'fade-out'
-        : ''}`"
+        : ''} ${props.isMobile
+        ? 'm-quarter'
+        : 'm-half'}`"
       :key="file.id"
     >
       <div class="f ai-center name-container">
@@ -128,7 +130,7 @@ const handleDrag = (): void => {
           :disabled="state.deleteFileId === file.id"
           :global-classes="['mh-1']"
           :with-icon="true"
-          @handle-click="(): void => emit('handle-file-options', file.id)"
+          @handle-click="(): void => emit('handle-open-file-details', file.id)"
         >
           <MenuDotsIconComponent :color="COLORS.muted" />
         </StyledButtonComponent>

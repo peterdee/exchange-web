@@ -17,7 +17,10 @@ interface ComponentState {
   passwordError: boolean;
 }
 
-const emit = defineEmits(['close-modal']);
+const emit = defineEmits([
+  'close-modal',
+  'handle-file-password',
+]);
 
 const props = defineProps<{
   isMobile: boolean;
@@ -63,17 +66,20 @@ const handleRemovePassword = async (): Promise<void> => {
     );
     changesDone = true;
   }
-  const delayedAction = () => {
-    if (changesDone) {
-      props.listedFile.withPassword = false;
-    }
-  };
-  return handleCloseModal(delayedAction);
+  const delayedAction = (): void => emit(
+    'handle-file-password',
+    {
+      fileId: props.listedFile.id,
+      withPassword: false,
+    },
+  );
+  return handleCloseModal(changesDone ? delayedAction : undefined);
 };
 
 const handleSubmit = async (): Promise<null | void> => {
   const trimmedPassword = (state.password || '').trim();
   if (!trimmedPassword) {
+    state.passwordError = true;
     return null;
   }
   state.isLoading = true;
@@ -97,12 +103,17 @@ const handleSubmit = async (): Promise<null | void> => {
       },
     );
   }
-  const delayedAction = () => {
-    if (changesDone) {
-      props.listedFile.withPassword = true;
-    }
-  };
-  return handleCloseModal(delayedAction);
+  if (state.passwordError) {
+    return null;
+  }
+  const delayedAction = (): void => emit(
+    'handle-file-password',
+    {
+      fileId: props.listedFile.id,
+      withPassword: true,
+    },
+  );
+  return handleCloseModal(changesDone ? delayedAction : undefined);
 };
 </script>
 
@@ -154,6 +165,7 @@ const handleSubmit = async (): Promise<null | void> => {
           type="password"
           placeholder="File password"
           :value="state.password"
+          :with-error="state.passwordError"
           @handle-input="handleInput"
         />
         <StyledButtonComponent

@@ -42,6 +42,11 @@ const props = defineProps({
     required: true,
     type: String,
   },
+  withError: {
+    default: false,
+    required: false,
+    type: Boolean,
+  },
 });
 
 const state = reactive<{ showPassword: boolean }>({
@@ -81,6 +86,8 @@ const togglePasswordVisibility = (): void => {
     <input
       :class="`input w-100 styled-input ${additionalClasses} ${props.type === 'password'
         ? 'with-password'
+        : ''} ${props.withError
+        ? 'error-border'
         : ''}`"
       :disabled="props.disabled"
       :name="props.name"
@@ -119,6 +126,9 @@ const togglePasswordVisibility = (): void => {
 .styled-input {
   font-size: var(--spacer);
   height: calc(var(--spacer) * 2.5);
+}
+.error-border {
+  border-color: var(--error);
 }
 .with-password {
   width: calc(100% - var(--spacer) * 2.5);

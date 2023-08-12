@@ -25,6 +25,7 @@ import HeaderComponent from './components/Header.vue';
 import isMobile from './utilities/is-mobile';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
+import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
 
 interface AppState {
   connected: boolean;
@@ -50,26 +51,13 @@ const state = reactive<AppState>({
   showSettingsModal: false,
 });
 
-const deleteFile = ({ fileId }: { fileId: string }): Socket => {
-  state.listedFiles = state.listedFiles.filter(
-    (item: ListedFile): boolean => item.id !== fileId,
-  );
-  return connection.io.emit(
-    EVENTS.deleteFile,
-    { fileId },
-  );
-};
-
-const downloadFile = (
-  { fileId, ownerId }: { fileId: string, ownerId: string },
-): Socket => {
-  return connection.io.emit(
-    EVENTS.downloadFile,
-    {
-      fileId,
-      ownerId,
-    },
-  );
+const closeModal = (modalName: string): void => {
+  if (modalName === 'details') {
+    state.fileDetailsFileId = '';
+  }
+  if (modalName === 'password') {
+    state.passwordModalFileId = '';
+  }
 };
 
 const handleAddFile = (entry: ListedFile): void => {
@@ -81,6 +69,16 @@ const handleDeleteAllFiles = (): void => {
   state.showSettingsModal = false;
 };
 
+const handleDeleteFile = ({ fileId }: { fileId: string }): Socket => {
+  state.listedFiles = state.listedFiles.filter(
+    (item: ListedFile): boolean => item.id !== fileId,
+  );
+  return connection.io.emit(
+    EVENTS.deleteFile,
+    { fileId },
+  );
+};
+
 const handleDeviceName = (value: string): void => {
   state.deviceName = value;
   state.showDeviceNameModal = false;
@@ -88,9 +86,36 @@ const handleDeviceName = (value: string): void => {
   return setValue<boolean>('deviceNameSet', true);
 }
 
+const handleDownloadFile = (
+  { fileId, ownerId }: { fileId: string, ownerId: string },
+): Socket => connection.io.emit(
+  EVENTS.downloadFile,
+  {
+    fileId,
+    ownerId,
+  },
+);
+
 const handleFileDetails = (fileId: string): void => {
   state.fileDetailsFileId = fileId;
 }
+
+const handleFilePassword = (
+  {
+    fileId = '',
+    withPassword = false,
+  }: {
+    fileId: string;
+    withPassword: boolean;
+  },
+): void => {
+  console.log('here', fileId, withPassword);
+  state.listedFiles.forEach((item: ListedFile): void => {
+    if (item.id === fileId) {
+      item.withPassword = withPassword;
+    }
+  });
+};
 
 const handleShowPasswordModal = (fileId: string): void => {
   state.passwordModalFileId = fileId;
@@ -287,14 +312,6 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
   }
 };
 
-const closeFileDetailsModal = (): void => {
-  state.fileDetailsFileId = '';
-}
-
-const closePasswordModal = (): void => {
-  state.passwordModalFileId = '';
-}
-
 const toggleSettingsModal = (): void => {
   state.showSettingsModal = !state.showSettingsModal;
 }
@@ -364,7 +381,14 @@ onMounted((): void => {
       v-if="!state.connected"
       class="f ai-center"
     >
-      Connecting...
+      <div class="f d-col">
+        <span class="t-center input-title">
+          Connecting to the server...
+        </span>
+        <div class="f ai-center j-center mt-1 mh-auto spinner-background">
+          <StyledSpinnerComponent />
+        </div>
+      </div>
     </div>
     <DeviceNameModalComponent
       v-if="state.showDeviceNameModal"
@@ -377,8 +401,8 @@ onMounted((): void => {
       :listed-file="state.listedFiles.filter(
         (item: ListedFile): boolean => item.id === state.fileDetailsFileId,
       )[0]"
-      @close-modal="closeFileDetailsModal"
-      @download-file="downloadFile"
+      @close-modal="(): void => closeModal('details')"
+      @download-file="handleDownloadFile"
       @toggle-password-modal="handleShowPasswordModal"
     />
     <PasswordModalComponent
@@ -387,7 +411,8 @@ onMounted((): void => {
       :listed-file="state.listedFiles.filter(
         (item: ListedFile): boolean => item.id === state.passwordModalFileId,
       )[0]"
-      @close-modal="closePasswordModal"
+      @close-modal="(): void => closeModal('password')"
+      @handle-file-password="handleFilePassword"
     />
     <div
       v-if="state.connected"
@@ -418,9 +443,9 @@ onMounted((): void => {
         :listed-files="state.listedFiles"
         :owner-id="connection.io.id"
         @handle-add-file="handleAddFile"
-        @handle-delete-file="deleteFile"
-        @handle-download-file="downloadFile"
-        @handle-file-options="handleFileDetails"
+        @handle-delete-file="handleDeleteFile"
+        @handle-download-file="handleDownloadFile"
+        @handle-open-file-details="handleFileDetails"
       />
       <FooterComponent
         :backend-status="state.connected
@@ -431,3 +456,12 @@ onMounted((): void => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.spinner-background {
+  background-color: var(--accent);
+  border-radius: 50%;
+  height: calc(var(--spacer) * 3);
+  width: calc(var(--spacer) * 3);
+}
+</style>
