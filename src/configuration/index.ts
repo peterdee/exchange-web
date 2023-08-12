@@ -4,7 +4,9 @@ export const COLORS = {
   accent: '#1e7878',
   accentLight: '#53acac',
   error: '#ee3020',
-  muted: '#999999', 
+  muted: '#999999',
+  mutedLight: '#bbbbbb',
+  positive: '#60be60',
 };
 
 export const EVENTS = {

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import DeleteIconComponent from './icons/DeleteIcon.vue';
-import FileIconComponent from './icons/FileIcon.vue';
-import formatDate from '../utilities/format-date';
-import formatFileSize from '../utilities/format-file-size';
-import type { ListedFile } from '../types';
-import { SPACER } from '../configuration';
-import StyledButtonComponent from './elements/StyledButton.vue';
+import DeleteIconComponent from '../icons/DeleteIcon.vue';
+import FileIconComponent from '../icons/FileIcon.vue';
+import formatDate from '../../utilities/format-date';
+import formatFileSize from '../../utilities/format-file-size';
+import type { ListedFile } from '../../types';
+import { SPACER } from '../../configuration';
+import StyledButtonComponent from '../elements/StyledButton.vue';
 
 interface ComponentState {
   isClosing: boolean;
@@ -93,15 +93,15 @@ const handleShowPasswordModal = (): void => {
         </StyledButtonComponent>
       </div>
       <div class="mt-half ns input-title">
-        Added: {{ `${formatDate(props.listedFile.createdAt)}${!props.listedFile.isOwner
-          ? ' (owner time)'
-          : ''}` }}
-      </div>
-      <div class="mt-half ns input-title">
         File name: {{ props.listedFile.name }}
       </div>
       <div class="mt-half ns input-title">
         File size: {{ formatFileSize(props.listedFile.size) }}
+      </div>
+      <div class="mt-half ns input-title">
+        Added: {{ `${formatDate(props.listedFile.createdAt)}${!props.listedFile.isOwner
+          ? ' (owner time)'
+          : ''}` }}
       </div>
       <template v-if="!props.listedFile.isOwner">
         <div class="mt-half ns input-title">
@@ -126,7 +126,7 @@ const handleShowPasswordModal = (): void => {
         </StyledButtonComponent>
       </template>
       <template v-if="props.listedFile.isOwner">
-        <div class="f ns input-title">
+        <div class="f ai-center ns input-title">
           <span>
             Password protection:
           </span>

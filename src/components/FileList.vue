@@ -5,9 +5,9 @@ import { COLORS, EVENTS } from '../configuration';
 import connection from '../connection';
 import DeleteIconComponent from './icons/DeleteIcon.vue';
 import DownloadIconComponent from './icons/DownloadIcon.vue';
-import formatFileSize from '../utilities/format-file-size';
 import getFilesFromDroppedItems from '../utilities/get-files-from-dropped-items';
 import type { ListedFile } from '../types';
+import LockIconComponent from './icons/LockIcon.vue';
 import MenuDotsIconComponent from './icons/MenuDotsIcon.vue';
 import StyledButtonComponent from './elements/StyledButton.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
@@ -109,9 +109,18 @@ const handleDrag = (): void => {
         : ''}`"
       :key="file.id"
     >
-      <span>
-        {{ file.name }} (owner: {{ file.deviceName }}) (size: {{ formatFileSize(file.size) }})
-      </span>
+      <div class="f ai-center name-container">
+        <div class="icon">
+          <LockIconComponent
+            :color="!file.withPassword
+              ? COLORS.mutedLight
+              : COLORS.positive"
+          />
+        </div>
+        <div class="ml-half ns input-title file-name">
+          {{ file.name }}
+        </div>
+      </div>
       <div class="f">
         <StyledButtonComponent
           title="Options"
@@ -171,7 +180,18 @@ const handleDrag = (): void => {
   width: calc(100% - var(--spacer) * 4);
   transition: box-shadow var(--transition) ease-out;
 }
+.file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.icon {
+  width: calc(var(--spacer) * 2);
+}
 .list-mobile {
   width: calc(100% - var(--spacer) * 2);
+}
+.name-container {
+  overflow: hidden;
 }
 </style>
