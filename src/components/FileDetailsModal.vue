@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import DeleteIconComponent from './DeleteIcon.vue';
-import FileIconComponent from './FileIcon.vue';
+import DeleteIconComponent from './icons/DeleteIcon.vue';
+import FileIconComponent from './icons/FileIcon.vue';
 import formatDate from '../utilities/format-date';
 import formatFileSize from '../utilities/format-file-size';
 import type { ListedFile } from '../types';
 import { SPACER } from '../configuration';
-import StyledButtonComponent from './StyledButton.vue';
+import StyledButtonComponent from './elements/StyledButton.vue';
 
 interface ComponentState {
   isClosing: boolean;

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import { COLORS, SPACER } from '../configuration';
-import EyeClosedIconComponent from './EyeClosedIcon.vue';
-import EyeOpenedIconComponent from './EyeOpenedIcon.vue';
+import { COLORS, SPACER } from '../../configuration';
+import EyeClosedIconComponent from '../icons/EyeClosedIcon.vue';
+import EyeOpenedIconComponent from '../icons/EyeOpenedIcon.vue';
 import StyledButtonComponent from './StyledButton.vue';
 
 const emit = defineEmits(['handle-input']);

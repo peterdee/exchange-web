@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import LogoIconComponent from './LogoIcon.vue';
-import { SPACER } from '../configuration';
-import StyledButtonComponent from './StyledButton.vue';
-import StyledInputComponent from './StyledInput.vue';
+import LogoIconComponent from '../icons/LogoIcon.vue';
+import { SPACER } from '../../configuration';
+import StyledButtonComponent from '../elements/StyledButton.vue';
+import StyledInputComponent from '../elements/StyledInput.vue';
 
 interface ComponentState {
   deviceName: string;

@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import type { AcknowledgementMessage, ListedFile } from '../types';
-import connection from '../connection';
-import DeleteIconComponent from './DeleteIcon.vue';
-import { EVENTS, SPACER } from '../configuration';
-import LockIconComponent from './LockIcon.vue';
-import sleep from '../utilities/sleep';
-import StyledButtonComponent from './StyledButton.vue';
-import StyledInputComponent from './StyledInput.vue';
+import type { AcknowledgementMessage, ListedFile } from '../../types';
+import connection from '../../connection';
+import DeleteIconComponent from '../icons/DeleteIcon.vue';
+import { EVENTS, SPACER } from '../../configuration';
+import LockIconComponent from '../icons/LockIcon.vue';
+import sleep from '../../utilities/sleep';
+import StyledButtonComponent from '../elements/StyledButton.vue';
+import StyledInputComponent from '../elements/StyledInput.vue';
 
 interface ComponentState {
   isClosing: boolean;

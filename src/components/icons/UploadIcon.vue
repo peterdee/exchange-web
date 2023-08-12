@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { COLORS, SPACER } from '../configuration';
+import { COLORS, SPACER } from '../../configuration';
 
 const props = defineProps({
   color: {

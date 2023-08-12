@@ -2,11 +2,11 @@
 import { COLORS, EVENTS, SPACER } from '../configuration';
 import connection from '../connection';
 import type { ListedFile } from '../types';
-import LogoIconComponent from './LogoIcon.vue';
+import LogoIconComponent from './icons/LogoIcon.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
-import SettingsIconComponent from './SettingsIcon.vue';
-import StyledButtonComponent from './StyledButton.vue';
-import UplaodIconComponent from './UploadIcon.vue';
+import SettingsIconComponent from './icons/SettingsIcon.vue';
+import StyledButtonComponent from './elements/StyledButton.vue';
+import UplaodIconComponent from './icons/UploadIcon.vue';
 
 const emit = defineEmits([
   'handle-add-file',
@@ -75,7 +75,7 @@ const handleUploadButton = (): void => {
     </div>
     <div class="f ai-center ml-1">
       <StyledButtonComponent
-        title="Add file"
+        title="Add files"
         :custom-styles="{ height: `${SPACER * 2}px` }"
         :with-icon="true"
         @handle-click="handleUploadButton"

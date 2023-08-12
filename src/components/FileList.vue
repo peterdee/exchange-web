@@ -3,13 +3,13 @@ import { reactive } from 'vue';
 
 import { COLORS, EVENTS } from '../configuration';
 import connection from '../connection';
-import DeleteIconComponent from '../components/DeleteIcon.vue';
-import DownloadIconComponent from '../components/DownloadIcon.vue';
+import DeleteIconComponent from './icons/DeleteIcon.vue';
+import DownloadIconComponent from './icons/DownloadIcon.vue';
 import formatFileSize from '../utilities/format-file-size';
 import getFilesFromDroppedItems from '../utilities/get-files-from-dropped-items';
 import type { ListedFile } from '../types';
-import MenuDotsIconComponent from '../components/MenuDotsIcon.vue';
-import StyledButtonComponent from '../components/StyledButton.vue';
+import MenuDotsIconComponent from './icons/MenuDotsIcon.vue';
+import StyledButtonComponent from './elements/StyledButton.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
 
 interface ComponentState {

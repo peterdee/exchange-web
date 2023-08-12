@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import connection from '../connection';
-import DeleteIconComponent from './DeleteIcon.vue';
-import SettingsIconComponent from './SettingsIcon.vue';
-import { EVENTS, SPACER } from '../configuration';
-import StyledButtonComponent from './StyledButton.vue';
-import StyledInputComponent from './StyledInput.vue';
+import connection from '../../connection';
+import DeleteIconComponent from '../icons/DeleteIcon.vue';
+import SettingsIconComponent from '../icons/SettingsIcon.vue';
+import { EVENTS, SPACER } from '../../configuration';
+import StyledButtonComponent from '../elements/StyledButton.vue';
+import StyledInputComponent from '../elements/StyledInput.vue';
 
 interface ComponentState {
   deviceName: string;

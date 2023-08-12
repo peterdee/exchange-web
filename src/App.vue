@@ -15,7 +15,7 @@ import type {
 } from './types';
 import connection from './connection';
 import { decodeBase64ToBlob } from './utilities/base64';
-import DeviceNameModalComponent from './components/DeviceNameModal.vue';
+import DeviceNameModalComponent from './components/modals/DeviceNameModal.vue';
 import { EVENTS, MESSAGES } from './configuration';
 import FileListComponent from './components/FileList.vue';
 import FileDetailsModalComponent from './components/FileDetailsModal.vue';
@@ -23,8 +23,8 @@ import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
 import isMobile from './utilities/is-mobile';
-import PasswordModalComponent from './components/PasswordModal.vue';
-import SettingsModalComponent from './components/SettingsModal.vue';
+import PasswordModalComponent from './components/modals/PasswordModal.vue';
+import SettingsModalComponent from './components/modals/SettingsModal.vue';
 
 interface AppState {
   connected: boolean;
