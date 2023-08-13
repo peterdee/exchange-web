@@ -112,11 +112,16 @@ const handleDrag = (): void => {
       :key="file.id"
     >
       <div class="f ai-center name-container">
-        <div class="icon">
+        <div
+          class="icon"
+          :title="file.withPassword
+            ? 'Protected with password'
+            : 'No password protection'"
+        >
           <LockIconComponent
             :color="!file.withPassword
               ? COLORS.mutedLight
-              : COLORS.positive"
+              : COLORS.accent"
           />
         </div>
         <div class="ml-half ns input-title file-name">

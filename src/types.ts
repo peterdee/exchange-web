@@ -6,13 +6,16 @@ export interface AcknowledgementMessage<T = null> {
   status: number;
 }
 
-export interface ChunkData {
+export interface GenericFileData {
+  fileId: string;
+  ownerId: string;
+}
+
+export interface ChunkData extends GenericFileData {
   chunk: string;
   currentChunk: number;
-  fileId: string;
   fileName: string;
   fileSize: string;
-  ownerId: string;
   targetId: string;
   totalChunks: number;
   type: string;
@@ -22,13 +25,11 @@ export type ChunkRequest = Pick<ChunkData, 'fileId' | 'ownerId' | 'targetId'> & 
   chunkIndex: number;
 }
 
-export interface DownloadedItem {
+export interface DownloadedItem extends GenericFileData {
   chunks: string[];
   downloadCompleted: boolean;
-  fileId: string;
   fileName: string;
   fileSize: string;
-  ownerId: string;
   totalChunks: number;
   type: string;
 }
@@ -48,11 +49,5 @@ export interface ListedFile {
 
 export interface UpdateDeviceName {
   newDeviceName: string;
-  ownerId: string;
-}
-
-export interface UpdateFilePrivacy {
-  fileId: string;
-  isPrivate: boolean;
   ownerId: string;
 }

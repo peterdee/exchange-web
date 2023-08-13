@@ -10,6 +10,7 @@ import type {
   ChunkData,
   ChunkRequest,
   DownloadedItem,
+  GenericFileData,
   ListedFile,
   UpdateDeviceName,
 } from './types';
@@ -109,7 +110,6 @@ const handleFilePassword = (
     withPassword: boolean;
   },
 ): void => {
-  console.log('here', fileId, withPassword);
   state.listedFiles.forEach((item: ListedFile): void => {
     if (item.id === fileId) {
       item.withPassword = withPassword;
@@ -124,6 +124,15 @@ const handleShowPasswordModal = (fileId: string): void => {
 const handleUpdateDeviceName = (value: string): void => {
   state.showSettingsModal = false;
   return handleDeviceName(value);
+};
+
+const ioHandlerChangePassword = (data: GenericFileData): void => {
+  const { fileId = '', ownerId = '' } = data;
+  state.listedFiles.forEach((item: ListedFile): void => {
+    if (item.id === fileId && item.ownerId === ownerId) {
+      item.withPassword = true;
+    }
+  });
 };
 
 const ioHandlerClientDisconnect = ({ id }: { id: string }): void => {
@@ -319,6 +328,7 @@ const toggleSettingsModal = (): void => {
 onBeforeUnmount((): void => {
   if (state.connected) {
     const { io } = connection;
+    io.off(EVENTS.changePassword, ioHandlerChangePassword);
     io.off(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
     io.off(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
     io.off(EVENTS.deleteFile, ioHandlerDeleteFile);
@@ -359,6 +369,7 @@ onMounted((): void => {
     EVENTS.connect,
     (): void => {
       io.emit(EVENTS.requestListedFiles);
+      io.on(EVENTS.changePassword, ioHandlerChangePassword);
       io.on(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
       io.on(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
       io.on(EVENTS.deleteFile, ioHandlerDeleteFile);

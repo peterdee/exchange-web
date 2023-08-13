@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
+import type { Socket } from 'socket.io-client';
 
 import type { AcknowledgementMessage, ListedFile } from '../../types';
 import connection from '../../connection';
@@ -41,7 +42,7 @@ const handleCloseModal = (delayedAction?: () => void): void => {
       if (delayedAction) {
         delayedAction();
       }
-      emit('close-modal');
+      return emit('close-modal');
     },
     240,
   );
@@ -52,11 +53,10 @@ const handleInput = ({ value = '' }: { value: string }): void => {
   state.passwordError = false;
 };
 
-const handleRemovePassword = async (): Promise<void> => {
-  state.isLoading = true;
-  await sleep();
-  let changesDone = false;
+const handleRemovePassword = async (): Promise<null | Socket | void> => {
   if (connection.io.connected) {
+    state.isLoading = true;
+    await sleep();
     connection.io.emit(
       EVENTS.removePassword,
       {
@@ -64,56 +64,55 @@ const handleRemovePassword = async (): Promise<void> => {
         ownerId: connection.io.id,
       },
     );
-    changesDone = true;
+    const delayedAction = (): void => emit(
+      'handle-file-password',
+      {
+        fileId: props.listedFile.id,
+        withPassword: false,
+      },
+    );
+    return handleCloseModal(delayedAction);
   }
-  const delayedAction = (): void => emit(
-    'handle-file-password',
-    {
-      fileId: props.listedFile.id,
-      withPassword: false,
-    },
-  );
-  return handleCloseModal(changesDone ? delayedAction : undefined);
+  state.isLoading = false;
+  return null;
 };
 
-const handleSubmit = async (): Promise<null | void> => {
+const handleSubmit = async (): Promise<null | Socket | void> => {
   const trimmedPassword = (state.password || '').trim();
   if (!trimmedPassword) {
     state.passwordError = true;
     return null;
   }
-  state.isLoading = true;
-  await sleep();
-  let changesDone = false;
   if (connection.io.connected) {
-    connection.io.emit(
+    state.isLoading = true;
+    await sleep();
+    return connection.io.emit(
       EVENTS.changePassword,
       {
         fileId: props.listedFile.id,
         ownerId: connection.io.id,
         password: trimmedPassword,
       },
-      (response: AcknowledgementMessage): void => {
+      (response: AcknowledgementMessage): null | void => {
         const { status } = response;
         if (status && status === 200) {
-          changesDone = true;
-        } else {
-          state.passwordError = true;
+          const delayedAction = (): void => emit(
+            'handle-file-password',
+            {
+              fileId: props.listedFile.id,
+              withPassword: true,
+            },
+          );
+          return handleCloseModal(delayedAction);
         }
+        state.passwordError = true;
+        return null;
       },
     );
   }
-  if (state.passwordError) {
-    return null;
-  }
-  const delayedAction = (): void => emit(
-    'handle-file-password',
-    {
-      fileId: props.listedFile.id,
-      withPassword: true,
-    },
-  );
-  return handleCloseModal(changesDone ? delayedAction : undefined);
+  state.isLoading = false;
+  state.passwordError = true;
+  return null;
 };
 </script>
 
@@ -164,6 +163,7 @@ const handleSubmit = async (): Promise<null | void> => {
           name="filePassword"
           type="password"
           placeholder="File password"
+          :disabled="state.isLoading"
           :value="state.password"
           :with-error="state.passwordError"
           @handle-input="handleInput"
