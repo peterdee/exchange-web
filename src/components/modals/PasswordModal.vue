@@ -161,8 +161,8 @@ const handleSubmit = async (): Promise<null | Socket | void> => {
       >
         <StyledInputComponent
           name="filePassword"
-          type="password"
           placeholder="File password"
+          type="password"
           :disabled="state.isLoading"
           :value="state.password"
           :with-error="state.passwordError"
@@ -191,7 +191,7 @@ const handleSubmit = async (): Promise<null | Socket | void> => {
           :with-spinner="true"
           @handle-click="handleRemovePassword"
         >
-          Remove password protection
+          Remove password
         </StyledButtonComponent>
       </template>
     </div>

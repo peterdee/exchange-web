@@ -61,8 +61,8 @@ const handleSubmit = (): void => {
           name="deviceName"
           placeholder="Device name"
           type="text"
-          @handle-input="handleInput"
           :value="state.deviceName"
+          @handle-input="handleInput"
         />
         <StyledButtonComponent
           type="submit"

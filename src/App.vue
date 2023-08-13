@@ -147,7 +147,7 @@ const ioHandlerDeleteAllFiles = ({ ownerId = '' }: { ownerId: string }): void =>
   );
 };
 
-const ioHandlerDeleteFile = ({ fileId }: { fileId: string }): void => {
+const ioHandlerDeleteFile = ({ fileId = '' }: { fileId: string }): void => {
   state.listedFiles = state.listedFiles.filter(
     (item: ListedFile): boolean => item.id !== fileId,
   );
@@ -194,6 +194,15 @@ const ioHandlerListFile = (data: ListedFile): void => {
   state.listedFiles.push({
     ...data,
     isOwner: false,
+  });
+};
+
+const ioHandlerRemoveFilePassword = (data: GenericFileData): void => {
+  const { fileId = '', ownerId = '' } = data;
+  state.listedFiles.forEach((item: ListedFile): void => {
+    if (item.id === fileId && item.ownerId === ownerId) {
+      item.withPassword = false;
+    }
   });
 };
 
@@ -335,6 +344,7 @@ onBeforeUnmount((): void => {
     io.off(EVENTS.downloadFile, ioHandlerDownloadFile);
     io.off(EVENTS.downloadFileError, ioHandlerDownloadFileError);
     io.off(EVENTS.listFile, ioHandlerListFile);
+    io.off(EVENTS.removePassword, ioHandlerRemoveFilePassword);
     io.off(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
     io.off(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
     io.off(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
@@ -376,6 +386,7 @@ onMounted((): void => {
       io.on(EVENTS.downloadFile, ioHandlerDownloadFile);
       io.on(EVENTS.downloadFileError, ioHandlerDownloadFileError);
       io.on(EVENTS.listFile, ioHandlerListFile);
+      io.on(EVENTS.removePassword, ioHandlerRemoveFilePassword);
       io.on(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
       io.on(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
       io.on(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
