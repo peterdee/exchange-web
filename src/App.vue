@@ -17,6 +17,7 @@ import type {
 import connection from './connection';
 import { decodeBase64ToBlob } from './utilities/base64';
 import DeviceNameModalComponent from './components/modals/DeviceNameModal.vue';
+import EnterPasswordModalComponent from './components/modals/EnterPasswordModal.vue';
 import { EVENTS, MESSAGES } from './configuration';
 import FileListComponent from './components/FileList.vue';
 import FileDetailsModalComponent from './components/modals/FileDetailsModal.vue';
@@ -32,6 +33,7 @@ interface AppState {
   connected: boolean;
   deviceName: string;
   downloads: DownloadedItem[];
+  enterPasswordModalFileId: string;
   fileDetailsFileId: string;
   isMobile: boolean;
   listedFiles: ListedFile[];
@@ -44,6 +46,7 @@ const state = reactive<AppState>({
   connected: false,
   deviceName: '',
   downloads: [],
+  enterPasswordModalFileId: '',
   fileDetailsFileId: '',
   isMobile: false,
   listedFiles: [],
@@ -55,6 +58,9 @@ const state = reactive<AppState>({
 const closeModal = (modalName: string): void => {
   if (modalName === 'details') {
     state.fileDetailsFileId = '';
+  }
+  if (modalName === 'enter-password') {
+    state.enterPasswordModalFileId = '';
   }
   if (modalName === 'password') {
     state.passwordModalFileId = '';
@@ -116,6 +122,10 @@ const handleFilePassword = (
     }
   });
 };
+
+// const handleShowEnterPasswordModal = (fileId: string): void => {
+//   state.enterPasswordModalFileId = fileId;
+// };
 
 const handleShowPasswordModal = (fileId: string): void => {
   state.passwordModalFileId = fileId;
@@ -416,6 +426,15 @@ onMounted((): void => {
       v-if="state.showDeviceNameModal"
       :is-mobile="state.isMobile"
       @handle-device-name="handleDeviceName"
+    />
+    <EnterPasswordModalComponent
+      v-if="!!state.enterPasswordModalFileId"
+      :is-mobile="state.isMobile"
+      :listed-file="state.listedFiles.filter(
+        (item: ListedFile): boolean => item.id === state.enterPasswordModalFileId,
+      )[0]"
+      @close-modal="(): void => closeModal('enter-password')"
+      @handle-download-file="handleDownloadFile"
     />
     <FileDetailsModalComponent
       v-if="!!state.fileDetailsFileId"
