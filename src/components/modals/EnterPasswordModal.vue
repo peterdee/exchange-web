@@ -1,14 +1,21 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
+import type { Socket } from 'socket.io-client';
 
+import type {
+  AcknowledgementMessage,
+  ListedFile,
+} from '../../types';
+import { EVENTS, MESSAGES, SPACER } from '../../configuration';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
-import type { ListedFile } from '../../types';
-import LockIconComponent from '../icons/LogoIcon.vue';
-import { SPACER } from '../../configuration';
+import LockIconComponent from '../icons/LockIcon.vue';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
+import connection from '../../connection';
+import sleep from '../../utilities/sleep';
 
 interface ComponentState {
+  errorMessage: string;
   isClosing: boolean;
   isLoading: boolean;
   password: string;
@@ -18,6 +25,7 @@ interface ComponentState {
 const emit = defineEmits([
   'close-modal',
   'handle-download-file',
+  'handle-store-grant',
 ]);
 
 const props = defineProps<{
@@ -26,6 +34,7 @@ const props = defineProps<{
 }>();
 
 const state = reactive<ComponentState>({
+  errorMessage: '',
   isClosing: false,
   isLoading: false,
   password: '',
@@ -46,15 +55,72 @@ const handleCloseModal = (delayedAction?: () => void): void => {
 };
 
 const handleInput = ({ value }: { value: string }): void => {
+  state.errorMessage = '';
   state.password = value;
+  state.passwordError = false;
 };
 
-const handleSubmit = (): void => {
-  state.isClosing = true;
-  setTimeout(
-    (): void => emit('handle-download-file', state.password),
-    240,
-  );
+const handleSubmit = async (): Promise<null | Socket> => {
+  const trimmedPassword = (state.password || '').trim();
+  if (!(connection.io.connected && trimmedPassword)) {
+    return null;
+  }
+  state.isLoading = true;
+  await sleep(500);
+  return connection.io.emit(
+    EVENTS.requestGrant,
+    {
+      fileId: props.listedFile.id,
+      ownerId: props.listedFile.ownerId,
+      password: trimmedPassword,
+    },
+    (response: AcknowledgementMessage<{ grant: string } | null>): null | void => {
+      const { info, status } = response;
+      if (status === 400) {
+        if (info === MESSAGES.fileNotFound) {
+          state.errorMessage = 'File not found!';
+        }
+        if (info === MESSAGES.fileOwnerDisconnected) {
+          state.errorMessage = 'File owner disconnected!';
+        }
+        if (info === MESSAGES.invalidData) {
+          state.errorMessage = 'Provided data is invalid!';
+        }
+        if (info === MESSAGES.missingRequiredData) {
+          state.errorMessage = 'Required data is missing!';
+        }
+        state.passwordError = true;
+        return null;
+      }
+      if (status === 401) {
+        state.errorMessage = 'Provided password is invalid!';
+        state.passwordError = true;
+        return null;
+      }
+      const { data } = response;
+      if (data && data.grant) {
+        emit(
+          'handle-store-grant',
+          {
+            fileId: props.listedFile.id,
+            grant: data.grant,
+          },
+        );
+        const delayedAction = (): void => emit(
+          'handle-download-file',
+          {
+            fileId: props.listedFile.id,
+            grant: data.grant,
+            ownerId: props.listedFile.ownerId,
+          },
+        );
+        return handleCloseModal(delayedAction);
+      }
+      state.errorMessage = 'Something went wrong...';
+      state.passwordError = true;
+      return null;
+    },
+  )
 };
 </script>
 
@@ -89,10 +155,10 @@ const handleSubmit = (): void => {
         </StyledButtonComponent>
       </div>
       <div class="ns mt-half input-title">
-        This file ({{ props.listedFile.name }}) is protected
+        File {{ props.listedFile.name }} requires password
       </div>
       <div class="ns mt-half input-title">
-        Please enter file password to download the file
+        Please enter file password to proceed
       </div>
       <form
         class="f d-col mt-half"
@@ -109,9 +175,11 @@ const handleSubmit = (): void => {
         />
         <StyledButtonComponent
           type="submit"
-          :disabled="!state.password || !(state.password || '').trim()"
+          :disabled="!state.password || !(state.password || '').trim() || state.isLoading"
           :globalClasses="['mt-half']"
+          :is-loading="state.isLoading"
           :is-positive="true"
+          :with-spinner="true"
         >
           Download
         </StyledButtonComponent>

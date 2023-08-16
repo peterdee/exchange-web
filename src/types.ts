@@ -39,6 +39,7 @@ export interface ListedFile {
   createdAt: number;
   deviceName: string;
   file?: File;
+  grant?: string;
   id: string;
   isOwner: boolean;
   name: string;

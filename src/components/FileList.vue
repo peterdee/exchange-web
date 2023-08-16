@@ -22,6 +22,7 @@ const emit = defineEmits([
   'handle-delete-file',
   'handle-download-file',
   'handle-open-file-details',
+  'handle-show-file-password-modal',
 ]);
 
 const props = defineProps<{
@@ -75,6 +76,32 @@ const handleDelete = (fileId: string): void => {
       state.deleteFileId = '';
     },
     240,
+  );
+};
+
+const handleDownload = (file: ListedFile): void => {
+  if (!file.withPassword) {
+    return emit(
+      'handle-download-file',
+      {
+        fileId: file.id,
+        ownerId: file.ownerId,
+      },
+    );
+  }
+  if (file.withPassword && file.grant) {
+    return emit(
+      'handle-download-file',
+      {
+        fileId: file.id,
+        grant: file.grant,
+        ownerId: file.ownerId,
+      },
+    );
+  }
+  return emit(
+    'handle-show-file-password-modal',
+    file.id,
   );
 };
 
@@ -154,13 +181,7 @@ const handleDrag = (): void => {
           title="Download"
           :custom-styles="{ height: '32px' }"
           :with-icon="true"
-          @handle-click="(): void => emit(
-            'handle-download-file',
-            {
-              fileId: file.id,
-              ownerId: file.ownerId,
-            },
-          )"
+          @handle-click="(): void => handleDownload(file)"
         >
           <DownloadIconComponent />
         </StyledButtonComponent>

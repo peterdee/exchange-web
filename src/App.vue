@@ -94,11 +94,21 @@ const handleDeviceName = (value: string): void => {
 }
 
 const handleDownloadFile = (
-  { fileId, ownerId }: { fileId: string, ownerId: string },
+  {
+    fileId = '',
+    grant = '',
+    ownerId = '',
+  }: {
+    fileId: string;
+    grant?: string;
+    ownerId: string;
+  },
 ): Socket => connection.io.emit(
+  // TODO: use acknowledgement for the case of invalid grant
   EVENTS.downloadFile,
   {
     fileId,
+    grant,
     ownerId,
   },
 );
@@ -123,12 +133,22 @@ const handleFilePassword = (
   });
 };
 
-// const handleShowEnterPasswordModal = (fileId: string): void => {
-//   state.enterPasswordModalFileId = fileId;
-// };
+const handleShowEnterPasswordModal = (fileId: string): void => {
+  state.enterPasswordModalFileId = fileId;
+};
 
 const handleShowPasswordModal = (fileId: string): void => {
   state.passwordModalFileId = fileId;
+};
+
+const handleStoreGrant = (
+  { fileId = '', grant = '' }: { fileId: string, grant: string },
+): void => {
+  state.listedFiles.forEach((item: ListedFile): void => {
+    if (item.id === fileId) {
+      item.grant = grant;
+    }
+  });
 };
 
 const handleUpdateDeviceName = (value: string): void => {
@@ -435,6 +455,7 @@ onMounted((): void => {
       )[0]"
       @close-modal="(): void => closeModal('enter-password')"
       @handle-download-file="handleDownloadFile"
+      @handle-store-grant="handleStoreGrant"
     />
     <FileDetailsModalComponent
       v-if="!!state.fileDetailsFileId"
@@ -487,6 +508,7 @@ onMounted((): void => {
         @handle-delete-file="handleDeleteFile"
         @handle-download-file="handleDownloadFile"
         @handle-open-file-details="handleFileDetails"
+        @handle-show-file-password-modal="handleShowEnterPasswordModal"
       />
       <FooterComponent
         :backend-status="state.connected

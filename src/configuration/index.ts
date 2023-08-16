@@ -22,6 +22,7 @@ export const EVENTS = {
   listFile: 'list-file',
   removePassword: 'remove-password',
   requestFileChunk: 'request-file-chunk',
+  requestGrant: 'request-grant',
   requestListedFiles: 'request-listed-files',
   updateDeviceName: 'update-device-name',
   updateFilePrivacy: 'update-file-privacy',
@@ -30,6 +31,10 @@ export const EVENTS = {
 
 export const MESSAGES = {
   fileNotFound: 'FILE_NOT_FOUND',
+  fileOwnerDisconnected: 'FILE_OWNER_DISCONNECTED',
+  invalidData: 'INVALID_DATA',
+  invalidPassword: 'INVALID_PASSWORD',
+  missingRequiredData: 'MISSING_REQUIRED_DATA',
 };
 
 export const SPACER = 16;
