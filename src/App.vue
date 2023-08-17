@@ -28,6 +28,7 @@ import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
 import isMobile from './utilities/is-mobile';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
+import saveFileOnDisk from './utilities/save-file-on-disk';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
 import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
 
@@ -361,15 +362,10 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
       (string: string, chunk: string): string => `${string}${chunk}`,
       '',
     );
-    const blob = decodeBase64ToBlob(base64String, completeFile.type);
-    const url = URL.createObjectURL(blob);
-    const downloadLink = window.document.createElement('a');
-    downloadLink.href = url;
-    downloadLink.download = completeFile.fileName;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    return URL.revokeObjectURL(url);
+    return saveFileOnDisk(
+      decodeBase64ToBlob(base64String, completeFile.type),
+      completeFile.fileName,
+    );
   }
 };
 
