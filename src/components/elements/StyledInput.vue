@@ -128,7 +128,7 @@ const togglePasswordVisibility = (): void => {
   height: calc(var(--spacer) * 2.5);
 }
 .error-border {
-  border-color: var(--error);
+  border-color: var(--negative);
 }
 .with-password {
   width: calc(100% - var(--spacer) * 2.5);

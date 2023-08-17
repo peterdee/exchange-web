@@ -6,13 +6,13 @@ import type {
   AcknowledgementMessage,
   ListedFile,
 } from '../../types';
+import connection from '../../connection';
 import { EVENTS, MESSAGES, SPACER } from '../../configuration';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import LockIconComponent from '../icons/LockIcon.vue';
+import sleep from '../../utilities/sleep';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
-import connection from '../../connection';
-import sleep from '../../utilities/sleep';
 
 interface ComponentState {
   errorMessage: string;
@@ -75,6 +75,7 @@ const handleSubmit = async (): Promise<null | Socket> => {
       password: trimmedPassword,
     },
     (response: AcknowledgementMessage<{ grant: string } | null>): null | void => {
+      state.isLoading = false;
       const { info, status } = response;
       if (status === 400) {
         if (info === MESSAGES.fileNotFound) {
@@ -173,6 +174,14 @@ const handleSubmit = async (): Promise<null | Socket> => {
           :with-error="state.passwordError"
           @handle-input="handleInput"
         />
+        <div class="f ai-center j-center error-block">
+          <div
+            v-if="state.passwordError"
+            class="ns t-center error-text"
+          >
+            {{ state.errorMessage }}
+          </div>
+        </div>
         <StyledButtonComponent
           type="submit"
           :disabled="!state.password || !(state.password || '').trim() || state.isLoading"
@@ -181,9 +190,20 @@ const handleSubmit = async (): Promise<null | Socket> => {
           :is-positive="true"
           :with-spinner="true"
         >
-          Download
+          Download file
         </StyledButtonComponent>
       </form>
     </div>
   </div>
 </template>
+
+<style scoped>
+.error-block {
+  height: calc(var(--spacer) * 3);
+}
+.error-text {
+  color: var(--negative);
+  font-size: calc(var(--spacer) * 1.25);
+  font-weight: 300;
+}
+</style>

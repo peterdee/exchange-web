@@ -18,6 +18,7 @@ interface ComponentState {
 const emit = defineEmits([
   'close-modal',
   'download-file',
+  'handle-show-file-password-modal',
   'toggle-password-modal',
 ]);
 
@@ -32,26 +33,48 @@ const state = reactive<ComponentState>({
   showPasswordModal: false,
 });
 
-const handleCloseModal = (): void => {
+const handleCloseModal = (delayedAction?: () => void): void => {
   state.isClosing = true;
   setTimeout(
-    (): void => emit('close-modal'),
+    (): void => {
+      if (delayedAction) {
+        delayedAction();
+      }
+      return emit('close-modal');
+    },
     240,
   );
 };
 
 const handleDownload = (): void => {
   state.isClosing = true;
-  setTimeout(
-    (): void => emit(
+  const { listedFile: file } = props;
+  if (!file.withPassword) {
+    const delayedAction = (): void => emit(
       'download-file',
       {
-        fileId: props.listedFile.id,
-        ownerId: props.listedFile.ownerId,
+        fileId: file.id,
+        ownerId: file.ownerId,
       },
-    ),
-    240,
+    );
+    return handleCloseModal(delayedAction);
+  }
+  if (file.withPassword && file.grant) {
+    const delayedAction = (): void => emit(
+      'download-file',
+      {
+        fileId: file.id,
+        grant: file.grant,
+        ownerId: file.ownerId,
+      },
+    );
+    return handleCloseModal(delayedAction);
+  }
+  const delayedAction = (): void => emit(
+    'handle-show-file-password-modal',
+    file.id,
   );
+  return handleCloseModal(delayedAction);
 };
 
 const handleShowPasswordModal = (): void => {
@@ -65,7 +88,7 @@ const handleShowPasswordModal = (): void => {
     :class="`f d-col j-center modal-background ${state.isClosing
       ? 'fade-out'
       : 'fade-in'}`"
-    @mousedown="handleCloseModal"
+    @mousedown="(): void => handleCloseModal()"
   >
     <div
       :class="`f d-col mh-auto p-1 modal-content ${props.isMobile

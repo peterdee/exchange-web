@@ -7,6 +7,7 @@ import {
 import type { Socket } from 'socket.io-client';
 
 import type {
+  AcknowledgementMessage,
   ChunkData,
   ChunkRequest,
   DownloadedItem,
@@ -17,6 +18,7 @@ import type {
 import connection from './connection';
 import { decodeBase64ToBlob } from './utilities/base64';
 import DeviceNameModalComponent from './components/modals/DeviceNameModal.vue';
+import DownloadErrorModalComponent from './components/modals/DownloadErrorModal.vue';
 import EnterPasswordModalComponent from './components/modals/EnterPasswordModal.vue';
 import { EVENTS, MESSAGES } from './configuration';
 import FileListComponent from './components/FileList.vue';
@@ -32,6 +34,7 @@ import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
 interface AppState {
   connected: boolean;
   deviceName: string;
+  downloadErrorMessage: string;
   downloads: DownloadedItem[];
   enterPasswordModalFileId: string;
   fileDetailsFileId: string;
@@ -45,6 +48,7 @@ interface AppState {
 const state = reactive<AppState>({
   connected: false,
   deviceName: '',
+  downloadErrorMessage: '',
   downloads: [],
   enterPasswordModalFileId: '',
   fileDetailsFileId: '',
@@ -58,6 +62,9 @@ const state = reactive<AppState>({
 const closeModal = (modalName: string): void => {
   if (modalName === 'details') {
     state.fileDetailsFileId = '';
+  }
+  if (modalName === 'download-error') {
+    state.downloadErrorMessage = '';
   }
   if (modalName === 'enter-password') {
     state.enterPasswordModalFileId = '';
@@ -104,12 +111,29 @@ const handleDownloadFile = (
     ownerId: string;
   },
 ): Socket => connection.io.emit(
-  // TODO: use acknowledgement for the case of invalid grant
   EVENTS.downloadFile,
   {
     fileId,
     grant,
     ownerId,
+  },
+  (response: AcknowledgementMessage): null | void => {
+    const { info, status } = response;
+    if (status === 400) {
+      if (info === MESSAGES.fileNotFound) {
+        state.downloadErrorMessage = 'File no longer available!';
+      }
+      if (info === MESSAGES.fileOwnerDisconnected) {
+        state.downloadErrorMessage = 'File owner disconnected!';
+      }
+      if (info === MESSAGES.missingRequiredData) {
+        state.downloadErrorMessage = 'Missing required data!';
+      }
+      return null;
+    }
+    if (response.status === 401) {
+      return handleShowEnterPasswordModal(fileId);
+    }
   },
 );
 
@@ -183,21 +207,15 @@ const ioHandlerDeleteFile = ({ fileId = '' }: { fileId: string }): void => {
   );
 };
 
-const ioHandlerDownloadFile = async (
+const ioHandlerDownloadFile = (
   data: { fileId: string; targetId: string },
-): Promise<Socket | void> => {
+): null | Socket => {
   const { fileId = '', targetId = '' } = data;
   const [file] = state.listedFiles.filter(
     (item: ListedFile): boolean => item.id === fileId && item.isOwner,
   );
   if (!file) {
-    return connection.io.emit(
-      EVENTS.downloadFileError,
-      {
-        info: MESSAGES.fileNotFound,
-        targetId,
-      }
-    );
+    return null;
   }
   return connection.io.emit(
     EVENTS.uploadFileChunk,
@@ -213,11 +231,6 @@ const ioHandlerDownloadFile = async (
       type: file.file?.type,
     },
   );
-};
-
-// TODO: handle errors
-const ioHandlerDownloadFileError = (data: unknown): void => {
-  console.log(data);
 };
 
 const ioHandlerListFile = (data: ListedFile): void => {
@@ -372,7 +385,6 @@ onBeforeUnmount((): void => {
     io.off(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
     io.off(EVENTS.deleteFile, ioHandlerDeleteFile);
     io.off(EVENTS.downloadFile, ioHandlerDownloadFile);
-    io.off(EVENTS.downloadFileError, ioHandlerDownloadFileError);
     io.off(EVENTS.listFile, ioHandlerListFile);
     io.off(EVENTS.removePassword, ioHandlerRemoveFilePassword);
     io.off(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
@@ -414,7 +426,6 @@ onMounted((): void => {
       io.on(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
       io.on(EVENTS.deleteFile, ioHandlerDeleteFile);
       io.on(EVENTS.downloadFile, ioHandlerDownloadFile);
-      io.on(EVENTS.downloadFileError, ioHandlerDownloadFileError);
       io.on(EVENTS.listFile, ioHandlerListFile);
       io.on(EVENTS.removePassword, ioHandlerRemoveFilePassword);
       io.on(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
@@ -447,6 +458,12 @@ onMounted((): void => {
       :is-mobile="state.isMobile"
       @handle-device-name="handleDeviceName"
     />
+    <DownloadErrorModalComponent
+      v-if="state.downloadErrorMessage"
+      :is-mobile="state.isMobile"
+      :message="state.downloadErrorMessage"
+      @close-modal="(): void => closeModal('download-error')"
+    />
     <EnterPasswordModalComponent
       v-if="!!state.enterPasswordModalFileId"
       :is-mobile="state.isMobile"
@@ -465,6 +482,7 @@ onMounted((): void => {
       )[0]"
       @close-modal="(): void => closeModal('details')"
       @download-file="handleDownloadFile"
+      @handle-show-file-password-modal="handleShowEnterPasswordModal"
       @toggle-password-modal="handleShowPasswordModal"
     />
     <PasswordModalComponent

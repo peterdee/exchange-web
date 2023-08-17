@@ -3,7 +3,7 @@ export const CHUNK_SIZE = 1024 * 128;
 export const COLORS = {
   accent: '#1e7878',
   accentLight: '#53acac',
-  error: '#ee3020',
+  error: '#aa2111',
   muted: '#999999',
   mutedLight: '#bbbbbb',
   positive: '#60be60',
@@ -18,7 +18,6 @@ export const EVENTS = {
   deleteFile: 'delete-file',
   disconnect: 'disconnect',
   downloadFile: 'download-file',
-  downloadFileError: 'download-file-error',
   listFile: 'list-file',
   removePassword: 'remove-password',
   requestFileChunk: 'request-file-chunk',
