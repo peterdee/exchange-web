@@ -224,12 +224,12 @@ const ioHandlerDownloadFile = (
       chunk: file.chunks[0],
       currentChunk: 1,
       fileId,
-      fileName: file.name,
-      fileSize: file.size,
+      fileName: file.fileName,
+      fileSize: file.fileSize,
       ownerId: file.ownerId,
       targetId,
       totalChunks: file.chunks.length,
-      type: file.file?.type,
+      type: file.fileType,
     },
   );
 };
@@ -272,12 +272,12 @@ const ioHandlerRequestFileChunk = (data: ChunkRequest): Socket => {
       chunk: chunks[chunkIndex],
       currentChunk: chunkIndex,
       fileId,
-      fileName: file.name,
-      fileSize: file.size,
+      fileName: file.fileName,
+      fileSize: file.fileSize,
       ownerId: file.ownerId,
       targetId,
       totalChunks: chunks.length,
-      type: file.file?.type,
+      type: file.fileType,
     },
   );
 };

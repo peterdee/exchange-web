@@ -52,21 +52,22 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
     props.deviceName,
     props.ownerId,
   );
-  preparedFiles.forEach((entry: ListedFile): void => {
+  preparedFiles.forEach((file: ListedFile): void => {
     if (connection.io.connected) {
       connection.io.emit(
         EVENTS.listFile,
         {
-          createdAt: entry.createdAt,
-          deviceName: entry.deviceName,
-          id: entry.id,
-          name: entry.name,
-          ownerId: entry.ownerId,
-          size: entry.size,
+          createdAt: file.createdAt,
+          deviceName: file.deviceName,
+          fileName: file.fileName,
+          fileSize: file.fileSize,
+          id: file.id,
+          ownerId: file.ownerId,
+          withPassword: file.withPassword,
         },
       );
     }
-    return emit('handle-add-file', entry);
+    return emit('handle-add-file', file);
   });
 };
 
@@ -169,7 +170,7 @@ const handleDrag = (): void => {
           <CheckIconComponent :color="COLORS.accent" />
         </div>
         <div class="ml-half ns input-title file-name">
-          {{ file.name }}
+          {{ file.fileName }}
         </div>
       </div>
       <div class="f">
@@ -197,10 +198,15 @@ const handleDrag = (): void => {
           v-if="!file.isOwner"
           title="Download"
           :custom-styles="{ height: '32px' }"
+          :disabled="file.isDownloading"
           :with-icon="true"
           @handle-click="(): void => handleDownload(file)"
         >
-          <DownloadIconComponent />
+          <DownloadIconComponent
+            :color="file.isDownloading
+              ? COLORS.mutedLight
+              : COLORS.accent"
+          />
         </StyledButtonComponent>
       </div>
     </div>

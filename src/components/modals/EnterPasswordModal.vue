@@ -156,7 +156,7 @@ const handleSubmit = async (): Promise<null | Socket> => {
         </StyledButtonComponent>
       </div>
       <div class="ns mt-half input-title">
-        File {{ props.listedFile.name }} requires password
+        File {{ props.listedFile.fileName }} requires password
       </div>
       <div class="ns mt-half input-title">
         Please enter file password to proceed

@@ -152,7 +152,7 @@ const handleSubmit = async (): Promise<null | Socket | void> => {
         {{
           `${props.listedFile.withPassword
             ? 'Change'
-            : 'Add'} password for file ${props.listedFile.name}`
+            : 'Add'} password for file ${props.listedFile.fileName}`
         }}
       </div>
       <form

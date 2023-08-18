@@ -17,7 +17,7 @@ export default async function prepareSharedFiles(
   files.forEach((file: File, index: number): void => {
     const alreadyListed = listedFiles.filter(
       (item: ListedFile): boolean => item.id === hashes[index]
-        && item.file?.name === file.name && item.file?.size === file.size,
+        && item.fileName === file.name && item.fileSize === file.size,
     );
     if (alreadyListed.length === 0) {
       const entry: ListedFile = {
@@ -26,17 +26,17 @@ export default async function prepareSharedFiles(
         deviceName,
         downloadCompleted: false,
         downloadPercent: 0,
-        file,
+        fileLastModified: file.lastModified,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
         grant: '',
         id: hashes[index],
         isDownloading: false,
         isOwner: true,
-        name: file.name,
         ownerId,
-        size: file.size,
         withPassword: false,
       };
-      console.log('enc len', encoded[0].length);
       let chunk = '';
       for (let i = 0; i < encoded[index].length; i += 1) {
         chunk += encoded[index][i];
@@ -48,7 +48,6 @@ export default async function prepareSharedFiles(
       if (chunk) {
         entry.chunks.push(chunk);
       }
-      console.log('chnks', entry.chunks.length);
       result.push(entry);
     }
   });

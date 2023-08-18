@@ -116,10 +116,10 @@ const handleShowPasswordModal = (): void => {
         </StyledButtonComponent>
       </div>
       <div class="mt-half ns input-title">
-        File name: {{ props.listedFile.name }}
+        File name: {{ props.listedFile.fileName }}
       </div>
       <div class="mt-half ns input-title">
-        File size: {{ formatFileSize(props.listedFile.size) }}
+        File size: {{ formatFileSize(props.listedFile.fileSize) }}
       </div>
       <div class="mt-half ns input-title">
         Added: {{ `${formatDate(props.listedFile.createdAt)}${!props.listedFile.isOwner
@@ -141,6 +141,7 @@ const handleShowPasswordModal = (): void => {
           }}
         </div>
         <StyledButtonComponent
+          :disabled="props.listedFile.isDownloading"
           :globalClasses="['mt-half']"
           :is-positive="true"
           @handle-click="handleDownload"

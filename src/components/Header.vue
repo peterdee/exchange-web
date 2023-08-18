@@ -37,21 +37,22 @@ const handleUploadButton = (): void => {
         props.deviceName,
         props.ownerId,
       );
-      preparedFiles.forEach((entry: ListedFile): void => {
+      preparedFiles.forEach((file: ListedFile): void => {
         if (connection.io.connected) {
           connection.io.emit(
             EVENTS.listFile,
             {
-              createdAt: entry.createdAt,
-              deviceName: entry.deviceName,
-              id: entry.id,
-              name: entry.name,
-              ownerId: entry.ownerId,
-              size: entry.size,
+              createdAt: file.createdAt,
+              deviceName: file.deviceName,
+              fileName: file.fileName,
+              fileSize: file.fileSize,
+              id: file.id,
+              ownerId: file.ownerId,
+              withPassword: file.withPassword,
             },
           );
         }
-        emit('handle-add-file', entry);
+        emit('handle-add-file', file);
       });
     }
     document.body.removeChild(element);

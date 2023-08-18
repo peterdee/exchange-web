@@ -40,14 +40,15 @@ export interface ListedFile {
   deviceName: string;
   downloadCompleted: boolean;
   downloadPercent: number;
-  file?: File;
-  grant?: string;
+  fileLastModified: number;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  grant: string;
   id: string;
   isDownloading: boolean;
   isOwner: boolean;
-  name: string;
   ownerId: string;
-  size: number;
   withPassword: boolean;
 }
 
