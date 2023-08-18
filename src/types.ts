@@ -38,9 +38,12 @@ export interface ListedFile {
   chunks: string[];
   createdAt: number;
   deviceName: string;
+  downloadCompleted: boolean;
+  downloadPercent: number;
   file?: File;
   grant?: string;
   id: string;
+  isDownloading: boolean;
   isOwner: boolean;
   name: string;
   ownerId: string;

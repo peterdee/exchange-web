@@ -237,6 +237,10 @@ const ioHandlerDownloadFile = (
 const ioHandlerListFile = (data: ListedFile): void => {
   state.listedFiles.push({
     ...data,
+    downloadCompleted: false,
+    downloadPercent: 0,
+    grant: '',
+    isDownloading: false,
     isOwner: false,
   });
 };
@@ -283,6 +287,10 @@ const ioHandlerRequestListedFiles = (data: ListedFile[]): void => {
     data.forEach((item: ListedFile): void => {
       state.listedFiles.push({
         ...item,
+        downloadCompleted: false,
+        downloadPercent: 0,
+        grant: '',
+        isDownloading: false,
         isOwner: false,
       });
     });
@@ -314,6 +322,13 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
     (item: DownloadedItem): boolean => item.fileId === fileId,
   );
   if (!downloadedFileEntry) {
+    state.listedFiles.forEach((item: ListedFile): void => {
+      if (item.id === fileId) {
+        item.downloadCompleted = false;
+        item.downloadPercent = Math.round(currentChunk / (totalChunks / 100));
+        item.isDownloading = true;
+      }
+    });
     const newEntry: DownloadedItem = {
       chunks: [chunk],
       downloadCompleted: currentChunk === totalChunks,
@@ -340,6 +355,11 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
     );
   }
   if (currentChunk < totalChunks) {
+    state.listedFiles.forEach((item: ListedFile): void => {
+      if (item.id === fileId) {
+        item.downloadPercent = Math.round(currentChunk / (totalChunks / 100));
+      }
+    });
     return connection.io.emit(
       EVENTS.requestFileChunk,
       {
@@ -362,6 +382,16 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
       (string: string, chunk: string): string => `${string}${chunk}`,
       '',
     );
+    state.downloads = state.downloads.filter(
+      (item: DownloadedItem): boolean => item.fileId !== fileId,
+    );
+    state.listedFiles.forEach((item: ListedFile): void => {
+      if (item.id === fileId) {
+        item.downloadCompleted = true;
+        item.downloadPercent = 100;
+        item.isDownloading = false;
+      }
+    });
     return saveFileOnDisk(
       decodeBase64ToBlob(base64String, completeFile.type),
       completeFile.fileName,

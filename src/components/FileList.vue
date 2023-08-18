@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
+import CheckIconComponent from './icons/CheckIcon.vue';
 import { COLORS, EVENTS } from '../configuration';
 import connection from '../connection';
 import DeleteIconComponent from './icons/DeleteIcon.vue';
@@ -11,6 +12,7 @@ import LockIconComponent from './icons/LockIcon.vue';
 import MenuDotsIconComponent from './icons/MenuDotsIcon.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
 import StyledButtonComponent from './elements/StyledButton.vue';
+import StyledCircularProgressBarComponent from './elements/StyledCircularProgressBar.vue';
 
 interface ComponentState {
   deleteFileId: string;
@@ -140,6 +142,7 @@ const handleDrag = (): void => {
     >
       <div class="f ai-center name-container">
         <div
+          v-if="!file.downloadCompleted && !file.isDownloading"
           class="icon"
           :title="file.withPassword
             ? 'Protected with password'
@@ -150,6 +153,20 @@ const handleDrag = (): void => {
               ? COLORS.mutedLight
               : COLORS.accent"
           />
+        </div>
+        <div
+          v-if="!file.downloadCompleted && file.isDownloading"
+          class="icon"
+          :title="`Downloading file (${file.downloadPercent}%)`"
+        >
+          <StyledCircularProgressBarComponent :percent="file.downloadPercent" />
+        </div>
+        <div
+          v-if="file.downloadCompleted && !file.isDownloading"
+          class="icon"
+          title="Download completed"
+        >
+          <CheckIconComponent :color="COLORS.accent" />
         </div>
         <div class="ml-half ns input-title file-name">
           {{ file.name }}

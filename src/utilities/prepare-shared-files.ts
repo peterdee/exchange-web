@@ -24,17 +24,22 @@ export default async function prepareSharedFiles(
         chunks: [],
         createdAt: Date.now(),
         deviceName,
+        downloadCompleted: false,
+        downloadPercent: 0,
         file,
+        grant: '',
         id: hashes[index],
+        isDownloading: false,
         isOwner: true,
         name: file.name,
         ownerId,
         size: file.size,
         withPassword: false,
       };
+      console.log('enc len', encoded[0].length);
       let chunk = '';
-      for (let i = 0; i < encoded.length; i += 1) {
-        chunk += encoded[i];
+      for (let i = 0; i < encoded[index].length; i += 1) {
+        chunk += encoded[index][i];
         if (chunk.length === CHUNK_SIZE) {
           entry.chunks.push(chunk);
           chunk = '';
@@ -43,6 +48,7 @@ export default async function prepareSharedFiles(
       if (chunk) {
         entry.chunks.push(chunk);
       }
+      console.log('chnks', entry.chunks.length);
       result.push(entry);
     }
   });

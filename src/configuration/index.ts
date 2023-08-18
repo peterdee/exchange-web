@@ -1,4 +1,4 @@
-export const CHUNK_SIZE = 1024 * 128;
+export const CHUNK_SIZE = Number(import.meta.env.VITE_CHUNK_SIZE) || 1024 * 120;
 
 export const COLORS = {
   accent: '#1e7878',
@@ -6,6 +6,7 @@ export const COLORS = {
   error: '#aa2111',
   muted: '#999999',
   mutedLight: '#bbbbbb',
+  mutedSuperLight: '#dfdfdf',
   positive: '#60be60',
 };
 
