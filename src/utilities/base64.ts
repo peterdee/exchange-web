@@ -25,6 +25,7 @@ export function encodeFileToBase64(file: File): Promise<string> {
         if (!binary) {
           return resolve('');
         }
+        // TODO: chunks should be ArrayBuffer slices
         const bytes = new Uint8Array(binary as ArrayBuffer);
         let string = '';
         for (let i = 0; i < bytes.length; i += 1) {
