@@ -1,5 +1,4 @@
-import { CHUNK_SIZE } from '../configuration';
-import { encodeFileToBase64 } from './base64';
+import { convertFileToArrayBufferChunks } from './binary';
 import getHash from './get-hash';
 import type { ListedFile } from '../types';
 
@@ -12,7 +11,7 @@ export default async function prepareSharedFiles(
   const hashes = await Promise.all(files.map(
     (file: File): Promise<string> => getHash(file),
   ));
-  const encoded = await Promise.all(files.map(encodeFileToBase64));
+  const chunkedFiles = await Promise.all(files.map(convertFileToArrayBufferChunks));
   const result: ListedFile[] = [];
   files.forEach((file: File, index: number): void => {
     const alreadyListed = listedFiles.filter(
@@ -21,7 +20,7 @@ export default async function prepareSharedFiles(
     );
     if (alreadyListed.length === 0) {
       const entry: ListedFile = {
-        chunks: [],
+        chunks: chunkedFiles[index],
         createdAt: Date.now(),
         deviceName,
         downloadCompleted: false,
@@ -37,17 +36,6 @@ export default async function prepareSharedFiles(
         ownerId,
         withPassword: false,
       };
-      let chunk = '';
-      for (let i = 0; i < encoded[index].length; i += 1) {
-        chunk += encoded[index][i];
-        if (chunk.length === CHUNK_SIZE) {
-          entry.chunks.push(chunk);
-          chunk = '';
-        }
-      }
-      if (chunk) {
-        entry.chunks.push(chunk);
-      }
       result.push(entry);
     }
   });

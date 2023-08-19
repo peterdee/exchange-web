@@ -4,9 +4,7 @@ export function convertArrayBufferChunksToBlob(
   chunks: ArrayBuffer[],
   type: string = '',
 ): Blob {
-  for (let i = 0; i < chunks.length; i += 1) {
-
-  }
+  return new Blob([...chunks], { type });
 }
 
 export function convertFileToArrayBufferChunks(file: File): Promise<ArrayBuffer[]> {

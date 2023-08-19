@@ -12,7 +12,7 @@ export interface GenericFileData {
 }
 
 export interface ChunkData extends GenericFileData {
-  chunk: string;
+  chunk: ArrayBuffer;
   currentChunk: number;
   fileName: string;
   fileSize: string;
@@ -26,7 +26,7 @@ export type ChunkRequest = Pick<ChunkData, 'fileId' | 'ownerId' | 'targetId'> & 
 }
 
 export interface DownloadedItem extends GenericFileData {
-  chunks: string[];
+  chunks: ArrayBuffer[];
   downloadCompleted: boolean;
   fileName: string;
   fileSize: string;
@@ -35,7 +35,7 @@ export interface DownloadedItem extends GenericFileData {
 }
 
 export interface ListedFile {
-  chunks: string[];
+  chunks: ArrayBuffer[];
   createdAt: number;
   deviceName: string;
   downloadCompleted: boolean;
