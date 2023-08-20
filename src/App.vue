@@ -16,7 +16,7 @@ import type {
   UpdateDeviceName,
 } from './types';
 import connection from './connection';
-import { decodeBase64ToBlob } from './utilities/base64';
+import { convertArrayBufferChunksToBlob } from './utilities/binary';
 import DeviceNameModalComponent from './components/modals/DeviceNameModal.vue';
 import DownloadErrorModalComponent from './components/modals/DownloadErrorModal.vue';
 import EnterPasswordModalComponent from './components/modals/EnterPasswordModal.vue';
@@ -254,29 +254,29 @@ const ioHandlerRemoveFilePassword = (data: GenericFileData): void => {
   });
 };
 
-const ioHandlerRequestFileChunk = (data: ChunkRequest): Socket => {
+const ioHandlerRequestFileChunk = (data: ChunkRequest): null | Socket => {
   const {
     chunkIndex,
     fileId,
     targetId,
   } = data;
-
-  // TODO: handle errors & edge cases
-  const [file] = state.listedFiles.filter(
+  const [file = null] = state.listedFiles.filter(
     (item: ListedFile): boolean => item.id === fileId,
   );
-  const { chunks = [] } = file;
+  if (!file) {
+    return null;
+  }
   return connection.io.emit(
     EVENTS.uploadFileChunk,
     {
-      chunk: chunks[chunkIndex],
+      chunk: file.chunks[chunkIndex],
       currentChunk: chunkIndex,
       fileId,
       fileName: file.fileName,
       fileSize: file.fileSize,
       ownerId: file.ownerId,
       targetId,
-      totalChunks: chunks.length,
+      totalChunks: file.chunks.length,
       type: file.fileType,
     },
   );
@@ -378,10 +378,6 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
         (item: DownloadedItem): boolean => item.fileId === fileId,
       );
     }
-    const base64String = completeFile.chunks.reduce(
-      (string: string, chunk: string): string => `${string}${chunk}`,
-      '',
-    );
     state.downloads = state.downloads.filter(
       (item: DownloadedItem): boolean => item.fileId !== fileId,
     );
@@ -393,7 +389,7 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
       }
     });
     return saveFileOnDisk(
-      decodeBase64ToBlob(base64String, completeFile.type),
+      convertArrayBufferChunksToBlob(completeFile.chunks, completeFile.type),
       completeFile.fileName,
     );
   }
