@@ -28,6 +28,7 @@ import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
 import isMobile from './utilities/is-mobile';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
+import PrepareFilesModalComponent from './components/modals/PrepareFilesModal.vue';
 import saveFileOnDisk from './utilities/save-file-on-disk';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
 import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
@@ -43,6 +44,7 @@ interface AppState {
   listedFiles: ListedFile[];
   passwordModalFileId: string;
   showDeviceNameModal: boolean;
+  showPrepareFilesModal: boolean;
   showSettingsModal: boolean;
 }
 
@@ -57,6 +59,7 @@ const state = reactive<AppState>({
   listedFiles: [],
   passwordModalFileId: '',
   showDeviceNameModal: false,
+  showPrepareFilesModal: true,
   showSettingsModal: false,
 });
 
@@ -403,8 +406,13 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
   }
 };
 
-const toggleSettingsModal = (): void => {
-  state.showSettingsModal = !state.showSettingsModal;
+const toggleModal = (modalName: string): void => {
+  if (modalName === 'prepare-files') {
+    state.showPrepareFilesModal = !state.showPrepareFilesModal;
+  }
+  if (modalName === 'settings') {
+    state.showSettingsModal = !state.showSettingsModal;
+  }
 }
 
 onBeforeUnmount((): void => {
@@ -539,9 +547,14 @@ onMounted((): void => {
         :shared-files="state.listedFiles.filter(
           (item: ListedFile): boolean => item.ownerId === connection.io.id,
         ).length"
-        @close-modal="toggleSettingsModal"
+        @close-modal="(): void => toggleModal('settings')"
         @delete-all-files="handleDeleteAllFiles"
         @update-device-name="handleUpdateDeviceName"
+      />
+      <PrepareFilesModalComponent
+        v-if="state.showPrepareFilesModal"
+        :is-mobile="state.isMobile"
+        @close-modal="(): void => toggleModal('prepare-files')"
       />
       <HeaderComponent
         :device-name="state.deviceName"
@@ -549,7 +562,7 @@ onMounted((): void => {
         :listed-files="state.listedFiles"
         :owner-id="connection.io.id"
         @handle-add-file="handleAddFile"
-        @toggle-settings-modal="toggleSettingsModal"
+        @toggle-settings-modal="(): void => toggleModal('settings')"
       />
       <FileListComponent
         :device-name="state.deviceName"
