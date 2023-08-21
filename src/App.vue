@@ -469,7 +469,11 @@ onMounted((): void => {
 </script>
 
 <template>
-  <div class="f j-center h-100vh">
+  <div
+    :class="`f j-center ${state.isMobile
+      ? 'height-mobile'
+      : 'h-100vh'}`"
+  >
     <div
       v-if="!state.connected"
       class="f ai-center"
@@ -569,6 +573,10 @@ onMounted((): void => {
 </template>
 
 <style scoped>
+.height-mobile {
+  height: fill-available;
+  height: -webkit-fill-available;
+}
 .spinner-background {
   background-color: var(--accent);
   border-radius: 50%;

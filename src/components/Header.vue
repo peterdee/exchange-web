@@ -54,8 +54,8 @@ const handleUploadButton = (): void => {
         }
         emit('handle-add-file', file);
       });
+      document.body.removeChild(element);
     }
-    document.body.removeChild(element);
   };
 };
 </script>
