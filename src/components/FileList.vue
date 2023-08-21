@@ -237,6 +237,7 @@ const handleDrag = (): void => {
   white-space: nowrap;
 }
 .icon {
+  height: calc(var(--spacer) * 2);
   width: calc(var(--spacer) * 2);
 }
 .list-mobile {

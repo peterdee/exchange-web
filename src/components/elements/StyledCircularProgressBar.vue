@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-
 import { COLORS } from '../../configuration';
 
 const props = defineProps({
@@ -19,16 +17,15 @@ const props = defineProps({
     type: Number,
   },
 });
-
-const background = ref(`
-  radial-gradient(closest-side, white 60%, transparent 60% 100%),
-  conic-gradient(${props.fillColor} ${props.percent}%, ${props.emptyColor} 0)
-`);
-</script>
+</script>ååå
 
 <template>
   <div
     class="progress-bar"
+    :style="{ background: `
+      radial-gradient(closest-side, white 60%, transparent 60% 100%),
+      conic-gradient(${props.fillColor} ${props.percent}%, ${props.emptyColor} 0)
+    `}"
   >
     <progress
       max="100"
@@ -47,7 +44,6 @@ progress {
   width: 0;
 }
 .progress-bar {
-  background: v-bind(background);
   border-radius: 50%; 
   height: calc(var(--spacer) * 1.75);
   width: calc(var(--spacer) * 1.75);

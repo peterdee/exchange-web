@@ -269,7 +269,7 @@ const ioHandlerRequestFileChunk = (data: ChunkRequest): null | Socket => {
   return connection.io.emit(
     EVENTS.uploadFileChunk,
     {
-      chunk: file.chunks[chunkIndex],
+      chunk: file.chunks[chunkIndex - 1],
       currentChunk: chunkIndex,
       fileId,
       fileName: file.fileName,
@@ -318,10 +318,20 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
     totalChunks,
     type,
   } = data;
-  const [downloadedFileEntry = null] = state.downloads.filter(
-    (item: DownloadedItem): boolean => item.fileId === fileId,
-  );
-  if (!downloadedFileEntry) {
+  if (currentChunk === 1 && totalChunks === 1) {
+    state.listedFiles.forEach((item: ListedFile): void => {
+      if (item.id === fileId) {
+        item.downloadCompleted = true;
+        item.downloadPercent = 100
+        item.isDownloading = false;
+      }
+    });
+    return saveFileOnDisk(
+      convertArrayBufferChunksToBlob([chunk], type),
+      fileName,
+    );
+  }
+  if (currentChunk === 1 && totalChunks > 1) {
     state.listedFiles.forEach((item: ListedFile): void => {
       if (item.id === fileId) {
         item.downloadCompleted = false;
@@ -340,21 +350,22 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
       type,
     };
     state.downloads.push(newEntry);
-  } else {
-    downloadedFileEntry.chunks.push(chunk);
-    downloadedFileEntry.downloadCompleted = currentChunk === totalChunks;
-    state.downloads = state.downloads.reduce(
-      (array: DownloadedItem[], item: DownloadedItem): DownloadedItem[] => {
-        if (item.fileId === downloadedFileEntry.fileId) {
-          array.push(downloadedFileEntry);
-        }
-        array.push(item);
-        return array;
+    return connection.io.emit(
+      EVENTS.requestFileChunk,
+      {
+        chunkIndex: currentChunk + 1,
+        fileId,
+        ownerId,
+        targetId,
       },
-      [],
     );
   }
-  if (currentChunk < totalChunks) {
+  if (currentChunk > 1 && currentChunk < totalChunks) {
+    state.downloads.forEach((item: DownloadedItem): void => {
+      if (item.fileId === fileId) {
+        item.chunks.push(chunk);
+      }
+    });
     state.listedFiles.forEach((item: ListedFile): void => {
       if (item.id === fileId) {
         item.downloadPercent = Math.round(currentChunk / (totalChunks / 100));
@@ -369,17 +380,10 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
         targetId,
       },
     );
-  } else {
-    let completeFile: DownloadedItem;
-    if (downloadedFileEntry) {
-      completeFile = downloadedFileEntry;
-    } else {
-      [completeFile] = state.downloads.filter(
-        (item: DownloadedItem): boolean => item.fileId === fileId,
-      );
-    }
-    state.downloads = state.downloads.filter(
-      (item: DownloadedItem): boolean => item.fileId !== fileId,
+  }
+  if (currentChunk === totalChunks) {
+    const [downloadedFile] = state.downloads.filter(
+      (item: DownloadedItem): boolean => item.fileId === fileId,
     );
     state.listedFiles.forEach((item: ListedFile): void => {
       if (item.id === fileId) {
@@ -388,9 +392,13 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
         item.isDownloading = false;
       }
     });
-    return saveFileOnDisk(
-      convertArrayBufferChunksToBlob(completeFile.chunks, completeFile.type),
-      completeFile.fileName,
+    downloadedFile.chunks.push(chunk);
+    saveFileOnDisk(
+      convertArrayBufferChunksToBlob(downloadedFile.chunks, downloadedFile.type),
+      downloadedFile.fileName,
+    );
+    state.downloads = state.downloads.filter(
+      (item: DownloadedItem): boolean => item.fileId !== fileId,
     );
   }
 };
