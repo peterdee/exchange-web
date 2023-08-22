@@ -32,6 +32,7 @@ import PrepareFilesModalComponent from './components/modals/PrepareFilesModal.vu
 import saveFileOnDisk from './utilities/save-file-on-disk';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
 import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
+import wakeLock from './utilities/wakelock';
 
 interface AppState {
   connected: boolean;
@@ -442,6 +443,7 @@ onMounted((): void => {
   }
 
   state.isMobile = isMobile();
+  wakeLock();
 
   const deviceName = getValue<string>('deviceName');
   const deviceNameSet = getValue<boolean>('deviceNameSet');

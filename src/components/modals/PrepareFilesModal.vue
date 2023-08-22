@@ -5,9 +5,12 @@ import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import InfoIconComponent from '../icons/InfoIcon.vue';
 import { SPACER } from '../../configuration';
 import StyledButtonComponent from '../elements/StyledButton.vue';
+import StyledInputComponent from '../elements/StyledInput.vue';
 
 interface ComponentState {
   isClosing: boolean;
+  isLoading: boolean;
+  password: string;
 }
 
 const emit = defineEmits(['close-modal']);
@@ -18,6 +21,8 @@ const props = defineProps<{
 
 const state = reactive<ComponentState>({
   isClosing: false,
+  isLoading: false,
+  password: '',
 });
 
 const handleCloseModal = (delayedAction?: () => void): void => {
@@ -31,6 +36,10 @@ const handleCloseModal = (delayedAction?: () => void): void => {
     },
     240,
   );
+};
+
+const handleInput = ({ value }: { value: string }): void => {
+  state.password = value;
 };
 </script>
 
@@ -49,7 +58,7 @@ const handleCloseModal = (delayedAction?: () => void): void => {
       <div class="f ai-center">
         <InfoIconComponent :size="SPACER * 2" />
         <span class="mh-1 modal-title">
-          Prepare
+          {{ `Prepare${!props.isMobile ? ' files' : ''}` }}
         </span>
         </div>
         <StyledButtonComponent
@@ -64,6 +73,51 @@ const handleCloseModal = (delayedAction?: () => void): void => {
           />
         </StyledButtonComponent>
       </div>
+      <div class="mt-half ns input-title">
+        These files are going to be shared
+      </div>
+      <div class="mt-half p-1 ns list">
+        text
+      </div>
+      <div class="mv-half ns input-title">
+        <span class="mr-half">
+          Password protection:
+        </span>
+        <span
+          :class="`${!!state.password ? 'ok' : 'error'}`"
+        >
+          {{ !!state.password ? 'enabled' : 'disabled' }}
+        </span>
+      </div>
+      <StyledInputComponent
+        name="password"
+        placeholder="Add password"
+        type="password"
+        :disabled="state.isLoading"
+        :value="state.password"
+        @handle-input="handleInput"
+      />
+      <StyledButtonComponent
+        :disabled="state.isLoading || state.isClosing"
+        :global-classes="['mt-half']"
+      >
+        Share files
+      </StyledButtonComponent>
     </div>
   </div>
 </template>
+
+<style scoped>
+.error {
+  color: var(--negative);
+}
+.list {
+  background-color: var(--muted-super-light);
+  border-radius: var(--spacer-half);
+  height: calc(var(--spacer) * 10);
+  overflow-y: scroll;
+}
+.ok {
+  color: var(--success);
+}
+</style>
