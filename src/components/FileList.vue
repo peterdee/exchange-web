@@ -129,7 +129,7 @@ const handleDrag = (): void => {
       v-if="props.listedFiles.length === 0"
       class="t-center ns fade-in drop-files-text"
     >
-      Drop files here...
+      {{ props.isMobile ? 'No files shared' : 'Drop files here...' }}
     </div>
     <div
       v-if="props.listedFiles.length > 0"

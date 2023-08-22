@@ -21,12 +21,11 @@ const props = defineProps<{
 }>();
 
 const handleUploadButton = (): void => {
-  const element = window.document.createElement('input');
+  const element = document.createElement('input');
   element.multiple = true;
+  element.setAttribute('style', 'display: none');
   element.type = 'file';
-  document.body.appendChild(element);
-  element.click();
-  element.onchange = async (event: Event): Promise<void> => {
+  element.oninput = async (event: Event): Promise<void> => {
     const target = event.target as HTMLInputElement;
     const { files: fileList } = target;
     const files = [...fileList || []];
@@ -54,9 +53,11 @@ const handleUploadButton = (): void => {
         }
         emit('handle-add-file', file);
       });
-      document.body.removeChild(element);
     }
+    document.body.removeChild(element);
   };
+  document.body.appendChild(element);
+  element.click();
 };
 </script>
 
