@@ -1,27 +1,35 @@
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { onMounted, reactive } from 'vue';
 
+import { COLORS, SPACER } from '../../configuration';
+import CrossIconComponent from '../icons/CrossIcon.vue';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import InfoIconComponent from '../icons/InfoIcon.vue';
-import { SPACER } from '../../configuration';
+import type { ListedFile } from '../../types';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
 
 interface ComponentState {
   isClosing: boolean;
   isLoading: boolean;
+  listedFiles: ListedFile[];
   password: string;
 }
 
-const emit = defineEmits(['close-modal']);
+const emit = defineEmits([
+  'close-modal',
+  'handle-share-files',
+]);
 
 const props = defineProps<{
   isMobile: boolean;
+  preparedFiles: ListedFile[];
 }>();
 
 const state = reactive<ComponentState>({
   isClosing: false,
   isLoading: false,
+  listedFiles: [],
   password: '',
 });
 
@@ -41,6 +49,19 @@ const handleCloseModal = (delayedAction?: () => void): void => {
 const handleInput = ({ value }: { value: string }): void => {
   state.password = value;
 };
+
+const handleRemoveFile = (fileId: string): void => {
+  state.listedFiles = state.listedFiles.filter(
+    (item: ListedFile): boolean => item.id !== fileId,
+  );
+  if (state.listedFiles.length === 0) {
+    handleCloseModal();
+  }
+};
+
+onMounted((): void => {
+  state.listedFiles = props.preparedFiles;
+});
 </script>
 
 <template>
@@ -77,15 +98,34 @@ const handleInput = ({ value }: { value: string }): void => {
         These files are going to be shared
       </div>
       <div class="mt-half p-1 ns list">
-        text
+        <div
+          v-for="item in state.listedFiles"
+          class="f ai-center j-space-between"
+          :key="item.id"
+        >
+          <span>
+            {{ item.fileName }}
+          </span>
+          <StyledButtonComponent
+            title="Remove file"
+            :custom-styles="{
+              height: `${SPACER * 1.5}px`,
+            }"
+            :with-icon="true"
+            @handle-click="(): void => handleRemoveFile(item.id)"
+          >
+            <CrossIconComponent
+              :color="COLORS.error"
+              :size="SPACER * 1.5"
+            />
+          </StyledButtonComponent>
+        </div>
       </div>
       <div class="mv-half ns input-title">
         <span class="mr-half">
           Password protection:
         </span>
-        <span
-          :class="`${!!state.password ? 'ok' : 'error'}`"
-        >
+        <span :class="`${!!state.password ? 'ok' : 'error'}`">
           {{ !!state.password ? 'enabled' : 'disabled' }}
         </span>
       </div>
@@ -110,6 +150,10 @@ const handleInput = ({ value }: { value: string }): void => {
 <style scoped>
 .error {
   color: var(--negative);
+}
+.icon {
+  height: calc(var(--spacer) * 1.75);
+  width: calc(var(--spacer) * 1.75);
 }
 .list {
   background-color: var(--muted-super-light);

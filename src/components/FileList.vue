@@ -10,6 +10,7 @@ import getFilesFromDroppedItems from '../utilities/get-files-from-dropped-items'
 import type { ListedFile } from '../types';
 import LockIconComponent from './icons/LockIcon.vue';
 import MenuDotsIconComponent from './icons/MenuDotsIcon.vue';
+import PrepareFilesModalComponent from './modals/PrepareFilesModal.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
 import StyledButtonComponent from './elements/StyledButton.vue';
 import StyledCircularProgressBarComponent from './elements/StyledCircularProgressBar.vue';
@@ -17,6 +18,8 @@ import StyledCircularProgressBarComponent from './elements/StyledCircularProgres
 interface ComponentState {
   deleteFileId: string;
   drag: boolean;
+  preparedFiles: ListedFile[];
+  showPrepareFilesModal: boolean;
 }
 
 const emit = defineEmits([
@@ -37,39 +40,9 @@ const props = defineProps<{
 const state = reactive<ComponentState>({
   deleteFileId: '',
   drag: false,
+  preparedFiles: [],
+  showPrepareFilesModal: false,
 });
-
-const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
-  state.drag = false;
-  const { dataTransfer } = event;
-  if (!dataTransfer) {
-    return null;
-  }
-  const files = await getFilesFromDroppedItems(dataTransfer);
-  const preparedFiles = await prepareSharedFiles(
-    files,
-    props.listedFiles,
-    props.deviceName,
-    props.ownerId,
-  );
-  preparedFiles.forEach((file: ListedFile): void => {
-    if (connection.io.connected) {
-      connection.io.emit(
-        EVENTS.listFile,
-        {
-          createdAt: file.createdAt,
-          deviceName: file.deviceName,
-          fileName: file.fileName,
-          fileSize: file.fileSize,
-          id: file.id,
-          ownerId: file.ownerId,
-          withPassword: file.withPassword,
-        },
-      );
-    }
-    return emit('handle-add-file', file);
-  });
-};
 
 const handleDelete = (fileId: string): void => {
   state.deleteFileId = fileId;
@@ -111,9 +84,58 @@ const handleDownload = (file: ListedFile): void => {
 const handleDrag = (): void => {
   state.drag = !state.drag;
 };
+
+const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
+  state.drag = false;
+  state.showPrepareFilesModal = true;
+  const { dataTransfer } = event;
+  if (!dataTransfer) {
+    return null;
+  }
+  const files = await getFilesFromDroppedItems(dataTransfer);
+  state.preparedFiles = await prepareSharedFiles(
+    files,
+    props.listedFiles,
+    props.deviceName,
+    props.ownerId,
+  );
+};
+
+const handleShareFiles = (files: ListedFile[], password: string): void => {
+  files.forEach((file: ListedFile): void => {
+    if (connection.io.connected) {
+      connection.io.emit(
+        EVENTS.listFile,
+        {
+          // TODO: password protection logic
+          createdAt: file.createdAt,
+          deviceName: file.deviceName,
+          fileName: file.fileName,
+          fileSize: file.fileSize,
+          id: file.id,
+          ownerId: file.ownerId,
+          password: password,
+          withPassword: file.withPassword,
+        },
+      );
+    }
+    return emit('handle-add-file', file);
+  });
+};
+
+const togglePrepareFilesModal = (): void => {
+  state.showPrepareFilesModal = false;
+};
 </script>
 
 <template>
+  <PrepareFilesModalComponent
+    v-if="state.showPrepareFilesModal"
+    :is-mobile="props.isMobile"
+    :prepared-files="state.preparedFiles"
+    @close-modal="togglePrepareFilesModal"
+    @handle-share-files="handleShareFiles"
+  />
   <div
     :class="`f d-col mh-auto file-list ${state.drag
       ? 'drag'
