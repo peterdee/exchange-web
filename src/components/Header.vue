@@ -34,6 +34,7 @@ const state = reactive<ComponentState>({
 });
 
 const handleUploadButton = (): void => {
+  state.showPrepareFilesModal = true;
   const element = document.createElement('input');
   element.multiple = true;
   element.setAttribute('style', 'display: none');
@@ -43,31 +44,14 @@ const handleUploadButton = (): void => {
     const { files: fileList } = target;
     const files = [...fileList || []];
     if (files && Array.isArray(files) && files.length > 0) {
-      const preparedFiles = await prepareSharedFiles(
+      state.preparedFiles = await prepareSharedFiles(
         files,
         props.listedFiles,
         props.deviceName,
         props.ownerId,
       );
-      preparedFiles.forEach((file: ListedFile): void => {
-        if (connection.io.connected) {
-          connection.io.emit(
-            EVENTS.listFile,
-            {
-              createdAt: file.createdAt,
-              deviceName: file.deviceName,
-              fileName: file.fileName,
-              fileSize: file.fileSize,
-              id: file.id,
-              ownerId: file.ownerId,
-              withPassword: file.withPassword,
-            },
-          );
-        }
-        emit('handle-add-file', file);
-      });
+      document.body.removeChild(element);
     }
-    document.body.removeChild(element);
   };
   document.body.appendChild(element);
   element.click();
@@ -101,7 +85,7 @@ const handleShareFiles = (files: ListedFile[], password: string): void => {
 };
 
 const togglePrepareFilesModal = (): void => {
-  state.showPrepareFilesModal = false;
+  state.showPrepareFilesModal = !state.showPrepareFilesModal;
 };
 </script>
 
