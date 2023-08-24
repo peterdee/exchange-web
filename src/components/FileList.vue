@@ -107,19 +107,24 @@ const handleShareFiles = (files: ListedFile[], password: string): void => {
       connection.io.emit(
         EVENTS.listFile,
         {
-          // TODO: password protection logic
           createdAt: file.createdAt,
           deviceName: file.deviceName,
           fileName: file.fileName,
           fileSize: file.fileSize,
           id: file.id,
           ownerId: file.ownerId,
-          password: password,
-          withPassword: file.withPassword,
+          password,
+          withPassword: !!password,
         },
       );
     }
-    return emit('handle-add-file', file);
+    return emit(
+      'handle-add-file',
+      {
+        ...file,
+        withPassword: !!password,
+      },
+    );
   });
 };
 

@@ -1,12 +1,20 @@
 <script setup lang="ts">
+import { reactive } from 'vue';
+
 import { COLORS, EVENTS, SPACER } from '../configuration';
 import connection from '../connection';
 import type { ListedFile } from '../types';
 import LogoIconComponent from './icons/LogoIcon.vue';
+import PrepareFilesModalComponent from './modals/PrepareFilesModal.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
 import SettingsIconComponent from './icons/SettingsIcon.vue';
 import StyledButtonComponent from './elements/StyledButton.vue';
 import UplaodIconComponent from './icons/UploadIcon.vue';
+
+interface ComponentState {
+  preparedFiles: ListedFile[];
+  showPrepareFilesModal: boolean;
+}
 
 const emit = defineEmits([
   'handle-add-file',
@@ -19,6 +27,11 @@ const props = defineProps<{
   listedFiles: ListedFile[];
   ownerId: string;
 }>();
+
+const state = reactive<ComponentState>({
+  preparedFiles: [],
+  showPrepareFilesModal: false,
+});
 
 const handleUploadButton = (): void => {
   const element = document.createElement('input');
@@ -59,9 +72,47 @@ const handleUploadButton = (): void => {
   document.body.appendChild(element);
   element.click();
 };
+
+const handleShareFiles = (files: ListedFile[], password: string): void => {
+  files.forEach((file: ListedFile): void => {
+    if (connection.io.connected) {
+      connection.io.emit(
+        EVENTS.listFile,
+        {
+          createdAt: file.createdAt,
+          deviceName: file.deviceName,
+          fileName: file.fileName,
+          fileSize: file.fileSize,
+          id: file.id,
+          ownerId: file.ownerId,
+          password,
+          withPassword: !!password,
+        },
+      );
+    }
+    return emit(
+      'handle-add-file',
+      {
+        ...file,
+        withPassword: !!password,
+      },
+    );
+  });
+};
+
+const togglePrepareFilesModal = (): void => {
+  state.showPrepareFilesModal = false;
+};
 </script>
 
 <template>
+  <PrepareFilesModalComponent
+    v-if="state.showPrepareFilesModal"
+    :is-mobile="props.isMobile"
+    :prepared-files="state.preparedFiles"
+    @close-modal="togglePrepareFilesModal"
+    @handle-share-files="handleShareFiles"
+  />
   <header
     :class="`f ai-center j-space-between ${props.isMobile
       ? 'mh-1'

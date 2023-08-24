@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue';
+import { onUpdated, reactive } from 'vue';
 
 import { COLORS, SPACER } from '../../configuration';
 import CrossIconComponent from '../icons/CrossIcon.vue';
@@ -10,6 +10,7 @@ import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
 
 interface ComponentState {
+  firstUpdate: boolean;
   isClosing: boolean;
   isLoading: boolean;
   listedFiles: ListedFile[];
@@ -27,6 +28,7 @@ const props = defineProps<{
 }>();
 
 const state = reactive<ComponentState>({
+  firstUpdate: true,
   isClosing: false,
   isLoading: false,
   listedFiles: [],
@@ -59,8 +61,20 @@ const handleRemoveFile = (fileId: string): void => {
   }
 };
 
-onMounted((): void => {
-  state.listedFiles = props.preparedFiles;
+const handleShareFiles = (): void => {
+  const delayedAction = (): void => emit(
+    'handle-share-files',
+    state.listedFiles,
+    state.password,
+  );
+  return handleCloseModal(delayedAction);
+};
+
+onUpdated((): void => {
+  if (state.listedFiles.length === 0 && state.firstUpdate) {
+    state.firstUpdate = false;
+    state.listedFiles = props.preparedFiles;
+  }
 });
 </script>
 
@@ -103,7 +117,7 @@ onMounted((): void => {
           class="f ai-center j-space-between"
           :key="item.id"
         >
-          <span>
+          <span class="mv-quarter input-title file-name">
             {{ item.fileName }}
           </span>
           <StyledButtonComponent
@@ -140,6 +154,7 @@ onMounted((): void => {
       <StyledButtonComponent
         :disabled="state.isLoading || state.isClosing"
         :global-classes="['mt-half']"
+        @handle-click="handleShareFiles"
       >
         Share files
       </StyledButtonComponent>
@@ -150,6 +165,11 @@ onMounted((): void => {
 <style scoped>
 .error {
   color: var(--negative);
+}
+.file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .icon {
   height: calc(var(--spacer) * 1.75);
