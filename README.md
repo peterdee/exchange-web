@@ -1,10 +1,14 @@
 ## exchange-web
 
-Exchange project allows users to share files using browser on their devices.
+[Exchange](https://exchange.dyum.in) application allows users to share files using browser on their devices
 
-Shared files can be protected with a password.
+Shared files can be protected with a password
 
 Stack: [Vue](https://vuejs.org), [Socket.IO](https://www.npmjs.com/package/socket.io-client), [Typescript](https://www.typescriptlang.org), [common-styles](https://github.com/julyskies/common-styles)
+
+Demo: https://exchange.dyum.in
+
+Backend project is available here: https://github.com/peterdee/exchange-backend
 
 ### Deploy
 
@@ -51,6 +55,10 @@ npm run dev
 ```
 
 Local WEB application will be available at https://localhost:3000
+
+### Vercel deployment
+
+`release` branch is automatically deployed to [Vercel](https://vercel.com)
 
 ### License
 
