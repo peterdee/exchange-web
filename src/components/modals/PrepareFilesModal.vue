@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { onUpdated, reactive } from 'vue';
 
-import { COLORS, SPACER } from '../../configuration';
+import {
+  COLORS,
+  MAX_FILE_SIZE,
+  SPACER,
+} from '../../configuration';
 import CrossIconComponent from '../icons/CrossIcon.vue';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import InfoIconComponent from '../icons/InfoIcon.vue';
 import type { ListedFile } from '../../types';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
+import formatFileSize from '../../utilities/format-file-size';
 
 interface ComponentState {
   firstUpdate: boolean;
@@ -109,7 +114,10 @@ onUpdated((): void => {
         </StyledButtonComponent>
       </div>
       <div class="mt-half ns input-title">
-        These files are going to be shared
+        Maximum single file size: {{ formatFileSize(MAX_FILE_SIZE) }}
+      </div>
+      <div class="mt-half ns input-title">
+        These files are going to be shared:
       </div>
       <div class="mt-half p-1 ns list">
         <div

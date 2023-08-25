@@ -50,6 +50,9 @@ const handleUploadButton = (): void => {
         props.deviceName,
         props.ownerId,
       );
+      if (state.preparedFiles.length === 0) {
+        state.showPrepareFilesModal = false;
+      }
       document.body.removeChild(element);
     }
   };
