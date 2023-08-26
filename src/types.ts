@@ -23,7 +23,7 @@ export interface ChunkData extends GenericFileData {
 
 export type ChunkRequest = Pick<ChunkData, 'fileId' | 'ownerId' | 'targetId'> & {
   chunkIndex: number;
-}
+};
 
 export interface DownloadedItem extends GenericFileData {
   chunks: ArrayBuffer[];

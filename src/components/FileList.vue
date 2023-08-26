@@ -99,6 +99,9 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
     props.deviceName,
     props.ownerId,
   );
+  if (state.preparedFiles.length === 0) {
+    state.showPrepareFilesModal = false;
+  }
 };
 
 const handleShareFiles = (files: ListedFile[], password: string): void => {

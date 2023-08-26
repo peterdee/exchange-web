@@ -1,5 +1,6 @@
 import { convertFileToArrayBufferChunks } from './binary';
 import getHash from './get-hash';
+import { MAX_FILE_SIZE } from '../configuration';
 import type { ListedFile } from '../types';
 
 export default async function prepareSharedFiles(
@@ -18,7 +19,7 @@ export default async function prepareSharedFiles(
       (item: ListedFile): boolean => item.id === hashes[index]
         && item.fileName === file.name && item.fileSize === file.size,
     );
-    if (alreadyListed.length === 0) {
+    if (alreadyListed.length === 0 && file.size < MAX_FILE_SIZE) {
       const entry: ListedFile = {
         chunks: chunkedFiles[index],
         createdAt: Date.now(),

@@ -29,6 +29,8 @@ export const EVENTS = {
   uploadFileChunk: 'upload-file-chunk',
 };
 
+export const MAX_FILE_SIZE = Number(import.meta.env.VITE_MAX_FILE_SIZE) || 1024 * 1024 * 100;
+
 export const MESSAGES = {
   fileNotFound: 'FILE_NOT_FOUND',
   fileOwnerDisconnected: 'FILE_OWNER_DISCONNECTED',
