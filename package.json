@@ -1,6 +1,6 @@
 {
   "name": "exchange-web",
-  "description": "WEB application for Exchange project",
+  "description": "EXCHANGE allows users to share files using browser on their devices",
   "private": true,
   "version": "1.0.0",
   "type": "module",

@@ -1,6 +1,6 @@
 ## exchange-web
 
-[Exchange](https://exchange.dyum.in) application allows users to share files using browser on their devices
+[EXCHANGE](https://exchange.dyum.in) allows users to share files using browser on their devices
 
 Shared files can be protected with a password
 
