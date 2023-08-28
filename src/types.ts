@@ -49,6 +49,7 @@ export interface ListedFile {
   isDownloading: boolean;
   isOwner: boolean;
   ownerId: string;
+  totalDownloads: number;
   withPassword: boolean;
 }
 
@@ -56,3 +57,7 @@ export interface UpdateDeviceName {
   newDeviceName: string;
   ownerId: string;
 }
+
+export type UpdateTotalDownloads = Pick<GenericFileData, 'fileId'> & {
+  totalDownloads: number;
+};

@@ -14,6 +14,7 @@ import type {
   GenericFileData,
   ListedFile,
   UpdateDeviceName,
+UpdateTotalDownloads,
 } from './types';
 import connection from './connection';
 import { convertArrayBufferChunksToBlob } from './utilities/binary';
@@ -307,6 +308,15 @@ const ioHandlerUpdateDeviceName = (data: UpdateDeviceName): void => {
   });
 };
 
+const ioHandlerUpdateTotalDownloads = (data: UpdateTotalDownloads): void => {
+  const { fileId = '', totalDownloads = 0 } = data;
+  state.listedFiles.forEach((item: ListedFile): void => {
+    if (item.id === fileId) {
+      item.totalDownloads = totalDownloads;
+    }
+  });
+};
+
 const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
   const {
     chunk,
@@ -423,6 +433,7 @@ onBeforeUnmount((): void => {
     io.off(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
     io.off(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
     io.off(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
+    io.off(EVENTS.updateTotalDownloads, ioHandlerUpdateTotalDownloads);
     io.off(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
     io.emit(EVENTS.close);
   }
@@ -465,6 +476,7 @@ onMounted((): void => {
       io.on(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
       io.on(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
       io.on(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
+      io.on(EVENTS.updateTotalDownloads, ioHandlerUpdateTotalDownloads);
       io.on(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
       state.connected = true;
     },

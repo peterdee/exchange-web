@@ -35,6 +35,7 @@ export default async function prepareSharedFiles(
         isDownloading: false,
         isOwner: true,
         ownerId,
+        totalDownloads: 0,
         withPassword: false,
       };
       result.push(entry);

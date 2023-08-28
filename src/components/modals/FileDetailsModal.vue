@@ -126,6 +126,9 @@ const handleShowPasswordModal = (): void => {
           ? ' (owner time)'
           : ''}` }}
       </div>
+      <div class="mt-half ns input-title">
+        Downloads: {{ props.listedFile.totalDownloads }}
+      </div>
       <template v-if="!props.listedFile.isOwner">
         <div class="mt-half ns input-title">
           Owner: {{ props.listedFile.deviceName }}

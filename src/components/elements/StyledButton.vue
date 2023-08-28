@@ -114,6 +114,7 @@ const additionalClasses = props.globalClasses.length > 0
 }
 .styled-button {
   font-size: var(--spacer);
+  font-weight: 300;
   height: calc(var(--spacer) * 2.5);
 }
 </style>
