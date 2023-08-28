@@ -26,6 +26,7 @@ export const EVENTS = {
   requestListedFiles: 'request-listed-files',
   updateDeviceName: 'update-device-name',
   updateFilePrivacy: 'update-file-privacy',
+  updateTotalDownloads: 'update-total-downloads',
   uploadFileChunk: 'upload-file-chunk',
 };
 
