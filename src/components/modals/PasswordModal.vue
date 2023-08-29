@@ -3,11 +3,11 @@ import { reactive } from 'vue';
 import type { Socket } from 'socket.io-client';
 
 import type { AcknowledgementMessage, ListedFile } from '../../types';
-import connection from '../../connection';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import { EVENTS, SPACER } from '../../configuration';
 import LockIconComponent from '../icons/LockIcon.vue';
 import sleep from '../../utilities/sleep';
+import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
 
@@ -54,14 +54,14 @@ const handleInput = ({ value = '' }: { value: string }): void => {
 };
 
 const handleRemovePassword = async (): Promise<null | Socket | void> => {
-  if (connection.io.connected) {
+  if (store.io.connected) {
     state.isLoading = true;
     await sleep();
-    connection.io.emit(
+    store.io.emit(
       EVENTS.removePassword,
       {
         fileId: props.listedFile.id,
-        ownerId: connection.io.id,
+        ownerId: store.io.id,
       },
     );
     const delayedAction = (): void => emit(
@@ -83,14 +83,14 @@ const handleSubmit = async (): Promise<null | Socket | void> => {
     state.passwordError = true;
     return null;
   }
-  if (connection.io.connected) {
+  if (store.io.connected) {
     state.isLoading = true;
     await sleep();
-    return connection.io.emit(
+    return store.io.emit(
       EVENTS.changePassword,
       {
         fileId: props.listedFile.id,
-        ownerId: connection.io.id,
+        ownerId: store.io.id,
         password: trimmedPassword,
       },
       (response: AcknowledgementMessage): null | void => {

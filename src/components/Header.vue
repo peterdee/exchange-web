@@ -2,12 +2,12 @@
 import { reactive } from 'vue';
 
 import { COLORS, EVENTS, SPACER } from '../configuration';
-import connection from '../connection';
 import type { ListedFile } from '../types';
 import LogoIconComponent from './icons/LogoIcon.vue';
 import PrepareFilesModalComponent from './modals/PrepareFilesModal.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
 import SettingsIconComponent from './icons/SettingsIcon.vue';
+import store from '../store';
 import StyledButtonComponent from './elements/StyledButton.vue';
 import UplaodIconComponent from './icons/UploadIcon.vue';
 
@@ -62,8 +62,8 @@ const handleUploadButton = (): void => {
 
 const handleShareFiles = (files: ListedFile[], password: string): void => {
   files.forEach((file: ListedFile): void => {
-    if (connection.io.connected) {
-      connection.io.emit(
+    if (store.io.connected) {
+      store.io.emit(
         EVENTS.listFile,
         {
           createdAt: file.createdAt,
@@ -77,13 +77,10 @@ const handleShareFiles = (files: ListedFile[], password: string): void => {
         },
       );
     }
-    return emit(
-      'handle-add-file',
-      {
-        ...file,
-        withPassword: !!password,
-      },
-    );
+    store.listedFiles.push({
+      ...file,
+      withPassword: !!password,
+    });
   });
 };
 

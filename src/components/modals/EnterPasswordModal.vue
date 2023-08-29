@@ -6,11 +6,11 @@ import type {
   AcknowledgementMessage,
   ListedFile,
 } from '../../types';
-import connection from '../../connection';
 import { EVENTS, MESSAGES, SPACER } from '../../configuration';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import LockIconComponent from '../icons/LockIcon.vue';
 import sleep from '../../utilities/sleep';
+import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
 
@@ -62,12 +62,12 @@ const handleInput = ({ value }: { value: string }): void => {
 
 const handleSubmit = async (): Promise<null | Socket> => {
   const trimmedPassword = (state.password || '').trim();
-  if (!(connection.io.connected && trimmedPassword)) {
+  if (!(store.io.connected && trimmedPassword)) {
     return null;
   }
   state.isLoading = true;
   await sleep(500);
-  return connection.io.emit(
+  return store.io.emit(
     EVENTS.requestGrant,
     {
       fileId: props.listedFile.id,
