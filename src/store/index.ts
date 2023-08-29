@@ -1,7 +1,6 @@
 import { io, type Socket } from 'socket.io-client';
 import { reactive } from 'vue';
 
-import { convertArrayBufferChunksToBlob } from '../utilities/binary';
 import type {
   ChunkData,
   ChunkRequest,
@@ -11,6 +10,7 @@ import type {
   UpdateDeviceName,
   UpdateTotalDownloads,
 } from '../types';
+import { convertArrayBufferChunksToBlob } from '../utilities/binary';
 import { EVENTS } from '../configuration';
 import saveFileOnDisk from '../utilities/save-file-on-disk';
 import { WS_URL } from '../configuration';

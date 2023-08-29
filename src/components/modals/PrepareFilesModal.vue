@@ -8,11 +8,11 @@ import {
 } from '../../configuration';
 import CrossIconComponent from '../icons/CrossIcon.vue';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
+import formatFileSize from '../../utilities/format-file-size';
 import InfoIconComponent from '../icons/InfoIcon.vue';
 import type { ListedFile } from '../../types';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
-import formatFileSize from '../../utilities/format-file-size';
 
 interface ComponentState {
   firstUpdate: boolean;

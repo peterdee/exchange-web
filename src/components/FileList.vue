@@ -3,7 +3,6 @@ import { reactive } from 'vue';
 
 import CheckIconComponent from './icons/CheckIcon.vue';
 import { COLORS, EVENTS } from '../configuration';
-import connection from '../connection';
 import DeleteIconComponent from './icons/DeleteIcon.vue';
 import DownloadIconComponent from './icons/DownloadIcon.vue';
 import getFilesFromDroppedItems from '../utilities/get-files-from-dropped-items';
@@ -12,6 +11,7 @@ import LockIconComponent from './icons/LockIcon.vue';
 import MenuDotsIconComponent from './icons/MenuDotsIcon.vue';
 import PrepareFilesModalComponent from './modals/PrepareFilesModal.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
+import store from '../store';
 import StyledButtonComponent from './elements/StyledButton.vue';
 import StyledCircularProgressBarComponent from './elements/StyledCircularProgressBar.vue';
 
@@ -23,7 +23,6 @@ interface ComponentState {
 }
 
 const emit = defineEmits([
-  'handle-add-file',
   'handle-delete-file',
   'handle-download-file',
   'handle-open-file-details',
@@ -106,8 +105,8 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
 
 const handleShareFiles = (files: ListedFile[], password: string): void => {
   files.forEach((file: ListedFile): void => {
-    if (connection.io.connected) {
-      connection.io.emit(
+    if (store.io.connected) {
+      store.io.emit(
         EVENTS.listFile,
         {
           createdAt: file.createdAt,
@@ -121,13 +120,10 @@ const handleShareFiles = (files: ListedFile[], password: string): void => {
         },
       );
     }
-    return emit(
-      'handle-add-file',
-      {
-        ...file,
-        withPassword: !!password,
-      },
-    );
+    store.listedFiles.push({
+      ...file,
+      withPassword: !!password,
+    });
   });
 };
 

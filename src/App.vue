@@ -19,10 +19,10 @@ import FileDetailsModalComponent from './components/modals/FileDetailsModal.vue'
 import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
-import ioState, { handleDisconnect } from './connection';
 import isMobile from './utilities/is-mobile';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
+import store, { handleDisconnect } from './store';
 import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
 import wakeLock from './utilities/wakelock';
 
@@ -63,20 +63,16 @@ const closeModal = (modalName: string): void => {
   }
 };
 
-const handleAddFile = (entry: ListedFile): void => {
-  ioState.listedFiles.push(entry);
-};
-
 const handleDeleteAllFiles = (): void => {
-  ioState.listedFiles = [];
+  store.listedFiles = [];
   state.showSettingsModal = false;
 };
 
 const handleDeleteFile = ({ fileId }: { fileId: string }): Socket => {
-  ioState.listedFiles = ioState.listedFiles.filter(
+  store.listedFiles = store.listedFiles.filter(
     (item: ListedFile): boolean => item.id !== fileId,
   );
-  return ioState.io.emit(
+  return store.io.emit(
     EVENTS.deleteFile,
     { fileId },
   );
@@ -99,7 +95,7 @@ const handleDownloadFile = (
     grant?: string;
     ownerId: string;
   },
-): Socket => ioState.io.emit(
+): Socket => store.io.emit(
   EVENTS.downloadFile,
   {
     fileId,
@@ -139,7 +135,7 @@ const handleFilePassword = (
     withPassword: boolean;
   },
 ): void => {
-  ioState.listedFiles.forEach((item: ListedFile): void => {
+  store.listedFiles.forEach((item: ListedFile): void => {
     if (item.id === fileId) {
       item.withPassword = withPassword;
     }
@@ -157,7 +153,7 @@ const handleShowPasswordModal = (fileId: string): void => {
 const handleStoreGrant = (
   { fileId = '', grant = '' }: { fileId: string, grant: string },
 ): void => {
-  ioState.listedFiles.forEach((item: ListedFile): void => {
+  store.listedFiles.forEach((item: ListedFile): void => {
     if (item.id === fileId) {
       item.grant = grant;
     }
@@ -198,7 +194,7 @@ onMounted((): void => {
     state.deviceName = deviceName;
   }
 
-  ioState.io.open();
+  store.io.open();
 });
 </script>
 
@@ -209,7 +205,7 @@ onMounted((): void => {
       : 'h-100vh'}`"
   >
     <div
-      v-if="!ioState.connected"
+      v-if="!store.connected"
       class="f ai-center"
     >
       <div class="f d-col">
@@ -235,7 +231,7 @@ onMounted((): void => {
     <EnterPasswordModalComponent
       v-if="!!state.enterPasswordModalFileId"
       :is-mobile="state.isMobile"
-      :listed-file="ioState.listedFiles.filter(
+      :listed-file="store.listedFiles.filter(
         (item: ListedFile): boolean => item.id === state.enterPasswordModalFileId,
       )[0]"
       @close-modal="(): void => closeModal('enter-password')"
@@ -245,7 +241,7 @@ onMounted((): void => {
     <FileDetailsModalComponent
       v-if="!!state.fileDetailsFileId"
       :is-mobile="state.isMobile"
-      :listed-file="ioState.listedFiles.filter(
+      :listed-file="store.listedFiles.filter(
         (item: ListedFile): boolean => item.id === state.fileDetailsFileId,
       )[0]"
       @close-modal="(): void => closeModal('details')"
@@ -256,22 +252,22 @@ onMounted((): void => {
     <PasswordModalComponent
       v-if="!!state.passwordModalFileId"
       :is-mobile="state.isMobile"
-      :listed-file="ioState.listedFiles.filter(
+      :listed-file="store.listedFiles.filter(
         (item: ListedFile): boolean => item.id === state.passwordModalFileId,
       )[0]"
       @close-modal="(): void => closeModal('password')"
       @handle-file-password="handleFilePassword"
     />
     <div
-      v-if="ioState.connected"
+      v-if="store.connected"
       class="f d-col w-100"
     >
       <SettingsModalComponent
         v-if="state.showSettingsModal"
         :device-name="state.deviceName"
         :is-mobile="state.isMobile"
-        :shared-files="ioState.listedFiles.filter(
-          (item: ListedFile): boolean => item.ownerId === ioState.io.id,
+        :shared-files="store.listedFiles.filter(
+          (item: ListedFile): boolean => item.ownerId === store.io.id,
         ).length"
         @close-modal="(): void => toggleModal('settings')"
         @delete-all-files="handleDeleteAllFiles"
@@ -280,24 +276,22 @@ onMounted((): void => {
       <HeaderComponent
         :device-name="state.deviceName"
         :is-mobile="state.isMobile"
-        :listed-files="ioState.listedFiles"
-        :owner-id="ioState.io.id"
-        @handle-add-file="handleAddFile"
+        :listed-files="store.listedFiles"
+        :owner-id="store.io.id"
         @toggle-settings-modal="(): void => toggleModal('settings')"
       />
       <FileListComponent
         :device-name="state.deviceName"
         :is-mobile="state.isMobile"
-        :listed-files="ioState.listedFiles"
-        :owner-id="ioState.io.id"
-        @handle-add-file="handleAddFile"
+        :listed-files="store.listedFiles"
+        :owner-id="store.io.id"
         @handle-delete-file="handleDeleteFile"
         @handle-download-file="handleDownloadFile"
         @handle-open-file-details="handleFileDetails"
         @handle-show-file-password-modal="handleShowEnterPasswordModal"
       />
       <FooterComponent
-        :backend-status="ioState.connected
+        :backend-status="store.connected
           ? 'connected'
           : 'inaccessible'"
         :is-mobile="state.isMobile"

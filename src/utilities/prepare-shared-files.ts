@@ -1,7 +1,7 @@
 import { convertFileToArrayBufferChunks } from './binary';
 import getHash from './get-hash';
-import { MAX_FILE_SIZE } from '../configuration';
 import type { ListedFile } from '../types';
+import { MAX_FILE_SIZE } from '../configuration';
 
 export default async function prepareSharedFiles(
   files: File[],

@@ -1,10 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import {
-  COLORS,
-  SPACER,
-} from '../../configuration';
+import { COLORS, SPACER } from '../../configuration';
 import DangerIconComponent from '../icons/DangerIcon.vue';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import StyledButtonComponent from '../elements/StyledButton.vue';
@@ -20,9 +17,7 @@ const props = defineProps<{
   message: string;
 }>();
 
-const state = reactive<ComponentState>({
-  isClosing: false,
-});
+const state = reactive<ComponentState>({ isClosing: false });
 
 const handleCloseModal = (): void => {
   state.isClosing = true;
