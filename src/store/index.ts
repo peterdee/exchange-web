@@ -26,7 +26,7 @@ const connection = io(
   },
 );
 
-const state = reactive<{
+const store= reactive<{
   connected: boolean;
   downloads: DownloadedItem[];
   io: Socket;
@@ -40,7 +40,7 @@ const state = reactive<{
 
 const ioHandlerChangePassword = (data: GenericFileData): void => {
   const { fileId = '', ownerId = '' } = data;
-  state.listedFiles.forEach((item: ListedFile): void => {
+  store.listedFiles.forEach((item: ListedFile): void => {
     if (item.id === fileId && item.ownerId === ownerId) {
       item.withPassword = true;
     }
@@ -48,19 +48,19 @@ const ioHandlerChangePassword = (data: GenericFileData): void => {
 };
 
 const ioHandlerClientDisconnect = ({ id }: { id: string }): void => {
-  state.listedFiles = state.listedFiles.filter(
+  store.listedFiles = store.listedFiles.filter(
     (entry: ListedFile): boolean => entry.ownerId !== id,
   );
 };
 
 const ioHandlerDeleteAllFiles = ({ ownerId = '' }: { ownerId: string }): void => {
-  state.listedFiles = state.listedFiles.filter(
+  store.listedFiles = store.listedFiles.filter(
     (item: ListedFile): boolean => item.ownerId !== ownerId,
   );
 };
 
 const ioHandlerDeleteFile = ({ fileId = '' }: { fileId: string }): void => {
-  state.listedFiles = state.listedFiles.filter(
+  store.listedFiles = store.listedFiles.filter(
     (item: ListedFile): boolean => item.id !== fileId,
   );
 };
@@ -69,7 +69,7 @@ const ioHandlerDownloadFile = (
   data: { fileId: string; targetId: string },
 ): null | Socket => {
   const { fileId = '', targetId = '' } = data;
-  const [file] = state.listedFiles.filter(
+  const [file] = store.listedFiles.filter(
     (item: ListedFile): boolean => item.id === fileId && item.isOwner,
   );
   if (!file) {
@@ -92,7 +92,7 @@ const ioHandlerDownloadFile = (
 };
 
 const ioHandlerListFile = (data: ListedFile): void => {
-  state.listedFiles.push({
+  store.listedFiles.push({
     ...data,
     downloadCompleted: false,
     downloadPercent: 0,
@@ -104,7 +104,7 @@ const ioHandlerListFile = (data: ListedFile): void => {
 
 const ioHandlerRemoveFilePassword = (data: GenericFileData): void => {
   const { fileId = '', ownerId = '' } = data;
-  state.listedFiles.forEach((item: ListedFile): void => {
+  store.listedFiles.forEach((item: ListedFile): void => {
     if (item.id === fileId && item.ownerId === ownerId) {
       item.withPassword = false;
     }
@@ -117,7 +117,7 @@ const ioHandlerRequestFileChunk = (data: ChunkRequest): null | Socket => {
     fileId,
     targetId,
   } = data;
-  const [file = null] = state.listedFiles.filter(
+  const [file = null] = store.listedFiles.filter(
     (item: ListedFile): boolean => item.id === fileId,
   );
   if (!file) {
@@ -142,7 +142,7 @@ const ioHandlerRequestFileChunk = (data: ChunkRequest): null | Socket => {
 const ioHandlerRequestListedFiles = (data: ListedFile[]): void => {
   if (Array.isArray(data) && data.length > 0) {
     data.forEach((item: ListedFile): void => {
-      state.listedFiles.push({
+      store.listedFiles.push({
         ...item,
         downloadCompleted: false,
         downloadPercent: 0,
@@ -156,7 +156,7 @@ const ioHandlerRequestListedFiles = (data: ListedFile[]): void => {
 
 const ioHandlerUpdateDeviceName = (data: UpdateDeviceName): void => {
   const { newDeviceName = '', ownerId = '' } = data;
-  state.listedFiles.forEach((item: ListedFile): void => {
+  store.listedFiles.forEach((item: ListedFile): void => {
     if (item.ownerId === ownerId) {
       item.deviceName = newDeviceName;
     }
@@ -165,7 +165,7 @@ const ioHandlerUpdateDeviceName = (data: UpdateDeviceName): void => {
 
 const ioHandlerUpdateTotalDownloads = (data: UpdateTotalDownloads): void => {
   const { fileId = '', totalDownloads = 0 } = data;
-  state.listedFiles.forEach((item: ListedFile): void => {
+  store.listedFiles.forEach((item: ListedFile): void => {
     if (item.id === fileId) {
       item.totalDownloads = totalDownloads;
     }
@@ -185,7 +185,7 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
     type,
   } = data;
   if (currentChunk === 1 && totalChunks === 1) {
-    state.listedFiles.forEach((item: ListedFile): void => {
+    store.listedFiles.forEach((item: ListedFile): void => {
       if (item.id === fileId) {
         item.downloadCompleted = true;
         item.downloadPercent = 100
@@ -198,7 +198,7 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
     );
   }
   if (currentChunk === 1 && totalChunks > 1) {
-    state.listedFiles.forEach((item: ListedFile): void => {
+    store.listedFiles.forEach((item: ListedFile): void => {
       if (item.id === fileId) {
         item.downloadCompleted = false;
         item.downloadPercent = Math.round(currentChunk / (totalChunks / 100));
@@ -215,7 +215,7 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
       totalChunks,
       type,
     };
-    state.downloads.push(newEntry);
+    store.downloads.push(newEntry);
     return connection.emit(
       EVENTS.requestFileChunk,
       {
@@ -227,12 +227,12 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
     );
   }
   if (currentChunk > 1 && currentChunk < totalChunks) {
-    state.downloads.forEach((item: DownloadedItem): void => {
+    store.downloads.forEach((item: DownloadedItem): void => {
       if (item.fileId === fileId) {
         item.chunks.push(chunk);
       }
     });
-    state.listedFiles.forEach((item: ListedFile): void => {
+    store.listedFiles.forEach((item: ListedFile): void => {
       if (item.id === fileId) {
         item.downloadPercent = Math.round(currentChunk / (totalChunks / 100));
       }
@@ -248,10 +248,10 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
     );
   }
   if (currentChunk === totalChunks) {
-    const [downloadedFile] = state.downloads.filter(
+    const [downloadedFile] = store.downloads.filter(
       (item: DownloadedItem): boolean => item.fileId === fileId,
     );
-    state.listedFiles.forEach((item: ListedFile): void => {
+    store.listedFiles.forEach((item: ListedFile): void => {
       if (item.id === fileId) {
         item.downloadCompleted = true;
         item.downloadPercent = 100;
@@ -263,7 +263,7 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
       convertArrayBufferChunksToBlob(downloadedFile.chunks, downloadedFile.type),
       downloadedFile.fileName,
     );
-    state.downloads = state.downloads.filter(
+    store.downloads = store.downloads.filter(
       (item: DownloadedItem): boolean => item.fileId !== fileId,
     );
   }
@@ -287,30 +287,30 @@ connection.on(
     
     connection.emit(EVENTS.requestListedFiles);
 
-    state.connected = true;
-    state.io = connection;
+    store.connected = true;
+    store.io = connection;
   },
 );
 
 export const handleDisconnect = (): void => {
-  if (state.connected) {
-    state.io.off(EVENTS.changePassword, ioHandlerChangePassword);
-    state.io.off(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
-    state.io.off(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
-    state.io.off(EVENTS.deleteFile, ioHandlerDeleteFile);
-    state.io.off(EVENTS.downloadFile, ioHandlerDownloadFile);
-    state.io.off(EVENTS.listFile, ioHandlerListFile);
-    state.io.off(EVENTS.removePassword, ioHandlerRemoveFilePassword);
-    state.io.off(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
-    state.io.off(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
-    state.io.off(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
-    state.io.off(EVENTS.updateTotalDownloads, ioHandlerUpdateTotalDownloads);
-    state.io.off(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
+  if (store.connected) {
+    store.io.off(EVENTS.changePassword, ioHandlerChangePassword);
+    store.io.off(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
+    store.io.off(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
+    store.io.off(EVENTS.deleteFile, ioHandlerDeleteFile);
+    store.io.off(EVENTS.downloadFile, ioHandlerDownloadFile);
+    store.io.off(EVENTS.listFile, ioHandlerListFile);
+    store.io.off(EVENTS.removePassword, ioHandlerRemoveFilePassword);
+    store.io.off(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
+    store.io.off(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
+    store.io.off(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
+    store.io.off(EVENTS.updateTotalDownloads, ioHandlerUpdateTotalDownloads);
+    store.io.off(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
 
-    state.io.emit(EVENTS.close);
+    store.io.emit(EVENTS.close);
 
-    state.connected = false;
+    store.connected = false;
   }
 };
 
-export default state;
+export default store;
