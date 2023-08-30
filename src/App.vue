@@ -68,16 +68,6 @@ const handleDeleteAllFiles = (): void => {
   state.showSettingsModal = false;
 };
 
-const handleDeleteFile = ({ fileId }: { fileId: string }): Socket => {
-  store.listedFiles = store.listedFiles.filter(
-    (item: ListedFile): boolean => item.id !== fileId,
-  );
-  return store.io.emit(
-    EVENTS.deleteFile,
-    { fileId },
-  );
-};
-
 const handleDeviceName = (value: string): void => {
   state.deviceName = value;
   state.showDeviceNameModal = false;
@@ -285,7 +275,6 @@ onMounted((): void => {
         :is-mobile="state.isMobile"
         :listed-files="store.listedFiles"
         :owner-id="store.io.id"
-        @handle-delete-file="handleDeleteFile"
         @handle-download-file="handleDownloadFile"
         @handle-open-file-details="handleFileDetails"
         @handle-show-file-password-modal="handleShowEnterPasswordModal"

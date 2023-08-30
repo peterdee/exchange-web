@@ -16,10 +16,7 @@ interface ComponentState {
   showPrepareFilesModal: boolean;
 }
 
-const emit = defineEmits([
-  'handle-add-file',
-  'toggle-settings-modal',
-]);
+const emit = defineEmits(['toggle-settings-modal']);
 
 const props = defineProps<{
   deviceName: string;

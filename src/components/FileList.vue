@@ -23,7 +23,6 @@ interface ComponentState {
 }
 
 const emit = defineEmits([
-  'handle-delete-file',
   'handle-download-file',
   'handle-open-file-details',
   'handle-show-file-password-modal',
@@ -45,9 +44,14 @@ const state = reactive<ComponentState>({
 
 const handleDelete = (fileId: string): void => {
   state.deleteFileId = fileId;
+  if (store.io.connected) {
+    store.io.emit(EVENTS.deleteFile, { fileId });
+  }
   setTimeout(
     (): void => {
-      emit('handle-delete-file', { fileId });
+      store.listedFiles = store.listedFiles.filter(
+        (item: ListedFile): boolean => item.id !== fileId,
+      );
       state.deleteFileId = '';
     },
     240,
