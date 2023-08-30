@@ -19,7 +19,6 @@ import FileDetailsModalComponent from './components/modals/FileDetailsModal.vue'
 import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
-import isMobile from './utilities/is-mobile';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
 import store, { handleDisconnect } from './store';
@@ -31,7 +30,6 @@ interface AppState {
   downloadErrorMessage: string;
   enterPasswordModalFileId: string;
   fileDetailsFileId: string;
-  isMobile: boolean;
   passwordModalFileId: string;
   showDeviceNameModal: boolean;
   showSettingsModal: boolean;
@@ -42,7 +40,6 @@ const state = reactive<AppState>({
   downloadErrorMessage: '',
   enterPasswordModalFileId: '',
   fileDetailsFileId: '',
-  isMobile: false,
   passwordModalFileId: '',
   showDeviceNameModal: false,
   showSettingsModal: false,
@@ -171,7 +168,6 @@ onMounted((): void => {
     }
   }
 
-  state.isMobile = isMobile();
   wakeLock();
 
   const deviceName = getValue<string>('deviceName');
@@ -190,7 +186,7 @@ onMounted((): void => {
 
 <template>
   <div
-    :class="`f j-center ${state.isMobile
+    :class="`f j-center ${store.isMobile
       ? 'height-mobile'
       : 'h-100vh'}`"
   >
@@ -209,18 +205,15 @@ onMounted((): void => {
     </div>
     <DeviceNameModalComponent
       v-if="state.showDeviceNameModal"
-      :is-mobile="state.isMobile"
       @handle-device-name="handleDeviceName"
     />
     <DownloadErrorModalComponent
       v-if="state.downloadErrorMessage"
-      :is-mobile="state.isMobile"
       :message="state.downloadErrorMessage"
       @close-modal="(): void => closeModal('download-error')"
     />
     <EnterPasswordModalComponent
       v-if="!!state.enterPasswordModalFileId"
-      :is-mobile="state.isMobile"
       :listed-file="store.listedFiles.filter(
         (item: ListedFile): boolean => item.id === state.enterPasswordModalFileId,
       )[0]"
@@ -230,7 +223,6 @@ onMounted((): void => {
     />
     <FileDetailsModalComponent
       v-if="!!state.fileDetailsFileId"
-      :is-mobile="state.isMobile"
       :listed-file="store.listedFiles.filter(
         (item: ListedFile): boolean => item.id === state.fileDetailsFileId,
       )[0]"
@@ -241,7 +233,6 @@ onMounted((): void => {
     />
     <PasswordModalComponent
       v-if="!!state.passwordModalFileId"
-      :is-mobile="state.isMobile"
       :listed-file="store.listedFiles.filter(
         (item: ListedFile): boolean => item.id === state.passwordModalFileId,
       )[0]"
@@ -255,7 +246,6 @@ onMounted((): void => {
       <SettingsModalComponent
         v-if="state.showSettingsModal"
         :device-name="state.deviceName"
-        :is-mobile="state.isMobile"
         :shared-files="store.listedFiles.filter(
           (item: ListedFile): boolean => item.ownerId === store.io.id,
         ).length"
@@ -265,14 +255,12 @@ onMounted((): void => {
       />
       <HeaderComponent
         :device-name="state.deviceName"
-        :is-mobile="state.isMobile"
         :listed-files="store.listedFiles"
         :owner-id="store.io.id"
         @toggle-settings-modal="(): void => toggleModal('settings')"
       />
       <FileListComponent
         :device-name="state.deviceName"
-        :is-mobile="state.isMobile"
         :listed-files="store.listedFiles"
         :owner-id="store.io.id"
         @handle-download-file="handleDownloadFile"
@@ -283,7 +271,6 @@ onMounted((): void => {
         :backend-status="store.connected
           ? 'connected'
           : 'inaccessible'"
-        :is-mobile="state.isMobile"
       />
     </div>
   </div>

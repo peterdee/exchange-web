@@ -20,7 +20,6 @@ const emit = defineEmits(['toggle-settings-modal']);
 
 const props = defineProps<{
   deviceName: string;
-  isMobile: boolean;
   listedFiles: ListedFile[];
   ownerId: string;
 }>();
@@ -89,13 +88,13 @@ const togglePrepareFilesModal = (): void => {
 <template>
   <PrepareFilesModalComponent
     v-if="state.showPrepareFilesModal"
-    :is-mobile="props.isMobile"
+    :is-mobile="store.isMobile"
     :prepared-files="state.preparedFiles"
     @close-modal="togglePrepareFilesModal"
     @handle-share-files="handleShareFiles"
   />
   <header
-    :class="`f ai-center j-space-between ${props.isMobile
+    :class="`f ai-center j-space-between ${store.isMobile
       ? 'mh-1'
       : 'mh-2'}`"
   >
@@ -103,7 +102,7 @@ const togglePrepareFilesModal = (): void => {
       <div class="f ai-center">
         <LogoIconComponent :color="COLORS.accent" />
       </div>
-      <div :class="`ns title ${props.isMobile ? 'ml-half' : 'ml-1'}`">
+      <div :class="`ns title ${store.isMobile ? 'ml-half' : 'ml-1'}`">
         EXCHANGE
       </div>
     </div>
@@ -119,7 +118,7 @@ const togglePrepareFilesModal = (): void => {
       <StyledButtonComponent
         title="Settings"
         :custom-styles="{ height: `${SPACER * 2}px` }"
-        :global-classes="[`${props.isMobile ? 'ml-half' : 'ml-1'}`]"
+        :global-classes="[`${store.isMobile ? 'ml-half' : 'ml-1'}`]"
         :with-icon="true"
         @handle-click="emit('toggle-settings-modal')"
       >

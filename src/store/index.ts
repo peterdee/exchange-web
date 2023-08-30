@@ -12,6 +12,7 @@ import type {
 } from '../types';
 import { convertArrayBufferChunksToBlob } from '../utilities/binary';
 import { EVENTS } from '../configuration';
+import isMobile from '../utilities/is-mobile';
 import saveFileOnDisk from '../utilities/save-file-on-disk';
 import { WS_URL } from '../configuration';
 
@@ -30,11 +31,13 @@ const store= reactive<{
   connected: boolean;
   downloads: DownloadedItem[];
   io: Socket;
+  isMobile: boolean;
   listedFiles: ListedFile[];
 }>({
   connected: false,
   downloads: [],
   io: connection,
+  isMobile: isMobile(),
   listedFiles: [],
 });
 

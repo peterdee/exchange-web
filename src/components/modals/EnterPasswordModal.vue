@@ -29,7 +29,6 @@ const emit = defineEmits([
 ]);
 
 const props = defineProps<{
-  isMobile: boolean;
   listedFile: ListedFile;
 }>();
 
@@ -132,7 +131,7 @@ const handleSubmit = async (): Promise<null | Socket> => {
       : 'fade-in'}`"
   >
     <div
-      :class="`f d-col mh-auto p-1 modal-content ${props.isMobile
+      :class="`f d-col mh-auto p-1 modal-content ${store.isMobile
         ? 'modal-content-mobile'
         : 'modal-content-web'}`"
     >

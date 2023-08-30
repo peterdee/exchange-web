@@ -7,6 +7,7 @@ import formatDate from '../../utilities/format-date';
 import formatFileSize from '../../utilities/format-file-size';
 import type { ListedFile } from '../../types';
 import { SPACER } from '../../configuration';
+import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 
 interface ComponentState {
@@ -23,7 +24,6 @@ const emit = defineEmits([
 ]);
 
 const props = defineProps<{
-  isMobile: boolean;
   listedFile: ListedFile;
 }>();
 
@@ -91,7 +91,7 @@ const handleShowPasswordModal = (): void => {
     @mousedown="(): void => handleCloseModal()"
   >
     <div
-      :class="`f d-col mh-auto p-1 modal-content ${props.isMobile
+      :class="`f d-col mh-auto p-1 modal-content ${store.isMobile
         ? 'modal-content-mobile'
         : 'modal-content-web'}`"
       @mousedown.stop
