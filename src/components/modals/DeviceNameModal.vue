@@ -3,6 +3,7 @@ import { reactive } from 'vue';
 
 import LogoIconComponent from '../icons/LogoIcon.vue';
 import { SPACER } from '../../configuration';
+import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
 
@@ -12,8 +13,6 @@ interface ComponentState {
 }
 
 const emit = defineEmits(['handle-device-name']);
-
-const props = defineProps<{ isMobile: boolean }>();
 
 const state = reactive<ComponentState>({
   deviceName: '',
@@ -40,7 +39,7 @@ const handleSubmit = (): void => {
       : 'fade-in'}`"
   >
     <div
-      :class="`f d-col mh-auto p-1 modal-content ${props.isMobile
+      :class="`f d-col mh-auto p-1 modal-content ${store.isMobile
         ? 'modal-content-mobile'
         : 'modal-content-web'}`"
     >

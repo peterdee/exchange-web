@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { BackendStatus } from '../types';
+import store from '../store';
 
 const props = defineProps<{
   backendStatus: BackendStatus;
-  isMobile: boolean;
 }>();
 
 const statusClass = props.backendStatus === 'connected'
@@ -23,7 +23,7 @@ const year = new Date().getFullYear();
 
 <template>
   <footer
-    :class="`f f-wrap ai-center j-center ns ${props.isMobile
+    :class="`f f-wrap ai-center j-center ns ${store.isMobile
       ? 'mh-1'
       : 'mh-2'}`"
   >

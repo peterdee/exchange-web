@@ -4,6 +4,7 @@ import { reactive } from 'vue';
 import { COLORS, SPACER } from '../../configuration';
 import DangerIconComponent from '../icons/DangerIcon.vue';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
+import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 
 interface ComponentState {
@@ -13,7 +14,6 @@ interface ComponentState {
 const emit = defineEmits(['close-modal']);
 
 const props = defineProps<{
-  isMobile: boolean;
   message: string;
 }>();
 
@@ -35,7 +35,7 @@ const handleCloseModal = (): void => {
       : 'fade-in'}`"
   >
     <div
-      :class="`f d-col mh-auto p-1 modal-content ${props.isMobile
+      :class="`f d-col mh-auto p-1 modal-content ${store.isMobile
         ? 'modal-content-mobile'
         : 'modal-content-web'}`"
     >

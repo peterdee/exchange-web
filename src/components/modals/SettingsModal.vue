@@ -3,6 +3,7 @@ import { reactive } from 'vue';
 
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import { EVENTS, SPACER } from '../../configuration';
+import type { ListedFile } from '../../types';
 import SettingsIconComponent from '../icons/SettingsIcon.vue';
 import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
@@ -20,13 +21,11 @@ const emit = defineEmits([
 ]);
 
 const props = defineProps<{
-  deviceName: string;
-  isMobile: boolean;
   sharedFiles: number;
 }>();
 
 const state = reactive<ComponentState>({
-  deviceName: props.deviceName,
+  deviceName: store.deviceName,
   isClosing: false,
 });
 
@@ -53,9 +52,9 @@ const handleDeleteAllFiles = (): void => {
   );
 };
 
-const handleSubmit = (): null | void => {
-  if (store.io.connected
-    && state.deviceName !== props.deviceName) {
+const handleSubmit = (): void => {
+  if (store.io.connected && state.deviceName !== store.deviceName
+    && store.listedFiles.some((item: ListedFile): boolean => item.ownerId === store.io.id)) {
     store.io.emit(
       EVENTS.updateDeviceName,
       {
@@ -80,7 +79,7 @@ const handleSubmit = (): null | void => {
     @mousedown="handleCloseModal"
   >
     <div
-      :class="`f d-col mh-auto p-1 modal-content ${props.isMobile
+      :class="`f d-col mh-auto p-1 modal-content ${store.isMobile
         ? 'modal-content-mobile'
         : 'modal-content-web'}`"
       @mousedown.stop
@@ -106,7 +105,7 @@ const handleSubmit = (): null | void => {
       </div>
       <div class="f d-col mt-half ns">
         <span class="input-title">
-          Device name: {{ props.deviceName }}
+          Device name: {{ store.deviceName }}
         </span>
         <span class="mt-half input-title">
           Shared files: {{ props.sharedFiles }}

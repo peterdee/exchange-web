@@ -29,8 +29,6 @@ const emit = defineEmits([
 ]);
 
 const props = defineProps<{
-  deviceName: string;
-  isMobile: boolean;
   listedFiles: ListedFile[];
   ownerId: string;
 }>();
@@ -99,7 +97,7 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
   state.preparedFiles = await prepareSharedFiles(
     files,
     props.listedFiles,
-    props.deviceName,
+    store.deviceName,
     props.ownerId,
   );
   if (state.preparedFiles.length === 0) {
@@ -139,7 +137,7 @@ const togglePrepareFilesModal = (): void => {
 <template>
   <PrepareFilesModalComponent
     v-if="state.showPrepareFilesModal"
-    :is-mobile="props.isMobile"
+    :is-mobile="store.isMobile"
     :prepared-files="state.preparedFiles"
     @close-modal="togglePrepareFilesModal"
     @handle-share-files="handleShareFiles"
@@ -149,7 +147,7 @@ const togglePrepareFilesModal = (): void => {
       ? 'drag'
       : ''} ${props.listedFiles.length === 0
       ? 'j-center'
-      : ''} ${props.isMobile ? 'list-mobile' : ''}`"
+      : ''} ${store.isMobile ? 'list-mobile' : ''}`"
     @dragenter.prevent="handleDrag"
     @dragleave.prevent="handleDrag"
     @dragover.prevent
@@ -159,14 +157,14 @@ const togglePrepareFilesModal = (): void => {
       v-if="props.listedFiles.length === 0"
       class="t-center ns fade-in drop-files-text"
     >
-      {{ props.isMobile ? 'No files shared' : 'Drop files here...' }}
+      {{ store.isMobile ? 'No files shared' : 'Drop files here...' }}
     </div>
     <div
       v-if="props.listedFiles.length > 0"
       v-for="file in props.listedFiles"
       :class="`f j-space-between ai-center fade-in ${state.deleteFileId === file.id
         ? 'fade-out'
-        : ''} ${props.isMobile
+        : ''} ${store.isMobile
         ? 'm-quarter'
         : 'm-half'}`"
       :key="file.id"

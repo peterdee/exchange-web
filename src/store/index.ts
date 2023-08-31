@@ -12,6 +12,7 @@ import type {
 } from '../types';
 import { convertArrayBufferChunksToBlob } from '../utilities/binary';
 import { EVENTS } from '../configuration';
+import isMobile from '../utilities/is-mobile';
 import saveFileOnDisk from '../utilities/save-file-on-disk';
 import { WS_URL } from '../configuration';
 
@@ -28,13 +29,17 @@ const connection = io(
 
 const store= reactive<{
   connected: boolean;
+  deviceName: string;
   downloads: DownloadedItem[];
   io: Socket;
+  isMobile: boolean;
   listedFiles: ListedFile[];
 }>({
   connected: false,
+  deviceName: '',
   downloads: [],
   io: connection,
+  isMobile: isMobile(),
   listedFiles: [],
 });
 

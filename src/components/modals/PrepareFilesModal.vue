@@ -11,6 +11,7 @@ import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import formatFileSize from '../../utilities/format-file-size';
 import InfoIconComponent from '../icons/InfoIcon.vue';
 import type { ListedFile } from '../../types';
+import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
 
@@ -28,7 +29,6 @@ const emit = defineEmits([
 ]);
 
 const props = defineProps<{
-  isMobile: boolean;
   preparedFiles: ListedFile[];
 }>();
 
@@ -90,7 +90,7 @@ onUpdated((): void => {
       : 'fade-in'}`"
   >
     <div
-      :class="`f d-col mh-auto p-1 modal-content ${props.isMobile
+      :class="`f d-col mh-auto p-1 modal-content ${store.isMobile
         ? 'modal-content-mobile'
         : 'modal-content-web'}`"
     >
@@ -98,7 +98,7 @@ onUpdated((): void => {
       <div class="f ai-center">
         <InfoIconComponent :size="SPACER * 2" />
         <span class="mh-1 modal-title">
-          {{ `Prepare${!props.isMobile ? ' files' : ''}` }}
+          {{ `Prepare${!store.isMobile ? ' files' : ''}` }}
         </span>
         </div>
         <StyledButtonComponent
