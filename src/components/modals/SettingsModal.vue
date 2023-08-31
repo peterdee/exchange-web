@@ -21,12 +21,11 @@ const emit = defineEmits([
 ]);
 
 const props = defineProps<{
-  deviceName: string;
   sharedFiles: number;
 }>();
 
 const state = reactive<ComponentState>({
-  deviceName: props.deviceName,
+  deviceName: store.deviceName,
   isClosing: false,
 });
 
@@ -54,7 +53,7 @@ const handleDeleteAllFiles = (): void => {
 };
 
 const handleSubmit = (): void => {
-  if (store.io.connected && state.deviceName !== props.deviceName
+  if (store.io.connected && state.deviceName !== store.deviceName
     && store.listedFiles.some((item: ListedFile): boolean => item.ownerId === store.io.id)) {
     store.io.emit(
       EVENTS.updateDeviceName,
@@ -106,7 +105,7 @@ const handleSubmit = (): void => {
       </div>
       <div class="f d-col mt-half ns">
         <span class="input-title">
-          Device name: {{ props.deviceName }}
+          Device name: {{ store.deviceName }}
         </span>
         <span class="mt-half input-title">
           Shared files: {{ props.sharedFiles }}

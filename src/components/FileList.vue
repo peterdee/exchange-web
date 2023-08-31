@@ -29,7 +29,6 @@ const emit = defineEmits([
 ]);
 
 const props = defineProps<{
-  deviceName: string;
   listedFiles: ListedFile[];
   ownerId: string;
 }>();
@@ -98,7 +97,7 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
   state.preparedFiles = await prepareSharedFiles(
     files,
     props.listedFiles,
-    props.deviceName,
+    store.deviceName,
     props.ownerId,
   );
   if (state.preparedFiles.length === 0) {

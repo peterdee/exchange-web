@@ -19,7 +19,6 @@ interface ComponentState {
 const emit = defineEmits(['toggle-settings-modal']);
 
 const props = defineProps<{
-  deviceName: string;
   listedFiles: ListedFile[];
   ownerId: string;
 }>();
@@ -43,7 +42,7 @@ const handleUploadButton = (): void => {
       state.preparedFiles = await prepareSharedFiles(
         files,
         props.listedFiles,
-        props.deviceName,
+        store.deviceName,
         props.ownerId,
       );
       if (state.preparedFiles.length === 0) {

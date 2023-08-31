@@ -6,10 +6,7 @@ import {
 } from 'vue';
 import type { Socket } from 'socket.io-client';
 
-import type {
-  AcknowledgementMessage,
-  ListedFile,
-} from './types';
+import type { AcknowledgementMessage, ListedFile } from './types';
 import DeviceNameModalComponent from './components/modals/DeviceNameModal.vue';
 import DownloadErrorModalComponent from './components/modals/DownloadErrorModal.vue';
 import EnterPasswordModalComponent from './components/modals/EnterPasswordModal.vue';
@@ -26,7 +23,6 @@ import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
 import wakeLock from './utilities/wakelock';
 
 interface AppState {
-  deviceName: string;
   downloadErrorMessage: string;
   enterPasswordModalFileId: string;
   fileDetailsFileId: string;
@@ -36,7 +32,6 @@ interface AppState {
 }
 
 const state = reactive<AppState>({
-  deviceName: '',
   downloadErrorMessage: '',
   enterPasswordModalFileId: '',
   fileDetailsFileId: '',
@@ -66,7 +61,7 @@ const handleDeleteAllFiles = (): void => {
 };
 
 const handleDeviceName = (value: string): void => {
-  state.deviceName = value;
+  store.deviceName = value;
   state.showDeviceNameModal = false;
   setValue<string>('deviceName', value);
   return setValue<boolean>('deviceNameSet', true);
@@ -156,7 +151,7 @@ const toggleModal = (modalName: string): void => {
   if (modalName === 'settings') {
     state.showSettingsModal = !state.showSettingsModal;
   }
-}
+};
 
 onBeforeUnmount(handleDisconnect);
 
@@ -173,11 +168,11 @@ onMounted((): void => {
   const deviceName = getValue<string>('deviceName');
   const deviceNameSet = getValue<boolean>('deviceNameSet');
   if (!deviceName || !deviceNameSet) {
-    state.deviceName = `${Math.random() * Date.now()}`.split('.').join('');
+    store.deviceName = `${Math.random() * Date.now()}`.split('.').join('');
     state.showDeviceNameModal = true;
-    setValue('deviceName', state.deviceName);
+    setValue('deviceName', store.deviceName);
   } else {
-    state.deviceName = deviceName;
+    store.deviceName = deviceName;
   }
 
   store.io.open();
@@ -245,7 +240,6 @@ onMounted((): void => {
     >
       <SettingsModalComponent
         v-if="state.showSettingsModal"
-        :device-name="state.deviceName"
         :shared-files="store.listedFiles.filter(
           (item: ListedFile): boolean => item.ownerId === store.io.id,
         ).length"
@@ -254,13 +248,11 @@ onMounted((): void => {
         @update-device-name="handleUpdateDeviceName"
       />
       <HeaderComponent
-        :device-name="state.deviceName"
         :listed-files="store.listedFiles"
         :owner-id="store.io.id"
         @toggle-settings-modal="(): void => toggleModal('settings')"
       />
       <FileListComponent
-        :device-name="state.deviceName"
         :listed-files="store.listedFiles"
         :owner-id="store.io.id"
         @handle-download-file="handleDownloadFile"

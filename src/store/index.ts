@@ -29,12 +29,14 @@ const connection = io(
 
 const store= reactive<{
   connected: boolean;
+  deviceName: string;
   downloads: DownloadedItem[];
   io: Socket;
   isMobile: boolean;
   listedFiles: ListedFile[];
 }>({
   connected: false,
+  deviceName: '',
   downloads: [],
   io: connection,
   isMobile: isMobile(),
