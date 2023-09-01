@@ -2,6 +2,7 @@
 import { reactive } from 'vue';
 
 import { COLORS, EVENTS, SPACER } from '../configuration';
+import connection from '../connection';
 import type { ListedFile } from '../types';
 import LogoIconComponent from './icons/LogoIcon.vue';
 import PrepareFilesModalComponent from './modals/PrepareFilesModal.vue';
@@ -57,8 +58,8 @@ const handleUploadButton = (): void => {
 
 const handleShareFiles = (files: ListedFile[], password: string): void => {
   files.forEach((file: ListedFile): void => {
-    if (store.io.connected) {
-      store.io.emit(
+    if (connection.connected) {
+      connection.emit(
         EVENTS.listFile,
         {
           createdAt: file.createdAt,

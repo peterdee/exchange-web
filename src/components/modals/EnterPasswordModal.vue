@@ -2,12 +2,10 @@
 import { reactive } from 'vue';
 import type { Socket } from 'socket.io-client';
 
-import type {
-  AcknowledgementMessage,
-  ListedFile,
-} from '../../types';
-import { EVENTS, MESSAGES, SPACER } from '../../configuration';
+import type { AcknowledgementMessage, ListedFile } from '../../types';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
+import connection from '../../connection';
+import { EVENTS, MESSAGES, SPACER } from '../../configuration';
 import LockIconComponent from '../icons/LockIcon.vue';
 import sleep from '../../utilities/sleep';
 import store from '../../store';
@@ -25,7 +23,6 @@ interface ComponentState {
 const emit = defineEmits([
   'close-modal',
   'handle-download-file',
-  'handle-store-grant',
 ]);
 
 const props = defineProps<{
@@ -61,12 +58,12 @@ const handleInput = ({ value }: { value: string }): void => {
 
 const handleSubmit = async (): Promise<null | Socket> => {
   const trimmedPassword = (state.password || '').trim();
-  if (!(store.io.connected && trimmedPassword)) {
+  if (!(connection.connected && trimmedPassword)) {
     return null;
   }
   state.isLoading = true;
   await sleep(500);
-  return store.io.emit(
+  return connection.emit(
     EVENTS.requestGrant,
     {
       fileId: props.listedFile.id,
@@ -99,13 +96,11 @@ const handleSubmit = async (): Promise<null | Socket> => {
       }
       const { data } = response;
       if (data && data.grant) {
-        emit(
-          'handle-store-grant',
-          {
-            fileId: props.listedFile.id,
-            grant: data.grant,
-          },
-        );
+        store.listedFiles.forEach((item: ListedFile): void => {
+          if (item.id === props.listedFile.id) {
+            item.grant = data.grant;
+          }
+        });
         const delayedAction = (): void => emit(
           'handle-download-file',
           {
