@@ -7,6 +7,7 @@ import {
 import type { Socket } from 'socket.io-client';
 
 import type { AcknowledgementMessage, ListedFile } from './types';
+import connection, { handleDisconnect } from './connection';
 import DeviceNameModalComponent from './components/modals/DeviceNameModal.vue';
 import DownloadErrorModalComponent from './components/modals/DownloadErrorModal.vue';
 import EnterPasswordModalComponent from './components/modals/EnterPasswordModal.vue';
@@ -18,11 +19,11 @@ import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
-import store, { handleDisconnect } from './store';
+import store from './store';
 import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
 import wakeLock from './utilities/wakelock';
 
-interface AppState {
+interface ComponentState {
   downloadErrorMessage: string;
   enterPasswordModalFileId: string;
   fileDetailsFileId: string;
@@ -31,7 +32,7 @@ interface AppState {
   showSettingsModal: boolean;
 }
 
-const state = reactive<AppState>({
+const state = reactive<ComponentState>({
   downloadErrorMessage: '',
   enterPasswordModalFileId: '',
   fileDetailsFileId: '',
@@ -55,11 +56,6 @@ const closeModal = (modalName: string): void => {
   }
 };
 
-const handleDeleteAllFiles = (): void => {
-  store.listedFiles = [];
-  state.showSettingsModal = false;
-};
-
 const handleDeviceName = (value: string): void => {
   store.deviceName = value;
   state.showDeviceNameModal = false;
@@ -77,7 +73,7 @@ const handleDownloadFile = (
     grant?: string;
     ownerId: string;
   },
-): Socket => store.io.emit(
+): Socket => connection.emit(
   EVENTS.downloadFile,
   {
     fileId,
@@ -108,38 +104,12 @@ const handleFileDetails = (fileId: string): void => {
   state.fileDetailsFileId = fileId;
 }
 
-const handleFilePassword = (
-  {
-    fileId = '',
-    withPassword = false,
-  }: {
-    fileId: string;
-    withPassword: boolean;
-  },
-): void => {
-  store.listedFiles.forEach((item: ListedFile): void => {
-    if (item.id === fileId) {
-      item.withPassword = withPassword;
-    }
-  });
-};
-
 const handleShowEnterPasswordModal = (fileId: string): void => {
   state.enterPasswordModalFileId = fileId;
 };
 
 const handleShowPasswordModal = (fileId: string): void => {
   state.passwordModalFileId = fileId;
-};
-
-const handleStoreGrant = (
-  { fileId = '', grant = '' }: { fileId: string, grant: string },
-): void => {
-  store.listedFiles.forEach((item: ListedFile): void => {
-    if (item.id === fileId) {
-      item.grant = grant;
-    }
-  });
 };
 
 const handleUpdateDeviceName = (value: string): void => {
@@ -175,7 +145,7 @@ onMounted((): void => {
     store.deviceName = deviceName;
   }
 
-  store.io.open();
+  connection.open();
 });
 </script>
 
@@ -214,7 +184,6 @@ onMounted((): void => {
       )[0]"
       @close-modal="(): void => closeModal('enter-password')"
       @handle-download-file="handleDownloadFile"
-      @handle-store-grant="handleStoreGrant"
     />
     <FileDetailsModalComponent
       v-if="!!state.fileDetailsFileId"
@@ -232,7 +201,6 @@ onMounted((): void => {
         (item: ListedFile): boolean => item.id === state.passwordModalFileId,
       )[0]"
       @close-modal="(): void => closeModal('password')"
-      @handle-file-password="handleFilePassword"
     />
     <div
       v-if="store.connected"
@@ -241,20 +209,19 @@ onMounted((): void => {
       <SettingsModalComponent
         v-if="state.showSettingsModal"
         :shared-files="store.listedFiles.filter(
-          (item: ListedFile): boolean => item.ownerId === store.io.id,
+          (item: ListedFile): boolean => item.ownerId === connection.id,
         ).length"
         @close-modal="(): void => toggleModal('settings')"
-        @delete-all-files="handleDeleteAllFiles"
         @update-device-name="handleUpdateDeviceName"
       />
       <HeaderComponent
         :listed-files="store.listedFiles"
-        :owner-id="store.io.id"
+        :owner-id="connection.id"
         @toggle-settings-modal="(): void => toggleModal('settings')"
       />
       <FileListComponent
         :listed-files="store.listedFiles"
-        :owner-id="store.io.id"
+        :owner-id="connection.id"
         @handle-download-file="handleDownloadFile"
         @handle-open-file-details="handleFileDetails"
         @handle-show-file-password-modal="handleShowEnterPasswordModal"

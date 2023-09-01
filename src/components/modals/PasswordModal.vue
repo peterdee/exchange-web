@@ -3,6 +3,7 @@ import { reactive } from 'vue';
 import type { Socket } from 'socket.io-client';
 
 import type { AcknowledgementMessage, ListedFile } from '../../types';
+import connection from '../../connection';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import { EVENTS, SPACER } from '../../configuration';
 import LockIconComponent from '../icons/LockIcon.vue';
@@ -18,10 +19,7 @@ interface ComponentState {
   passwordError: boolean;
 }
 
-const emit = defineEmits([
-  'close-modal',
-  'handle-file-password',
-]);
+const emit = defineEmits(['close-modal']);
 
 const props = defineProps<{
   listedFile: ListedFile;
@@ -53,23 +51,23 @@ const handleInput = ({ value = '' }: { value: string }): void => {
 };
 
 const handleRemovePassword = async (): Promise<null | Socket | void> => {
-  if (store.io.connected) {
+  if (connection.connected) {
     state.isLoading = true;
     await sleep();
-    store.io.emit(
+    connection.emit(
       EVENTS.removePassword,
       {
         fileId: props.listedFile.id,
-        ownerId: store.io.id,
+        ownerId: connection.id,
       },
     );
-    const delayedAction = (): void => emit(
-      'handle-file-password',
-      {
-        fileId: props.listedFile.id,
-        withPassword: false,
-      },
-    );
+    const delayedAction = (): void => {
+      store.listedFiles.forEach((item: ListedFile): void => {
+        if (item.id === props.listedFile.id) {
+          item.withPassword = false;
+        }
+      });
+    };
     return handleCloseModal(delayedAction);
   }
   state.isLoading = false;
@@ -82,26 +80,26 @@ const handleSubmit = async (): Promise<null | Socket | void> => {
     state.passwordError = true;
     return null;
   }
-  if (store.io.connected) {
+  if (connection.connected) {
     state.isLoading = true;
     await sleep();
-    return store.io.emit(
+    return connection.emit(
       EVENTS.changePassword,
       {
         fileId: props.listedFile.id,
-        ownerId: store.io.id,
+        ownerId: connection.id,
         password: trimmedPassword,
       },
       (response: AcknowledgementMessage): null | void => {
         const { status } = response;
         if (status && status === 200) {
-          const delayedAction = (): void => emit(
-            'handle-file-password',
-            {
-              fileId: props.listedFile.id,
-              withPassword: true,
-            },
-          );
+          const delayedAction = (): void => {
+            store.listedFiles.forEach((item: ListedFile): void => {
+              if (item.id === props.listedFile.id) {
+                item.withPassword = true;
+              }
+            });
+          };
           return handleCloseModal(delayedAction);
         }
         state.passwordError = true;

@@ -3,6 +3,7 @@ import { reactive } from 'vue';
 
 import CheckIconComponent from './icons/CheckIcon.vue';
 import { COLORS, EVENTS } from '../configuration';
+import connection from '../connection';
 import DeleteIconComponent from './icons/DeleteIcon.vue';
 import DownloadIconComponent from './icons/DownloadIcon.vue';
 import getFilesFromDroppedItems from '../utilities/get-files-from-dropped-items';
@@ -42,8 +43,8 @@ const state = reactive<ComponentState>({
 
 const handleDelete = (fileId: string): void => {
   state.deleteFileId = fileId;
-  if (store.io.connected) {
-    store.io.emit(EVENTS.deleteFile, { fileId });
+  if (connection.connected) {
+    connection.emit(EVENTS.deleteFile, { fileId });
   }
   setTimeout(
     (): void => {
@@ -107,8 +108,8 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
 
 const handleShareFiles = (files: ListedFile[], password: string): void => {
   files.forEach((file: ListedFile): void => {
-    if (store.io.connected) {
-      store.io.emit(
+    if (connection.connected) {
+      connection.emit(
         EVENTS.listFile,
         {
           createdAt: file.createdAt,

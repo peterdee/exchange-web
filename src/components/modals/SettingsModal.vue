@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
+import connection from '../../connection';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import { EVENTS, SPACER } from '../../configuration';
 import type { ListedFile } from '../../types';
@@ -16,7 +17,6 @@ interface ComponentState {
 
 const emit = defineEmits([
   'close-modal',
-  'delete-all-files',
   'update-device-name',
 ]);
 
@@ -42,24 +42,20 @@ const handleCloseModal = (): void => {
 };
 
 const handleDeleteAllFiles = (): void => {
-  if (store.io.connected) {
-    store.io.emit(EVENTS.deleteAllFiles);
+  if (connection.connected) {
+    connection.emit(EVENTS.deleteAllFiles);
   }
-  state.isClosing = true;
-  setTimeout(
-    (): void => emit('delete-all-files'),
-    240,
-  );
+  store.listedFiles = [];
 };
 
 const handleSubmit = (): void => {
-  if (store.io.connected && state.deviceName !== store.deviceName
-    && store.listedFiles.some((item: ListedFile): boolean => item.ownerId === store.io.id)) {
-    store.io.emit(
+  if (connection.connected && state.deviceName !== store.deviceName
+    && store.listedFiles.some((item: ListedFile): boolean => item.ownerId === connection.id)) {
+    connection.emit(
       EVENTS.updateDeviceName,
       {
         newDeviceName: state.deviceName,
-        ownerId: store.io.id,
+        ownerId: connection.id,
       },
     );
   }
@@ -112,7 +108,7 @@ const handleSubmit = (): void => {
         </span>
         <StyledButtonComponent
           type="button"
-          :disabled="props.sharedFiles === 0 || !store.io.connected"
+          :disabled="props.sharedFiles === 0 || !connection.connected"
           :global-classes="['mt-half']"
           :is-negative="true"
           @handle-click="handleDeleteAllFiles"
