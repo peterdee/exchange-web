@@ -30,11 +30,15 @@ const state = reactive<ComponentState>({
 });
 
 const handleUploadButton = (): void => {
+  state.preparedFiles = [];
   state.showPrepareFilesModal = true;
   const element = document.createElement('input');
   element.multiple = true;
   element.setAttribute('style', 'display: none');
   element.type = 'file';
+  element.oncancel = (): void => {
+    state.showPrepareFilesModal = false;
+  };
   element.oninput = async (event: Event): Promise<void> => {
     const target = event.target as HTMLInputElement;
     const { files: fileList } = target;

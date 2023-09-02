@@ -18,7 +18,6 @@ import StyledInputComponent from '../elements/StyledInput.vue';
 interface ComponentState {
   firstUpdate: boolean;
   isClosing: boolean;
-  isLoading: boolean;
   listedFiles: ListedFile[];
   password: string;
 }
@@ -35,7 +34,6 @@ const props = defineProps<{
 const state = reactive<ComponentState>({
   firstUpdate: true,
   isClosing: false,
-  isLoading: false,
   listedFiles: [],
   password: '',
 });
@@ -67,11 +65,15 @@ const handleRemoveFile = (fileId: string): void => {
 };
 
 const handleShareFiles = (): void => {
-  const delayedAction = (): void => emit(
-    'handle-share-files',
-    state.listedFiles,
-    state.password,
-  );
+  const delayedAction = (): void => {
+    emit(
+      'handle-share-files',
+      state.listedFiles,
+      state.password,
+    );
+    state.listedFiles = [];
+    state.password = '';
+  };
   return handleCloseModal(delayedAction);
 };
 
@@ -88,11 +90,13 @@ onUpdated((): void => {
     :class="`f d-col j-center modal-background ${state.isClosing
       ? 'fade-out'
       : 'fade-in'}`"
+    @mousedown="(): void => handleCloseModal()"
   >
     <div
       :class="`f d-col mh-auto p-1 modal-content ${store.isMobile
         ? 'modal-content-mobile'
         : 'modal-content-web'}`"
+      @mousedown.stop
     >
     <div class="f ai-center j-space-between ns">
       <div class="f ai-center">
@@ -155,12 +159,12 @@ onUpdated((): void => {
         name="password"
         placeholder="Add password"
         type="password"
-        :disabled="state.isLoading"
+        :disabled="state.isClosing || state.listedFiles.length === 0"
         :value="state.password"
         @handle-input="handleInput"
       />
       <StyledButtonComponent
-        :disabled="state.isLoading || state.isClosing"
+        :disabled="state.isClosing || state.listedFiles.length === 0"
         :global-classes="['mt-half']"
         @handle-click="handleShareFiles"
       >
