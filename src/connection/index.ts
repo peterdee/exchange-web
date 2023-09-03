@@ -11,6 +11,7 @@ import type {
 } from '../types';
 import { convertArrayBufferChunksToBlob } from '../utilities/binary';
 import { EVENTS } from '../configuration';
+import getHash from '../utilities/get-hash';
 import saveFileOnDisk from '../utilities/save-file-on-disk';
 import store from '../store';
 import { WS_URL } from '../configuration';
@@ -160,7 +161,9 @@ const ioHandlerUpdateTotalDownloads = (data: UpdateTotalDownloads): void => {
   });
 };
 
-const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
+const ioHandlerUploadFileChunk = async (
+  data: ChunkData,
+): Promise<null | Socket | void> => {
   const {
     chunk,
     currentChunk,
@@ -173,6 +176,26 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
     type,
   } = data;
   if (currentChunk === 1 && totalChunks === 1) {
+    const resultHash = await getHash(
+      convertArrayBufferChunksToBlob([chunk], type),
+    );
+    if (resultHash !== fileId) {
+      store.downloads = store.downloads.filter(
+        (item: DownloadedItem): boolean => item.fileId !== fileId,
+      );
+      store.listedFiles.forEach((item: ListedFile): void => {
+        if (item.id === fileId) {
+          item.downloadCompleted = false;
+          item.downloadPercent = 0;
+          item.isDownloading = false;
+          store.downloadFileError = {
+            errorText: 'Downloaded file differs from the original file!',
+            file: item,
+          };
+        }
+      });
+      return null;
+    }
     store.listedFiles.forEach((item: ListedFile): void => {
       if (item.id === fileId) {
         item.downloadCompleted = true;
@@ -239,6 +262,27 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
     const [downloadedFile] = store.downloads.filter(
       (item: DownloadedItem): boolean => item.fileId === fileId,
     );
+    downloadedFile.chunks.push(chunk);
+    const resultHash = await getHash(
+      convertArrayBufferChunksToBlob(downloadedFile.chunks, downloadedFile.type),
+    );
+    if (resultHash !== fileId) {
+      store.downloads = store.downloads.filter(
+        (item: DownloadedItem): boolean => item.fileId !== fileId,
+      );
+      store.listedFiles.forEach((item: ListedFile): void => {
+        if (item.id === fileId) {
+          item.downloadCompleted = false;
+          item.downloadPercent = 0;
+          item.isDownloading = false;
+          store.downloadFileError = {
+            errorText: 'Downloaded file differs from the original file!',
+            file: item,
+          };
+        }
+      });
+      return null;
+    }
     store.listedFiles.forEach((item: ListedFile): void => {
       if (item.id === fileId) {
         item.downloadCompleted = true;
@@ -246,7 +290,6 @@ const ioHandlerUploadFileChunk = (data: ChunkData): Socket | void => {
         item.isDownloading = false;
       }
     });
-    downloadedFile.chunks.push(chunk);
     saveFileOnDisk(
       convertArrayBufferChunksToBlob(downloadedFile.chunks, downloadedFile.type),
       downloadedFile.fileName,

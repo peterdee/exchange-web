@@ -53,6 +53,11 @@ export interface ListedFile {
   withPassword: boolean;
 }
 
+export interface DownloadFileError {
+  errorText: string;
+  file: ListedFile;
+}
+
 export interface UpdateDeviceName {
   newDeviceName: string;
   ownerId: string;
