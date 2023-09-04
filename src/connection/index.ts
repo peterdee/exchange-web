@@ -27,6 +27,34 @@ const connection = io(
   },
 );
 
+async function checkHashSum(
+  chunks: ArrayBuffer[],
+  fileType: string,
+  fileId: string,
+): Promise<boolean> {
+  const resultHash = await getHash(
+    convertArrayBufferChunksToBlob(chunks, fileType),
+  );
+  if (resultHash === fileId) {
+    return true;
+  }
+  store.downloads = store.downloads.filter(
+    (item: DownloadedItem): boolean => item.fileId !== fileId,
+  );
+  store.listedFiles.forEach((item: ListedFile): void => {
+    if (item.id === fileId) {
+      item.downloadCompleted = false;
+      item.downloadPercent = 0;
+      item.isDownloading = false;
+      store.downloadFileError = {
+        errorText: 'Downloaded file differs from the original file!',
+        file: item,
+      };
+    }
+  });
+  return false;
+}
+
 const ioHandlerChangePassword = (data: GenericFileData): void => {
   const { fileId = '', ownerId = '' } = data;
   store.listedFiles.forEach((item: ListedFile): void => {
@@ -176,24 +204,8 @@ const ioHandlerUploadFileChunk = async (
     type,
   } = data;
   if (currentChunk === 1 && totalChunks === 1) {
-    const resultHash = await getHash(
-      convertArrayBufferChunksToBlob([chunk], type),
-    );
-    if (resultHash !== fileId) {
-      store.downloads = store.downloads.filter(
-        (item: DownloadedItem): boolean => item.fileId !== fileId,
-      );
-      store.listedFiles.forEach((item: ListedFile): void => {
-        if (item.id === fileId) {
-          item.downloadCompleted = false;
-          item.downloadPercent = 0;
-          item.isDownloading = false;
-          store.downloadFileError = {
-            errorText: 'Downloaded file differs from the original file!',
-            file: item,
-          };
-        }
-      });
+    const isHashValid = await checkHashSum([chunk], type, fileId);
+    if (!isHashValid) {
       return null;
     }
     store.listedFiles.forEach((item: ListedFile): void => {
@@ -263,24 +275,8 @@ const ioHandlerUploadFileChunk = async (
       (item: DownloadedItem): boolean => item.fileId === fileId,
     );
     downloadedFile.chunks.push(chunk);
-    const resultHash = await getHash(
-      convertArrayBufferChunksToBlob(downloadedFile.chunks, downloadedFile.type),
-    );
-    if (resultHash !== fileId) {
-      store.downloads = store.downloads.filter(
-        (item: DownloadedItem): boolean => item.fileId !== fileId,
-      );
-      store.listedFiles.forEach((item: ListedFile): void => {
-        if (item.id === fileId) {
-          item.downloadCompleted = false;
-          item.downloadPercent = 0;
-          item.isDownloading = false;
-          store.downloadFileError = {
-            errorText: 'Downloaded file differs from the original file!',
-            file: item,
-          };
-        }
-      });
+    const isHashValid = await checkHashSum(downloadedFile.chunks, type, fileId);
+    if (!isHashValid) {
       return null;
     }
     store.listedFiles.forEach((item: ListedFile): void => {
