@@ -56,6 +56,12 @@ npm run dev
 
 Local WEB application will be available at https://localhost:3000
 
+### Possible improvements
+
+1. Improve data transfer security for password-proteced files: check grant for every requested file chunk
+
+2. Allow sharing private files: make it possible to share files that are not publicly visible
+
 ### Vercel deployment
 
 `release` branch is automatically deployed to [Vercel](https://vercel.com)

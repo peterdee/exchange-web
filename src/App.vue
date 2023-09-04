@@ -47,6 +47,7 @@ const closeModal = (modalName: string): void => {
   }
   if (modalName === 'download-error') {
     state.downloadErrorMessage = '';
+    store.downloadFileError = null;
   }
   if (modalName === 'enter-password') {
     state.enterPasswordModalFileId = '';
@@ -173,8 +174,10 @@ onMounted((): void => {
       @handle-device-name="handleDeviceName"
     />
     <DownloadErrorModalComponent
-      v-if="state.downloadErrorMessage"
-      :message="state.downloadErrorMessage"
+      v-if="state.downloadErrorMessage || store.downloadFileError"
+      :message="state.downloadErrorMessage
+        || store.downloadFileError?.errorText
+        || 'Could not download a file!'"
       @close-modal="(): void => closeModal('download-error')"
     />
     <EnterPasswordModalComponent
