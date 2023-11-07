@@ -160,7 +160,7 @@ onMounted((): void => {
       v-if="!store.connected"
       class="f ai-center"
     >
-      <div class="f d-col">
+      <div class="f d-col ns">
         <span class="t-center input-title">
           Connecting to the server...
         </span>
