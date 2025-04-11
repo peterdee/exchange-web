@@ -12,12 +12,11 @@ Backend project is available here: https://github.com/peterdee/exchange-backend
 
 ### Deploy
 
-Clone repository
+Clone repository and install dependencies
 
 ```shell script
-git clone https://github.com/peterdee/exchange-web
 cd ./exchange-web
-nvm use 18
+nvm use 22
 npm ci
 ```
 
@@ -28,6 +27,8 @@ mkdir certificates && cd certificates
 ```
 
 Generate certificate files for HTTPS
+
+*MacOS*
 
 ```shell script
 # Generate key file
