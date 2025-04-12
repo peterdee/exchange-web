@@ -219,12 +219,12 @@ onMounted((): void => {
       />
       <HeaderComponent
         :listed-files="store.listedFiles"
-        :owner-id="connection.id"
+        :owner-id="connection.id || ''"
         @toggle-settings-modal="(): void => toggleModal('settings')"
       />
       <FileListComponent
         :listed-files="store.listedFiles"
-        :owner-id="connection.id"
+        :owner-id="connection.id || ''"
         @handle-download-file="handleDownloadFile"
         @handle-open-file-details="handleFileDetails"
         @handle-show-file-password-modal="handleShowEnterPasswordModal"
