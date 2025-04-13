@@ -6,7 +6,7 @@ import {
 } from 'vue';
 import type { Socket } from 'socket.io-client';
 
-import type { AcknowledgementMessage, ListedFile } from './types';
+import type { AcknowledgementMessage, DownloadedItem, ListedFile } from './types';
 import connection, { handleDisconnect } from './connection';
 import DeviceNameModalComponent from './components/modals/DeviceNameModal.vue';
 import DownloadErrorModalComponent from './components/modals/DownloadErrorModal.vue';
@@ -55,6 +55,18 @@ const closeModal = (modalName: string): void => {
   if (modalName === 'password') {
     state.passwordModalFileId = '';
   }
+};
+
+const handleAbortDownloading = (fileId: string): void => {
+  store.downloads = store.downloads.filter(
+    (item: DownloadedItem): boolean => item.fileId !== fileId,
+  );
+  store.listedFiles.forEach((item: ListedFile) => {
+    if (item.id === fileId) {
+      item.downloadPercent = 0;
+      item.isDownloading = false;
+    }
+  });
 };
 
 const handleDeviceName = (value: string): void => {
@@ -193,6 +205,7 @@ onMounted((): void => {
       :listed-file="store.listedFiles.filter(
         (item: ListedFile): boolean => item.id === state.fileDetailsFileId,
       )[0]"
+      @abort-downloading="handleAbortDownloading"
       @close-modal="(): void => closeModal('details')"
       @download-file="handleDownloadFile"
       @handle-show-file-password-modal="handleShowEnterPasswordModal"
@@ -225,6 +238,7 @@ onMounted((): void => {
       <FileListComponent
         :listed-files="store.listedFiles"
         :owner-id="connection.id || ''"
+        @handle-abort-downloading="handleAbortDownloading"
         @handle-download-file="handleDownloadFile"
         @handle-open-file-details="handleFileDetails"
         @handle-show-file-password-modal="handleShowEnterPasswordModal"
