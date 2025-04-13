@@ -58,6 +58,12 @@ export interface DownloadFileError {
   file: ListedFile;
 }
 
+export interface ServerConfiguration {
+  chunkSizeBytes: number;
+  isLocalServer: boolean;
+  maxFileSizeBytes: number;
+}
+
 export interface UpdateDeviceName {
   newDeviceName: string;
   ownerId: string;

@@ -169,7 +169,7 @@ onMounted((): void => {
       : 'h-100vh'}`"
   >
     <div
-      v-if="!store.connected"
+      v-if="!(store.connected && store.receivedConfiguration)"
       class="f ai-center"
     >
       <div class="f d-col ns">
