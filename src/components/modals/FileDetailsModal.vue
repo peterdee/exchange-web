@@ -17,6 +17,7 @@ interface ComponentState {
 }
 
 const emit = defineEmits([
+  'abort-downloading',
   'close-modal',
   'download-file',
   'handle-show-file-password-modal',
@@ -44,6 +45,15 @@ const handleCloseModal = (delayedAction?: () => void): void => {
     },
     240,
   );
+};
+
+const handleAbortDownloading = (): void => {
+  state.isClosing = true;
+  const delayedAction = (): void => emit(
+    'abort-downloading',
+    props.listedFile.id,
+  );
+  return handleCloseModal(delayedAction);
 };
 
 const handleDownload = (): void => {
@@ -129,6 +139,9 @@ const handleShowPasswordModal = (): void => {
       <div class="mt-half ns input-title">
         Downloads: {{ props.listedFile.totalDownloads }}
       </div>
+      <div class="mt-half ns input-title">
+        Downloaded: {{ props.listedFile.downloadPercent }}%
+      </div>
       <template v-if="!props.listedFile.isOwner">
         <div class="mt-half ns input-title">
           Owner: {{ props.listedFile.deviceName }}
@@ -143,14 +156,24 @@ const handleShowPasswordModal = (): void => {
               : 'This file is not protected by password'
           }}
         </div>
-        <StyledButtonComponent
-          :disabled="props.listedFile.isDownloading"
-          :globalClasses="['mt-half']"
-          :is-positive="true"
-          @handle-click="handleDownload"
-        >
-          Download file
-        </StyledButtonComponent>
+        <template v-if="!props.listedFile.isDownloading">
+          <StyledButtonComponent
+            :globalClasses="['mt-half']"
+            :is-positive="true"
+            @handle-click="handleDownload"
+          >
+            Download file
+          </StyledButtonComponent>
+        </template>
+        <template v-if="props.listedFile.isDownloading">
+          <StyledButtonComponent
+            :globalClasses="['mt-half']"
+            :is-negative="true"
+            @handle-click="handleAbortDownloading"
+          >
+            Abort downloading
+          </StyledButtonComponent>
+        </template>
       </template>
       <template v-if="props.listedFile.isOwner">
         <div class="f ai-center ns input-title">
