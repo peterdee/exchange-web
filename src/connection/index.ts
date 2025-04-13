@@ -256,19 +256,20 @@ const ioHandlerUploadFileChunk = async (
       }
     });
     store.listedFiles.forEach((item: ListedFile): void => {
-      if (item.id === fileId) {
+      if (item.id === fileId && item.isDownloading) {
         item.downloadPercent = Math.round(currentChunk / (totalChunks / 100));
+        connection.emit(
+          EVENTS.requestFileChunk,
+          {
+            chunkIndex: currentChunk + 1,
+            fileId,
+            ownerId,
+            targetId,
+          },
+        );
       }
     });
-    return connection.emit(
-      EVENTS.requestFileChunk,
-      {
-        chunkIndex: currentChunk + 1,
-        fileId,
-        ownerId,
-        targetId,
-      },
-    );
+    return null;
   }
   if (currentChunk === totalChunks) {
     const [downloadedFile] = store.downloads.filter(

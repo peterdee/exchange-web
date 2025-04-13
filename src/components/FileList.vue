@@ -2,8 +2,9 @@
 import { reactive } from 'vue';
 
 import CheckIconComponent from './icons/CheckIcon.vue';
-import { COLORS, EVENTS } from '../configuration';
+import { COLORS, EVENTS, SPACER } from '../configuration';
 import connection from '../connection';
+import CrossIconComponent from './icons/CrossIcon.vue';
 import DeleteIconComponent from './icons/DeleteIcon.vue';
 import DownloadIconComponent from './icons/DownloadIcon.vue';
 import getFilesFromDroppedItems from '../utilities/get-files-from-dropped-items';
@@ -24,6 +25,7 @@ interface ComponentState {
 }
 
 const emit = defineEmits([
+  'handle-abort-downloading',
   'handle-download-file',
   'handle-open-file-details',
   'handle-show-file-password-modal',
@@ -205,7 +207,7 @@ const togglePrepareFilesModal = (): void => {
       <div class="f">
         <StyledButtonComponent
           title="Options"
-          :custom-styles="{ height: '32px' }"
+          :custom-styles="{ height: `${SPACER * 2}px` }"
           :disabled="state.deleteFileId === file.id"
           :global-classes="['mh-1']"
           :with-icon="true"
@@ -216,7 +218,7 @@ const togglePrepareFilesModal = (): void => {
         <StyledButtonComponent
           v-if="file.isOwner"
           title="Delete file"
-          :custom-styles="{ height: '32px' }"
+          :custom-styles="{ height: `${SPACER * 2}px` }"
           :disabled="state.deleteFileId === file.id"
           :with-icon="true"
           @handle-click="(): void => handleDelete(file.id)"
@@ -224,10 +226,9 @@ const togglePrepareFilesModal = (): void => {
           <DeleteIconComponent :color="COLORS.error" />
         </StyledButtonComponent>
         <StyledButtonComponent
-          v-if="!file.isOwner"
-          title="Download"
-          :custom-styles="{ height: '32px' }"
-          :disabled="file.isDownloading"
+          v-if="!file.isOwner && !file.isDownloading"
+          title="Download file"
+          :custom-styles="{ height: `${SPACER * 2}px` }"
           :with-icon="true"
           @handle-click="(): void => handleDownload(file)"
         >
@@ -236,6 +237,15 @@ const togglePrepareFilesModal = (): void => {
               ? COLORS.mutedLight
               : COLORS.accent"
           />
+        </StyledButtonComponent>
+        <StyledButtonComponent
+          v-if="!file.isOwner && file.isDownloading"
+          title="Abort downloading"
+          :custom-styles="{ height: `${SPACER * 2}px` }"
+          :with-icon="true"
+          @handle-click="(): void => emit('handle-abort-downloading', file.id)"
+        >
+          <CrossIconComponent :color="COLORS.error" />
         </StyledButtonComponent>
       </div>
     </div>
