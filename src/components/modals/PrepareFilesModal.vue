@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { onUpdated, reactive } from 'vue';
 
-import {
-  COLORS,
-  MAX_FILE_SIZE,
-  SPACER,
-} from '../../configuration';
+import { COLORS, SPACER } from '../../configuration';
 import CrossIconComponent from '../icons/CrossIcon.vue';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import formatFileSize from '../../utilities/format-file-size';
@@ -27,9 +23,7 @@ const emit = defineEmits([
   'handle-share-files',
 ]);
 
-const props = defineProps<{
-  preparedFiles: ListedFile[];
-}>();
+const props = defineProps<{ preparedFiles: ListedFile[] }>();
 
 const state = reactive<ComponentState>({
   firstUpdate: true,
@@ -118,7 +112,9 @@ onUpdated((): void => {
         </StyledButtonComponent>
       </div>
       <div class="mt-half ns input-title">
-        Maximum single file size: {{ formatFileSize(MAX_FILE_SIZE) }}
+        Maximum single file size: {{
+          formatFileSize(store.serverConfiguration.maxFileSizeBytes)
+        }}
       </div>
       <div class="mt-half ns input-title">
         These files are going to be shared:

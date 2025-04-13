@@ -1,5 +1,3 @@
-import { CHUNK_SIZE } from '../configuration';
-
 export function convertArrayBufferChunksToBlob(
   chunks: ArrayBuffer[],
   type: string = '',
@@ -7,7 +5,10 @@ export function convertArrayBufferChunksToBlob(
   return new Blob([...chunks], { type });
 }
 
-export function convertFileToArrayBufferChunks(file: File): Promise<ArrayBuffer[]> {
+export function convertFileToArrayBufferChunks(
+  file: File,
+  chunkSizeBytes: number,
+): Promise<ArrayBuffer[]> {
   return new Promise<ArrayBuffer[]>(
     (resolve): void => {
       const reader = new FileReader();
@@ -20,15 +21,15 @@ export function convertFileToArrayBufferChunks(file: File): Promise<ArrayBuffer[
         if (!binary) {
           return resolve([]);
         }
-        const chunksNumber = Math.ceil(binary.byteLength / CHUNK_SIZE);
+        const chunksNumber = Math.ceil(binary.byteLength / chunkSizeBytes);
         if (chunksNumber === 1) {
           return resolve([binary]);
         }
         const chunks: ArrayBuffer[] = [];
         for (let i = 0; i < chunksNumber; i += 1) {
-          const begin = CHUNK_SIZE * i;
+          const begin = chunkSizeBytes * i;
           const end = i < chunksNumber - 1
-            ? begin + CHUNK_SIZE
+            ? begin + chunkSizeBytes
             : binary.byteLength;
           chunks.push(binary.slice(begin, end));
         }

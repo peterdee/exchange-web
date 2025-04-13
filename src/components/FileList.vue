@@ -102,6 +102,8 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
     props.listedFiles,
     store.deviceName,
     props.ownerId,
+    store.serverConfiguration.chunkSizeBytes,
+    store.serverConfiguration.maxFileSizeBytes,
   );
   if (state.preparedFiles.length === 0) {
     state.showPrepareFilesModal = false;

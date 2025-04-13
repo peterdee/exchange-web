@@ -1,11 +1,13 @@
 import { io, type Socket } from 'socket.io-client';
 
 import type {
+  AcknowledgementMessage,
   ChunkData,
   ChunkRequest,
   DownloadedItem,
   GenericFileData,
   ListedFile,
+  ServerConfiguration,
   UpdateDeviceName,
   UpdateTotalDownloads,
 } from '../types';
@@ -313,9 +315,17 @@ connection.on(
     connection.on(EVENTS.updateTotalDownloads, ioHandlerUpdateTotalDownloads);
     connection.on(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
     
-    connection.emit(EVENTS.requestListedFiles);
-
-    store.connected = true;
+    connection.emit(
+      EVENTS.requestServerConfiguration,
+      (response: AcknowledgementMessage<ServerConfiguration>) => {
+        if (response.data) {
+          store.connected = true;
+          store.receivedConfiguration = true;
+          store.serverConfiguration = response.data;
+          connection.emit(EVENTS.requestListedFiles);
+        }
+      },
+    );
   },
 );
 
