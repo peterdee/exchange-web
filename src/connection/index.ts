@@ -1,11 +1,13 @@
 import { io, type Socket } from 'socket.io-client';
 
 import type {
+  AcknowledgementMessage,
   ChunkData,
   ChunkRequest,
   DownloadedItem,
   GenericFileData,
   ListedFile,
+  ServerConfiguration,
   UpdateDeviceName,
   UpdateTotalDownloads,
 } from '../types';
@@ -256,19 +258,20 @@ const ioHandlerUploadFileChunk = async (
       }
     });
     store.listedFiles.forEach((item: ListedFile): void => {
-      if (item.id === fileId) {
+      if (item.id === fileId && item.isDownloading) {
         item.downloadPercent = Math.round(currentChunk / (totalChunks / 100));
+        connection.emit(
+          EVENTS.requestFileChunk,
+          {
+            chunkIndex: currentChunk + 1,
+            fileId,
+            ownerId,
+            targetId,
+          },
+        );
       }
     });
-    return connection.emit(
-      EVENTS.requestFileChunk,
-      {
-        chunkIndex: currentChunk + 1,
-        fileId,
-        ownerId,
-        targetId,
-      },
-    );
+    return null;
   }
   if (currentChunk === totalChunks) {
     const [downloadedFile] = store.downloads.filter(
@@ -312,9 +315,17 @@ connection.on(
     connection.on(EVENTS.updateTotalDownloads, ioHandlerUpdateTotalDownloads);
     connection.on(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
     
-    connection.emit(EVENTS.requestListedFiles);
-
-    store.connected = true;
+    connection.emit(
+      EVENTS.requestServerConfiguration,
+      (response: AcknowledgementMessage<ServerConfiguration>) => {
+        if (response.data) {
+          store.connected = true;
+          store.receivedConfiguration = true;
+          store.serverConfiguration = response.data;
+          connection.emit(EVENTS.requestListedFiles);
+        }
+      },
+    );
   },
 );
 
