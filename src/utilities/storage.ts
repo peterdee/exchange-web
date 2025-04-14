@@ -1,4 +1,4 @@
-export type StorageKey = 'deviceName' | 'deviceNameSet';
+export type StorageKey = 'autoSaveDownloadedFiles' | 'deviceName' | 'deviceNameSet';
 
 interface StoredItem<T> {
   value: T;

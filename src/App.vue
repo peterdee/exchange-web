@@ -148,6 +148,10 @@ onMounted((): void => {
 
   wakeLock();
 
+  const autoSaveDownloadedFiles = getValue<boolean>('autoSaveDownloadedFiles');
+  if (typeof autoSaveDownloadedFiles === 'boolean') {
+    store.autoSaveDownloadedFiles = autoSaveDownloadedFiles;
+  }
   const deviceName = getValue<string>('deviceName');
   const deviceNameSet = getValue<boolean>('deviceNameSet');
   if (!deviceName || !deviceNameSet) {

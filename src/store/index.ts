@@ -10,6 +10,7 @@ import type {
 import isMobile from '../utilities/is-mobile';
 
 const store= reactive<{
+  autoSaveDownloadedFiles: boolean;
   connected: boolean;
   deviceName: string;
   downloadFileError: DownloadFileError | null;
@@ -19,6 +20,7 @@ const store= reactive<{
   receivedConfiguration: boolean;
   serverConfiguration: ServerConfiguration;
 }>({
+  autoSaveDownloadedFiles: true,
   connected: false,
   deviceName: '',
   downloadFileError: null,

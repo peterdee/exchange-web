@@ -3,12 +3,14 @@ import { reactive } from 'vue';
 
 import connection from '../../connection';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
+import formatFileSize from '../../utilities/format-file-size';
 import { EVENTS, SPACER } from '../../configuration';
 import type { ListedFile } from '../../types';
 import SettingsIconComponent from '../icons/SettingsIcon.vue';
 import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
+import StyledSwitchComponent from '../elements/StyledSwitch.vue';
 
 interface ComponentState {
   deviceName: string;
@@ -101,9 +103,6 @@ const handleSubmit = (): void => {
       </div>
       <div class="f d-col mt-half ns">
         <span class="input-title">
-          Device name: {{ store.deviceName }}
-        </span>
-        <span class="mt-half input-title">
           Shared files: {{ props.sharedFiles }}
         </span>
         <StyledButtonComponent
@@ -117,8 +116,8 @@ const handleSubmit = (): void => {
         </StyledButtonComponent>
       </div>
       <div class="mv-1 divider" />
-      <div class="ns input-title">
-        Update device name
+      <div class="ns title fw-500">
+        Device name
       </div>
       <form
         class="f d-col mt-half"
@@ -136,9 +135,34 @@ const handleSubmit = (): void => {
           :disabled="state.deviceName.length === 0"
           :globalClasses="['mt-half']"
         >
-          Update
+          Update device name
         </StyledButtonComponent>
       </form>
+      <div class="mv-1 divider" />
+      <StyledSwitchComponent
+        :checked="true"
+        :labelText="'Auto-save downloaded files'"
+      />
+      <div class="ns title fw-500">
+        Server configuration
+      </div>
+      <span class="mt-half input-title ns">
+        Chunk size: {{ formatFileSize(store.serverConfiguration.chunkSizeBytes) }}
+      </span>
+      <span class="mt-half input-title ns">
+        Maximum single file size: {{
+          formatFileSize(store.serverConfiguration.maxFileSizeBytes)
+        }}
+      </span>
+      <span class="mt-half input-title ns">
+        Server type: {{ store.serverConfiguration.isLocalServer ? 'local' : 'public' }}
+      </span>
     </div>
   </div>
 </template>
+
+<style scoped>
+.title {
+  font-size: calc(var(--spacer) * 1.25);
+}
+</style>
