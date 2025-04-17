@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
+import CheckFilledIconComponent from './icons/CheckFilledIcon.vue';
 import CheckIconComponent from './icons/CheckIcon.vue';
 import { COLORS, EVENTS, SPACER } from '../configuration';
+import { convertArrayBufferChunksToBlob } from '../utilities/binary';
 import connection from '../connection';
 import CrossIconComponent from './icons/CrossIcon.vue';
 import DeleteIconComponent from './icons/DeleteIcon.vue';
@@ -13,6 +15,8 @@ import LockIconComponent from './icons/LockIcon.vue';
 import MenuDotsIconComponent from './icons/MenuDotsIcon.vue';
 import PrepareFilesModalComponent from './modals/PrepareFilesModal.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
+import saveFileOnDisk from '../utilities/save-file-on-disk';
+import SaveIconComponent from './icons/SaveIcon.vue';
 import store from '../store';
 import StyledButtonComponent from './elements/StyledButton.vue';
 import StyledCircularProgressBarComponent from './elements/StyledCircularProgressBar.vue';
@@ -110,6 +114,34 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
   }
 };
 
+const handleSaveOnDisk = (fileId: string) => {
+  const [downloadedFile] = store.downloads.filter((item) => item.fileId === fileId);
+  store.listedFiles.forEach((item) => {
+    if (item.id === fileId) {
+      item.downloadPercent = 0;
+    }
+  });
+  if (!downloadedFile) {
+    return null;
+  }
+  if (!downloadedFile.downloadCompleted) {
+    store.downloads = store.downloads.filter((item) => item.fileId !== fileId);
+    return null;
+  }
+
+  saveFileOnDisk(
+    convertArrayBufferChunksToBlob(downloadedFile.chunks, downloadedFile.type),
+    downloadedFile.fileName,
+  );
+  store.downloads = store.downloads.filter((item) => item.fileId !== fileId);
+  store.listedFiles.forEach((item) => {
+    if (item.id === fileId) {
+      item.isSavedOnDisk = true;
+    }
+  });
+  return null;
+};
+
 const handleShareFiles = (files: ListedFile[], password: string): void => {
   files.forEach((file: ListedFile): void => {
     if (connection.connected) {
@@ -196,11 +228,18 @@ const togglePrepareFilesModal = (): void => {
           <StyledCircularProgressBarComponent :percent="file.downloadPercent" />
         </div>
         <div
-          v-if="file.downloadCompleted && !file.isDownloading"
+          v-if="file.downloadCompleted && !file.isDownloading && !file.isSavedOnDisk"
           class="icon"
           title="Download completed"
         >
           <CheckIconComponent :color="COLORS.accent" />
+        </div>
+        <div
+          v-if="file.downloadCompleted && !file.isDownloading && file.isSavedOnDisk"
+          class="icon"
+          title="File saved on disk"
+        >
+          <CheckFilledIconComponent :color="COLORS.accent" />
         </div>
         <div class="ml-half ns input-title file-name">
           {{ file.fileName }}
@@ -213,7 +252,7 @@ const togglePrepareFilesModal = (): void => {
           :disabled="state.deleteFileId === file.id"
           :global-classes="['mh-1']"
           :with-icon="true"
-          @handle-click="(): void => emit('handle-open-file-details', file.id)"
+          @handle-click="() => emit('handle-open-file-details', file.id)"
         >
           <MenuDotsIconComponent :color="COLORS.muted" />
         </StyledButtonComponent>
@@ -223,32 +262,41 @@ const togglePrepareFilesModal = (): void => {
           :custom-styles="{ height: `${SPACER * 2}px` }"
           :disabled="state.deleteFileId === file.id"
           :with-icon="true"
-          @handle-click="(): void => handleDelete(file.id)"
+          @handle-click="() => handleDelete(file.id)"
         >
           <DeleteIconComponent :color="COLORS.error" />
         </StyledButtonComponent>
-        <StyledButtonComponent
-          v-if="!file.isOwner && !file.isDownloading"
-          title="Download file"
-          :custom-styles="{ height: `${SPACER * 2}px` }"
-          :with-icon="true"
-          @handle-click="(): void => handleDownload(file)"
-        >
-          <DownloadIconComponent
-            :color="file.isDownloading
-              ? COLORS.mutedLight
-              : COLORS.accent"
-          />
-        </StyledButtonComponent>
-        <StyledButtonComponent
-          v-if="!file.isOwner && file.isDownloading"
-          title="Abort downloading"
-          :custom-styles="{ height: `${SPACER * 2}px` }"
-          :with-icon="true"
-          @handle-click="(): void => emit('handle-abort-downloading', file.id)"
-        >
-          <CrossIconComponent :color="COLORS.error" />
-        </StyledButtonComponent>
+        <template v-if="!file.isOwner">
+          <StyledButtonComponent
+            v-if="!file.isDownloading && file.downloadPercent === 0"
+            title="Download file"
+            :custom-styles="{ height: `${SPACER * 2}px` }"
+            :with-icon="true"
+            @handle-click="() => handleDownload(file)"
+          >
+            <DownloadIconComponent
+              :color="COLORS.accent"
+            />
+          </StyledButtonComponent>
+          <StyledButtonComponent
+            v-if="!file.isDownloading && file.downloadPercent === 100 && !file.isSavedOnDisk"
+            title="Save file on disk"
+            :custom-styles="{ height: `${SPACER * 2}px` }"
+            :with-icon="true"
+            @handle-click="() => handleSaveOnDisk(file.id)"
+          >
+            <SaveIconComponent :color="COLORS.accent" />
+          </StyledButtonComponent>
+          <StyledButtonComponent
+            v-if="file.isDownloading"
+            title="Abort downloading"
+            :custom-styles="{ height: `${SPACER * 2}px` }"
+            :with-icon="true"
+            @handle-click="() => emit('handle-abort-downloading', file.id)"
+          >
+            <CrossIconComponent :color="COLORS.error" />
+          </StyledButtonComponent>
+        </template>
       </div>
     </div>
   </div>

@@ -12,7 +12,6 @@ export const COLORS = {
 
 export const DEFAULT_SERVER_CONFIGURATION: ServerConfiguration = {
   chunkSizeBytes: 122880, // 120 KB
-  isLocalServer: false,
   maxFileSizeBytes: 104857600, // 100 MB
 };
 

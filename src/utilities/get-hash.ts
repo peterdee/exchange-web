@@ -1,7 +1,7 @@
-export default function getHash(file: Blob | File): Promise<string> {
-  return new Promise<string>((resolve): void => {
+export default function getHash(file: Blob | File) {
+  return new Promise<string>((resolve) => {
     const reader = new FileReader();
-    reader.onload = async (event: ProgressEvent<FileReader>) => {
+    reader.onload = async (event) => {
       const { target } = event;
       if (!target) {
         return resolve('');

@@ -69,11 +69,11 @@ const handleAbortDownloading = (fileId: string): void => {
   });
 };
 
-const handleDeviceName = (value: string): void => {
+const handleDeviceName = (value: string) => {
   store.deviceName = value;
   state.showDeviceNameModal = false;
-  setValue<string>('deviceName', value);
-  return setValue<boolean>('deviceNameSet', true);
+  setValue('deviceName', value);
+  return setValue('deviceNameSet', true);
 }
 
 const handleDownloadFile = (
@@ -148,6 +148,10 @@ onMounted((): void => {
 
   wakeLock();
 
+  const autoSaveDownloadedFiles = getValue<boolean>('autoSaveDownloadedFiles');
+  if (typeof autoSaveDownloadedFiles === 'boolean') {
+    store.autoSaveDownloadedFiles = autoSaveDownloadedFiles;
+  }
   const deviceName = getValue<string>('deviceName');
   const deviceNameSet = getValue<boolean>('deviceNameSet');
   if (!deviceName || !deviceNameSet) {

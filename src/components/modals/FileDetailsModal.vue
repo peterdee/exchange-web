@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
+import { convertArrayBufferChunksToBlob } from '../../utilities/binary';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import FileIconComponent from '../icons/FileIcon.vue';
 import formatDate from '../../utilities/format-date';
 import formatFileSize from '../../utilities/format-file-size';
 import type { ListedFile } from '../../types';
+import saveFileOnDisk from '../../utilities/save-file-on-disk';
 import { SPACER } from '../../configuration';
 import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
@@ -87,7 +89,43 @@ const handleDownload = (): void => {
   return handleCloseModal(delayedAction);
 };
 
-const handleShowPasswordModal = (): void => {
+const handleSaveOnDisk = () => {
+  const [downloadedFile] = store.downloads.filter(
+    (item) => item.fileId === props.listedFile.id,
+  );
+
+  store.listedFiles.forEach((item) => {
+    if (item.id === props.listedFile.id) {
+      item.downloadPercent = 0;
+    }
+  });
+
+  if (!downloadedFile) {
+    return handleCloseModal();
+  }
+  if (!downloadedFile.downloadCompleted) {
+    store.downloads = store.downloads.filter(
+      (item) => item.fileId !== props.listedFile.id,
+    );
+    return handleCloseModal();
+  }
+
+  saveFileOnDisk(
+    convertArrayBufferChunksToBlob(downloadedFile.chunks, downloadedFile.type),
+    downloadedFile.fileName,
+  );
+  store.downloads = store.downloads.filter(
+    (item) => item.fileId !== props.listedFile.id,
+  );
+  store.listedFiles.forEach((item) => {
+    if (item.id === props.listedFile.id) {
+      item.isSavedOnDisk = true;
+    }
+  });
+  return handleCloseModal();
+};
+
+const handleShowPasswordModal = () => {
   emit('toggle-password-modal', props.listedFile.id);
   return handleCloseModal();
 };
@@ -98,7 +136,7 @@ const handleShowPasswordModal = (): void => {
     :class="`f d-col j-center modal-background ${state.isClosing
       ? 'fade-out'
       : 'fade-in'}`"
-    @mousedown="(): void => handleCloseModal()"
+    @mousedown="() => handleCloseModal()"
   >
     <div
       :class="`f d-col mh-auto p-1 modal-content ${store.isMobile
@@ -139,10 +177,10 @@ const handleShowPasswordModal = (): void => {
       <div class="mt-half ns input-title">
         Downloads: {{ props.listedFile.totalDownloads }}
       </div>
-      <div class="mt-half ns input-title">
-        Downloaded: {{ props.listedFile.downloadPercent }}%
-      </div>
       <template v-if="!props.listedFile.isOwner">
+        <div class="mt-half ns input-title">
+          Downloaded: {{ props.listedFile.downloadPercent }}%
+        </div>
         <div class="mt-half ns input-title">
           Owner: {{ props.listedFile.deviceName }}
         </div>
@@ -156,7 +194,9 @@ const handleShowPasswordModal = (): void => {
               : 'This file is not protected by password'
           }}
         </div>
-        <template v-if="!props.listedFile.isDownloading">
+        <template
+          v-if="!props.listedFile.isDownloading && listedFile.downloadPercent === 0"
+        >
           <StyledButtonComponent
             :globalClasses="['mt-half']"
             :is-positive="true"
@@ -172,6 +212,20 @@ const handleShowPasswordModal = (): void => {
             @handle-click="handleAbortDownloading"
           >
             Abort downloading
+          </StyledButtonComponent>
+        </template>
+        <template
+          v-if="!props.listedFile.isDownloading
+            && !store.autoSaveDownloadedFiles
+            && props.listedFile.downloadCompleted
+            && props.listedFile.downloadPercent === 100"
+        >
+          <StyledButtonComponent
+            :globalClasses="['mt-half']"
+            :is-positive="true"
+            @handle-click="handleSaveOnDisk"
+          >
+            Save file on disk
           </StyledButtonComponent>
         </template>
       </template>
