@@ -17,7 +17,7 @@ export function getValue<T>(key: StorageKey): null | T {
   }
 }
 
-export function setValue<T>(key: StorageKey, value: T): void {
+export function setValue<T = null>(key: StorageKey, value: T): void {
   const item: StoredItem<T> = { value };
   return localStorage.setItem(key, JSON.stringify(item));
 }

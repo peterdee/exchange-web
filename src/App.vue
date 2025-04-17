@@ -69,11 +69,11 @@ const handleAbortDownloading = (fileId: string): void => {
   });
 };
 
-const handleDeviceName = (value: string): void => {
+const handleDeviceName = (value: string) => {
   store.deviceName = value;
   state.showDeviceNameModal = false;
-  setValue<string>('deviceName', value);
-  return setValue<boolean>('deviceNameSet', true);
+  setValue('deviceName', value);
+  return setValue('deviceNameSet', true);
 }
 
 const handleDownloadFile = (
