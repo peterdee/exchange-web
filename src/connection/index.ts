@@ -1,11 +1,13 @@
 import { io, type Socket } from 'socket.io-client';
 
 import type {
+  AcknowledgementMessage,
   ChunkData,
   ChunkRequest,
   DownloadedItem,
   GenericFileData,
   ListedFile,
+  ServerConfiguration,
   UpdateDeviceName,
   UpdateTotalDownloads,
 } from '../types';
@@ -208,24 +210,49 @@ const ioHandlerUploadFileChunk = async (
     if (!isHashValid) {
       return null;
     }
-    store.listedFiles.forEach((item: ListedFile): void => {
-      if (item.id === fileId) {
-        item.downloadCompleted = true;
-        item.downloadPercent = 100
-        item.isDownloading = false;
-      }
-    });
-    return saveFileOnDisk(
-      convertArrayBufferChunksToBlob([chunk], type),
-      fileName,
-    );
+    if (store.autoSaveDownloadedFiles) {
+      store.listedFiles.forEach((item: ListedFile): void => {
+        if (item.id === fileId) {
+          item.downloadCompleted = true;
+          item.downloadPercent = 0;
+          item.isDownloading = false;
+          item.isSavedOnDisk = true;
+        }
+      });
+      return saveFileOnDisk(
+        convertArrayBufferChunksToBlob([chunk], type),
+        fileName,
+      );
+    } else {
+      store.listedFiles.forEach((item: ListedFile): void => {
+        if (item.id === fileId) {
+          item.downloadCompleted = true;
+          item.downloadPercent = 100;
+          item.isDownloading = false;
+          item.isSavedOnDisk = false;
+        }
+      });
+      const newEntry: DownloadedItem = {
+        chunks: [chunk],
+        downloadCompleted: true,
+        fileId,
+        fileName,
+        fileSize,
+        ownerId,
+        totalChunks,
+        type,
+      };
+      store.downloads.push(newEntry);
+    }
+    return null;
   }
   if (currentChunk === 1 && totalChunks > 1) {
-    store.listedFiles.forEach((item: ListedFile): void => {
+    store.listedFiles.forEach((item) => {
       if (item.id === fileId) {
         item.downloadCompleted = false;
         item.downloadPercent = Math.round(currentChunk / (totalChunks / 100));
         item.isDownloading = true;
+        item.isSavedOnDisk = false;
       }
     });
     const newEntry: DownloadedItem = {
@@ -250,12 +277,12 @@ const ioHandlerUploadFileChunk = async (
     );
   }
   if (currentChunk > 1 && currentChunk < totalChunks) {
-    store.downloads.forEach((item: DownloadedItem): void => {
+    store.downloads.forEach((item) => {
       if (item.fileId === fileId) {
         item.chunks.push(chunk);
       }
     });
-    store.listedFiles.forEach((item: ListedFile): void => {
+    store.listedFiles.forEach((item) => {
       if (item.id === fileId && item.isDownloading) {
         item.downloadPercent = Math.round(currentChunk / (totalChunks / 100));
         connection.emit(
@@ -275,6 +302,7 @@ const ioHandlerUploadFileChunk = async (
     const [downloadedFile] = store.downloads.filter(
       (item: DownloadedItem): boolean => item.fileId === fileId,
     );
+    downloadedFile.downloadCompleted = true;
     downloadedFile.chunks.push(chunk);
     const isHashValid = await checkHashSum(downloadedFile.chunks, type, fileId);
     if (!isHashValid) {
@@ -287,13 +315,21 @@ const ioHandlerUploadFileChunk = async (
         item.isDownloading = false;
       }
     });
-    saveFileOnDisk(
-      convertArrayBufferChunksToBlob(downloadedFile.chunks, downloadedFile.type),
-      downloadedFile.fileName,
-    );
-    store.downloads = store.downloads.filter(
-      (item: DownloadedItem): boolean => item.fileId !== fileId,
-    );
+    if (store.autoSaveDownloadedFiles) {
+      saveFileOnDisk(
+        convertArrayBufferChunksToBlob(downloadedFile.chunks, downloadedFile.type),
+        downloadedFile.fileName,
+      );
+      store.downloads = store.downloads.filter(
+        (item: DownloadedItem): boolean => item.fileId !== fileId,
+      );
+      store.listedFiles.forEach((item: ListedFile): void => {
+        if (item.id === fileId) {
+          item.downloadPercent = 0;
+          item.isSavedOnDisk = true;
+        }
+      });
+    }
   }
 };
 
@@ -313,9 +349,17 @@ connection.on(
     connection.on(EVENTS.updateTotalDownloads, ioHandlerUpdateTotalDownloads);
     connection.on(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
     
-    connection.emit(EVENTS.requestListedFiles);
-
-    store.connected = true;
+    connection.emit(
+      EVENTS.requestServerConfiguration,
+      (response: AcknowledgementMessage<ServerConfiguration>) => {
+        if (response.data) {
+          store.connected = true;
+          store.receivedConfiguration = true;
+          store.serverConfiguration = response.data;
+          connection.emit(EVENTS.requestListedFiles);
+        }
+      },
+    );
   },
 );
 

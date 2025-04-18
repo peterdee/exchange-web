@@ -1,25 +1,28 @@
 import { convertFileToArrayBufferChunks } from './binary';
 import getHash from './get-hash';
 import type { ListedFile } from '../types';
-import { MAX_FILE_SIZE } from '../configuration';
 
 export default async function prepareSharedFiles(
   files: File[],
   listedFiles: ListedFile[],
   deviceName: string,
   ownerId: string,
+  chunkSizeBytes: number,
+  maxFileSizeBytes: number,
 ): Promise<ListedFile[]> {
   const hashes = await Promise.all(files.map(
     (file: File): Promise<string> => getHash(file),
   ));
-  const chunkedFiles = await Promise.all(files.map(convertFileToArrayBufferChunks));
+  const chunkedFiles = await Promise.all(files.map(
+    (item) => convertFileToArrayBufferChunks(item, chunkSizeBytes),
+  ));
   const result: ListedFile[] = [];
   files.forEach((file: File, index: number): void => {
     const alreadyListed = listedFiles.filter(
       (item: ListedFile): boolean => item.id === hashes[index]
         && item.fileName === file.name && item.fileSize === file.size,
     );
-    if (alreadyListed.length === 0 && file.size < MAX_FILE_SIZE) {
+    if (alreadyListed.length === 0 && file.size < maxFileSizeBytes) {
       const entry: ListedFile = {
         chunks: chunkedFiles[index],
         createdAt: Date.now(),
@@ -34,6 +37,7 @@ export default async function prepareSharedFiles(
         id: hashes[index],
         isDownloading: false,
         isOwner: true,
+        isSavedOnDisk: false,
         ownerId,
         totalDownloads: 0,
         withPassword: false,

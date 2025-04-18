@@ -1,4 +1,4 @@
-export const CHUNK_SIZE = Number(import.meta.env.VITE_CHUNK_SIZE) || 1024 * 120;
+import type { ServerConfiguration } from '../types';
 
 export const COLORS = {
   accent: '#1e7878',
@@ -8,6 +8,11 @@ export const COLORS = {
   mutedLight: '#bbbbbb',
   mutedSuperLight: '#dfdfdf',
   positive: '#60be60',
+};
+
+export const DEFAULT_SERVER_CONFIGURATION: ServerConfiguration = {
+  chunkSizeBytes: 122880, // 120 KB
+  maxFileSizeBytes: 104857600, // 100 MB
 };
 
 export const EVENTS = {
@@ -24,13 +29,12 @@ export const EVENTS = {
   requestFileChunk: 'request-file-chunk',
   requestGrant: 'request-grant',
   requestListedFiles: 'request-listed-files',
+  requestServerConfiguration: 'request-server-configuration',
   updateDeviceName: 'update-device-name',
   updateFilePrivacy: 'update-file-privacy',
   updateTotalDownloads: 'update-total-downloads',
   uploadFileChunk: 'upload-file-chunk',
 };
-
-export const MAX_FILE_SIZE = Number(import.meta.env.VITE_MAX_FILE_SIZE) || 1024 * 1024 * 100;
 
 export const MESSAGES = {
   fileNotFound: 'FILE_NOT_FOUND',

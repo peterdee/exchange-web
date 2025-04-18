@@ -48,6 +48,7 @@ export interface ListedFile {
   id: string;
   isDownloading: boolean;
   isOwner: boolean;
+  isSavedOnDisk: boolean;
   ownerId: string;
   totalDownloads: number;
   withPassword: boolean;
@@ -56,6 +57,11 @@ export interface ListedFile {
 export interface DownloadFileError {
   errorText: string;
   file: ListedFile;
+}
+
+export interface ServerConfiguration {
+  chunkSizeBytes: number;
+  maxFileSizeBytes: number;
 }
 
 export interface UpdateDeviceName {
