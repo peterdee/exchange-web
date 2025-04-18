@@ -18,10 +18,10 @@ import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
+import { requestWakeLock } from './utilities/wakelock';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
 import store from './store';
 import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
-import wakeLock from './utilities/wakelock';
 
 interface ComponentState {
   downloadErrorMessage: string;
@@ -146,7 +146,7 @@ onMounted((): void => {
     }
   }
 
-  wakeLock();
+  requestWakeLock();
 
   const autoSaveDownloadedFiles = getValue<boolean>('autoSaveDownloadedFiles');
   if (typeof autoSaveDownloadedFiles === 'boolean') {
