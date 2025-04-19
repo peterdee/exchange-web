@@ -146,7 +146,11 @@ onMounted((): void => {
     }
   }
 
-  requestWakeLock();
+  const wakeLock = () => {
+    requestWakeLock();
+    document.removeEventListener('click', wakeLock);
+  };
+  document.addEventListener('click', wakeLock, { once: true });
 
   const autoSaveDownloadedFiles = getValue<boolean>('autoSaveDownloadedFiles');
   if (typeof autoSaveDownloadedFiles === 'boolean') {
