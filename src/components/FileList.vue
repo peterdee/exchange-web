@@ -222,7 +222,7 @@ const togglePrepareFilesModal = (): void => {
         </div>
         <div
           v-if="!file.downloadCompleted && file.isDownloading"
-          class="icon"
+          class="f ai-center j-center icon"
           :title="`Downloading file (${file.downloadPercent}%)`"
         >
           <StyledCircularProgressBarComponent :percent="file.downloadPercent" />
