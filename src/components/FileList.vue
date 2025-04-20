@@ -207,50 +207,16 @@ const togglePrepareFilesModal = (): void => {
       :key="file.id"
     >
       <div class="f ai-center name-container">
-        <div
-          v-if="!file.downloadCompleted && !file.isDownloading"
-          class="icon"
-          :title="file.withPassword
-            ? 'Protected with password'
-            : 'No password protection'"
-        >
-          <LockIconComponent
-            :color="!file.withPassword
-              ? COLORS.mutedLight
-              : COLORS.accent"
-          />
-        </div>
-        <div
-          v-if="!file.downloadCompleted && file.isDownloading"
-          class="f ai-center j-center icon"
-          :title="`Downloading file (${file.downloadPercent}%)`"
-        >
-          <StyledCircularProgressBarComponent :percent="file.downloadPercent" />
-        </div>
-        <div
-          v-if="file.downloadCompleted && !file.isDownloading && !file.isSavedOnDisk"
-          class="icon"
-          title="Download completed"
-        >
-          <CheckIconComponent :color="COLORS.accent" />
-        </div>
-        <div
-          v-if="file.downloadCompleted && !file.isDownloading && file.isSavedOnDisk"
-          class="icon"
-          title="File saved on disk"
-        >
-          <CheckFilledIconComponent :color="COLORS.accent" />
-        </div>
-        <div class="ml-half ns input-title file-name">
+        <div class="ns input-title file-name">
           {{ file.fileName }}
         </div>
       </div>
-      <div class="f">
+      <div class="f ai-center">
         <StyledButtonComponent
           title="Options"
           :custom-styles="{ height: `${SPACER * 2}px` }"
           :disabled="state.deleteFileId === file.id"
-          :global-classes="['mh-1']"
+          :global-classes="store.isMobile ? ['mh-half'] : ['mh-1']"
           :with-icon="true"
           @handle-click="() => emit('handle-open-file-details', file.id)"
         >
@@ -297,6 +263,40 @@ const togglePrepareFilesModal = (): void => {
             <CrossIconComponent :color="COLORS.error" />
           </StyledButtonComponent>
         </template>
+        <div
+          v-if="!file.downloadCompleted && !file.isDownloading"
+          :class="`f ai-center j-center icon ml-${store.isMobile ? 'quarter' : 'half'}`"
+          :title="file.withPassword
+            ? 'Protected with password'
+            : 'No password protection'"
+        >
+          <LockIconComponent
+            :color="!file.withPassword
+              ? COLORS.mutedLight
+              : COLORS.accent"
+          />
+        </div>
+        <div
+          v-if="!file.downloadCompleted && file.isDownloading"
+          :class="`f ai-center j-center icon ml-${store.isMobile ? 'quarter' : 'half'}`"
+          :title="`Downloading file (${file.downloadPercent}%)`"
+        >
+          <StyledCircularProgressBarComponent :percent="file.downloadPercent" />
+        </div>
+        <div
+          v-if="file.downloadCompleted && !file.isDownloading && !file.isSavedOnDisk"
+          :class="`f ai-center j-center icon ml-${store.isMobile ? 'quarter' : 'half'}`"
+          title="Download completed"
+        >
+          <CheckIconComponent :color="COLORS.accent" />
+        </div>
+        <div
+          v-if="file.downloadCompleted && !file.isDownloading && file.isSavedOnDisk"
+          :class="`f ai-center j-center icon ml-${store.isMobile ? 'quarter' : 'half'}`"
+          title="File saved on disk"
+        >
+          <CheckFilledIconComponent :color="COLORS.accent" />
+        </div>
       </div>
     </div>
   </div>
