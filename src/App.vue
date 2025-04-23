@@ -18,10 +18,10 @@ import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
+import { requestWakeLock } from './utilities/wakelock';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
 import store from './store';
 import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
-import wakeLock from './utilities/wakelock';
 
 interface ComponentState {
   downloadErrorMessage: string;
@@ -69,11 +69,11 @@ const handleAbortDownloading = (fileId: string): void => {
   });
 };
 
-const handleDeviceName = (value: string): void => {
+const handleDeviceName = (value: string) => {
   store.deviceName = value;
   state.showDeviceNameModal = false;
-  setValue<string>('deviceName', value);
-  return setValue<boolean>('deviceNameSet', true);
+  setValue('deviceName', value);
+  return setValue('deviceNameSet', true);
 }
 
 const handleDownloadFile = (
@@ -146,8 +146,16 @@ onMounted((): void => {
     }
   }
 
-  wakeLock();
+  const wakeLock = () => {
+    requestWakeLock();
+    document.removeEventListener('click', wakeLock);
+  };
+  document.addEventListener('click', wakeLock, { once: true });
 
+  const autoSaveDownloadedFiles = getValue<boolean>('autoSaveDownloadedFiles');
+  if (typeof autoSaveDownloadedFiles === 'boolean') {
+    store.autoSaveDownloadedFiles = autoSaveDownloadedFiles;
+  }
   const deviceName = getValue<string>('deviceName');
   const deviceNameSet = getValue<boolean>('deviceNameSet');
   if (!deviceName || !deviceNameSet) {

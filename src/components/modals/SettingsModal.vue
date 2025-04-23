@@ -3,12 +3,14 @@ import { reactive } from 'vue';
 
 import connection from '../../connection';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
+import formatFileSize from '../../utilities/format-file-size';
 import { EVENTS, SPACER } from '../../configuration';
-import type { ListedFile } from '../../types';
+import { setValue } from '../../utilities/storage';
 import SettingsIconComponent from '../icons/SettingsIcon.vue';
 import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
+import StyledSwitchComponent from '../elements/StyledSwitch.vue';
 
 interface ComponentState {
   deviceName: string;
@@ -29,28 +31,28 @@ const state = reactive<ComponentState>({
   isClosing: false,
 });
 
-const handleInput = ({ value }: { value: string }): void => {
+const handleInput = ({ value }: { value: string }) => {
   state.deviceName = value;
 };
 
-const handleCloseModal = (): void => {
+const handleCloseModal = () => {
   state.isClosing = true;
   setTimeout(
-    (): void => emit('close-modal'),
+    () => emit('close-modal'),
     240,
   );
 };
 
-const handleDeleteAllFiles = (): void => {
+const handleDeleteAllFiles = () => {
   if (connection.connected) {
     connection.emit(EVENTS.deleteAllFiles);
   }
   store.listedFiles = [];
 };
 
-const handleSubmit = (): void => {
+const handleSubmitNewDeviceName = () => {
   if (connection.connected && state.deviceName !== store.deviceName
-    && store.listedFiles.some((item: ListedFile): boolean => item.ownerId === connection.id)) {
+    && store.listedFiles.some((item) => item.ownerId === connection.id)) {
     connection.emit(
       EVENTS.updateDeviceName,
       {
@@ -61,9 +63,15 @@ const handleSubmit = (): void => {
   }
   state.isClosing = true;
   setTimeout(
-    (): void => emit('update-device-name', state.deviceName),
+    () => emit('update-device-name', state.deviceName),
     240,
   );
+};
+
+const handleAutoSaveSwitch = () => {
+  const newValue = !store.autoSaveDownloadedFiles;
+  setValue('autoSaveDownloadedFiles', newValue);
+  store.autoSaveDownloadedFiles = newValue;
 };
 </script>
 
@@ -101,9 +109,6 @@ const handleSubmit = (): void => {
       </div>
       <div class="f d-col mt-half ns">
         <span class="input-title">
-          Device name: {{ store.deviceName }}
-        </span>
-        <span class="mt-half input-title">
           Shared files: {{ props.sharedFiles }}
         </span>
         <StyledButtonComponent
@@ -117,12 +122,12 @@ const handleSubmit = (): void => {
         </StyledButtonComponent>
       </div>
       <div class="mv-1 divider" />
-      <div class="ns input-title">
-        Update device name
+      <div class="ns title fw-500">
+        Device name
       </div>
       <form
         class="f d-col mt-half"
-        @submit.prevent="handleSubmit"
+        @submit.prevent="handleSubmitNewDeviceName"
       >
         <StyledInputComponent
           name="deviceName"
@@ -136,9 +141,34 @@ const handleSubmit = (): void => {
           :disabled="state.deviceName.length === 0"
           :globalClasses="['mt-half']"
         >
-          Update
+          Update device name
         </StyledButtonComponent>
       </form>
+      <div class="mv-1 divider" />
+      <StyledSwitchComponent
+        :checked="store.autoSaveDownloadedFiles"
+        :global-classes="['input-title']"
+        :labelText="'Auto-save downloaded files'"
+        @handle-switch="handleAutoSaveSwitch"
+      />
+      <div class="mv-1 divider" />
+      <div class="ns title fw-500">
+        Server configuration
+      </div>
+      <span class="mt-half input-title ns">
+        Chunk size: {{ formatFileSize(store.serverConfiguration.chunkSizeBytes) }}
+      </span>
+      <span class="mt-half input-title ns">
+        Maximum single file size: {{
+          formatFileSize(store.serverConfiguration.maxFileSizeBytes)
+        }}
+      </span>
     </div>
   </div>
 </template>
+
+<style scoped>
+.title {
+  font-size: calc(var(--spacer) * 1.25);
+}
+</style>
