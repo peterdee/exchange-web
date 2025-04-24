@@ -17,6 +17,7 @@ import FileDetailsModalComponent from './components/modals/FileDetailsModal.vue'
 import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
+import isValidURL from './utilities/is-valid-url';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
 import { requestWakeLock } from './utilities/wakelock';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
@@ -164,6 +165,16 @@ onMounted((): void => {
     setValue('deviceName', store.deviceName);
   } else {
     store.deviceName = deviceName;
+  }
+
+  const queryParams = new URLSearchParams(window.location.search);
+  if (queryParams.size > 0) {
+    const isLocal = queryParams.get('local') === 'true';
+    const serverAddress = decodeURIComponent(queryParams.get('server') || '');
+    if (isLocal && serverAddress && isValidURL(serverAddress)) {
+      // TODO: set server address & open connection
+      console.log(isLocal, serverAddress);
+    }
   }
 
   connection.open();
