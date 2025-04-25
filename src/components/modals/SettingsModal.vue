@@ -5,6 +5,7 @@ import connection from '../../connection';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import formatFileSize from '../../utilities/format-file-size';
 import { EVENTS, SPACER } from '../../configuration';
+import isValidURL from '../../utilities/is-valid-url';
 import { setValue } from '../../utilities/storage';
 import SettingsIconComponent from '../icons/SettingsIcon.vue';
 import store from '../../store';
@@ -15,6 +16,7 @@ import StyledSwitchComponent from '../elements/StyledSwitch.vue';
 interface ComponentState {
   deviceName: string;
   isClosing: boolean;
+  serverAddress: string;
 }
 
 const emit = defineEmits([
@@ -29,10 +31,22 @@ const props = defineProps<{
 const state = reactive<ComponentState>({
   deviceName: store.deviceName,
   isClosing: false,
+  serverAddress: '',
 });
 
-const handleInput = ({ value }: { value: string }) => {
-  state.deviceName = value;
+const handleAutoSaveSwitch = () => {
+  const newValue = !store.autoSaveDownloadedFiles;
+  setValue('autoSaveDownloadedFiles', newValue);
+  store.autoSaveDownloadedFiles = newValue;
+};
+
+const handleInput = ({ value }: { value: string }, name: string) => {
+  if (name === 'deviceName') {
+    state.deviceName = value;
+  }
+  if (name === 'serverAddress') {
+    state.serverAddress = value;
+  }
 };
 
 const handleCloseModal = () => {
@@ -68,10 +82,12 @@ const handleSubmitNewDeviceName = () => {
   );
 };
 
-const handleAutoSaveSwitch = () => {
-  const newValue = !store.autoSaveDownloadedFiles;
-  setValue('autoSaveDownloadedFiles', newValue);
-  store.autoSaveDownloadedFiles = newValue;
+const handleSubmitServerAddress = () => {
+  let address = state.serverAddress;
+  if (address[address.length - 1] === '/') {
+    address = address.substring(0, address.length - 1);
+  }
+  return window.location.replace(`${address}/?callback=${window.location.origin}`);
 };
 </script>
 
@@ -134,7 +150,7 @@ const handleAutoSaveSwitch = () => {
           placeholder="Device name"
           type="text"
           :value="state.deviceName"
-          @handle-input="handleInput"
+          @handle-input="(event) => handleInput(event, 'deviceName')"
         />
         <StyledButtonComponent
           type="submit"
@@ -151,6 +167,29 @@ const handleAutoSaveSwitch = () => {
         :labelText="'Auto-save downloaded files'"
         @handle-switch="handleAutoSaveSwitch"
       />
+      <div class="mv-1 divider" />
+      <div class="ns title fw-500">
+        Local server address
+      </div>
+      <form
+        class="f d-col mt-half"
+        @submit.prevent="handleSubmitServerAddress"
+      >
+        <StyledInputComponent
+          name="serverAddress"
+          placeholder="https://"
+          type="text"
+          :value="state.serverAddress"
+          @handle-input="(event) => handleInput(event, 'serverAddress')"
+        />
+        <StyledButtonComponent
+          type="submit"
+          :disabled="state.serverAddress.length === 0 || !isValidURL(state.serverAddress)"
+          :globalClasses="['mt-half']"
+        >
+          Connect to the server
+        </StyledButtonComponent>
+      </form>
       <div class="mv-1 divider" />
       <div class="ns title fw-500">
         Server configuration
