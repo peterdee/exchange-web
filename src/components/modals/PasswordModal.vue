@@ -51,14 +51,14 @@ const handleInput = ({ value = '' }: { value: string }): void => {
 };
 
 const handleRemovePassword = async (): Promise<null | Socket | void> => {
-  if (connection.connected) {
+  if (connection.io.connected) {
     state.isLoading = true;
     await sleep();
-    connection.emit(
+    connection.io.emit(
       EVENTS.removePassword,
       {
         fileId: props.listedFile.id,
-        ownerId: connection.id,
+        ownerId: connection.io.id,
       },
     );
     const delayedAction = (): void => {
@@ -80,14 +80,14 @@ const handleSubmit = async (): Promise<null | Socket | void> => {
     state.passwordError = true;
     return null;
   }
-  if (connection.connected) {
+  if (connection.io.connected) {
     state.isLoading = true;
     await sleep();
-    return connection.emit(
+    return connection.io.emit(
       EVENTS.changePassword,
       {
         fileId: props.listedFile.id,
-        ownerId: connection.id,
+        ownerId: connection.io.id,
         password: trimmedPassword,
       },
       (response: AcknowledgementMessage): null | void => {

@@ -49,8 +49,8 @@ const state = reactive<ComponentState>({
 
 const handleDelete = (fileId: string): void => {
   state.deleteFileId = fileId;
-  if (connection.connected) {
-    connection.emit(EVENTS.deleteFile, { fileId });
+  if (connection.io.connected) {
+    connection.io.emit(EVENTS.deleteFile, { fileId });
   }
   setTimeout(
     (): void => {
@@ -144,8 +144,8 @@ const handleSaveOnDisk = (fileId: string) => {
 
 const handleShareFiles = (files: ListedFile[], password: string): void => {
   files.forEach((file: ListedFile): void => {
-    if (connection.connected) {
-      connection.emit(
+    if (connection.io.connected) {
+      connection.io.emit(
         EVENTS.listFile,
         {
           createdAt: file.createdAt,

@@ -18,17 +18,6 @@ import saveFileOnDisk from '../utilities/save-file-on-disk';
 import store from '../store';
 import { WS_URL } from '../configuration';
 
-const connection = io(
-  WS_URL,
-  {
-    autoConnect: false,
-    reconnection: true,
-    reconnectionAttempts: 10,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 10000,
-  },
-);
-
 async function checkHashSum(
   chunks: ArrayBuffer[],
   fileType: string,
@@ -56,6 +45,32 @@ async function checkHashSum(
   });
   return false;
 }
+
+const connection = {
+  io: io(
+    WS_URL,
+    {
+      autoConnect: false,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
+    },
+  ),
+};
+
+export const updateConnection = (url: string) => {
+  connection.io = io(
+    url,
+    {
+      autoConnect: false,
+      reconnection: true,
+      reconnectionAttempts: 10,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 10000,
+    },
+  );
+};
 
 const ioHandlerChangePassword = (data: GenericFileData): void => {
   const { fileId = '', ownerId = '' } = data;
@@ -94,7 +109,7 @@ const ioHandlerDownloadFile = (
   if (!file) {
     return null;
   }
-  return connection.emit(
+  return connection.io.emit(
     EVENTS.uploadFileChunk,
     {
       chunk: file.chunks[0],
@@ -142,7 +157,7 @@ const ioHandlerRequestFileChunk = (data: ChunkRequest): null | Socket => {
   if (!file) {
     return null;
   }
-  return connection.emit(
+  return connection.io.emit(
     EVENTS.uploadFileChunk,
     {
       chunk: file.chunks[chunkIndex - 1],
@@ -266,7 +281,7 @@ const ioHandlerUploadFileChunk = async (
       type,
     };
     store.downloads.push(newEntry);
-    return connection.emit(
+    return connection.io.emit(
       EVENTS.requestFileChunk,
       {
         chunkIndex: currentChunk + 1,
@@ -285,7 +300,7 @@ const ioHandlerUploadFileChunk = async (
     store.listedFiles.forEach((item) => {
       if (item.id === fileId && item.isDownloading) {
         item.downloadPercent = Math.round(currentChunk / (totalChunks / 100));
-        connection.emit(
+        connection.io.emit(
           EVENTS.requestFileChunk,
           {
             chunkIndex: currentChunk + 1,
@@ -333,52 +348,54 @@ const ioHandlerUploadFileChunk = async (
   }
 };
 
-connection.on(
-  EVENTS.connect,
-  (): void => {
-    connection.on(EVENTS.changePassword, ioHandlerChangePassword);
-    connection.on(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
-    connection.on(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
-    connection.on(EVENTS.deleteFile, ioHandlerDeleteFile);
-    connection.on(EVENTS.downloadFile, ioHandlerDownloadFile);
-    connection.on(EVENTS.listFile, ioHandlerListFile);
-    connection.on(EVENTS.removePassword, ioHandlerRemoveFilePassword);
-    connection.on(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
-    connection.on(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
-    connection.on(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
-    connection.on(EVENTS.updateTotalDownloads, ioHandlerUpdateTotalDownloads);
-    connection.on(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
-    
-    connection.emit(
-      EVENTS.requestServerConfiguration,
-      (response: AcknowledgementMessage<ServerConfiguration>) => {
-        if (response.data) {
-          store.connected = true;
-          store.receivedConfiguration = true;
-          store.serverConfiguration = response.data;
-          connection.emit(EVENTS.requestListedFiles);
-        }
-      },
-    );
-  },
-);
+export const registerEvents = () => {
+  connection.io.on(
+    EVENTS.connect,
+    (): void => {
+      connection.io.on(EVENTS.changePassword, ioHandlerChangePassword);
+      connection.io.on(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
+      connection.io.on(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
+      connection.io.on(EVENTS.deleteFile, ioHandlerDeleteFile);
+      connection.io.on(EVENTS.downloadFile, ioHandlerDownloadFile);
+      connection.io.on(EVENTS.listFile, ioHandlerListFile);
+      connection.io.on(EVENTS.removePassword, ioHandlerRemoveFilePassword);
+      connection.io.on(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
+      connection.io.on(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
+      connection.io.on(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
+      connection.io.on(EVENTS.updateTotalDownloads, ioHandlerUpdateTotalDownloads);
+      connection.io.on(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
+      
+      connection.io.emit(
+        EVENTS.requestServerConfiguration,
+        (response: AcknowledgementMessage<ServerConfiguration>) => {
+          if (response.data) {
+            store.connected = true;
+            store.receivedConfiguration = true;
+            store.serverConfiguration = response.data;
+            connection.io.emit(EVENTS.requestListedFiles);
+          }
+        },
+      );
+    },
+  );
+};
 
 export const handleDisconnect = (): void => {
-  if (connection.connected) {
-    connection.emit(EVENTS.close);
+  if (connection.io.connected) {
+    connection.io.emit(EVENTS.close);
 
-    connection.off(EVENTS.changePassword, ioHandlerChangePassword);
-    connection.off(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
-    connection.off(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
-    connection.off(EVENTS.deleteFile, ioHandlerDeleteFile);
-    connection.off(EVENTS.downloadFile, ioHandlerDownloadFile);
-    connection.off(EVENTS.listFile, ioHandlerListFile);
-    connection.off(EVENTS.removePassword, ioHandlerRemoveFilePassword);
-    connection.off(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
-    connection.off(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
-    connection.off(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
-    connection.off(EVENTS.updateTotalDownloads, ioHandlerUpdateTotalDownloads);
-    connection.off(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
+    connection.io.off(EVENTS.changePassword, ioHandlerChangePassword);
+    connection.io.off(EVENTS.clientDisconnect, ioHandlerClientDisconnect);
+    connection.io.off(EVENTS.deleteAllFiles, ioHandlerDeleteAllFiles);
+    connection.io.off(EVENTS.deleteFile, ioHandlerDeleteFile);
+    connection.io.off(EVENTS.downloadFile, ioHandlerDownloadFile);
+    connection.io.off(EVENTS.listFile, ioHandlerListFile);
+    connection.io.off(EVENTS.removePassword, ioHandlerRemoveFilePassword);
+    connection.io.off(EVENTS.requestFileChunk, ioHandlerRequestFileChunk);
+    connection.io.off(EVENTS.requestListedFiles, ioHandlerRequestListedFiles);
+    connection.io.off(EVENTS.updateDeviceName, ioHandlerUpdateDeviceName);
+    connection.io.off(EVENTS.updateTotalDownloads, ioHandlerUpdateTotalDownloads);
+    connection.io.off(EVENTS.uploadFileChunk, ioHandlerUploadFileChunk);
 
     store.connected = false;
   }

@@ -44,20 +44,20 @@ const handleCloseModal = () => {
 };
 
 const handleDeleteAllFiles = () => {
-  if (connection.connected) {
-    connection.emit(EVENTS.deleteAllFiles);
+  if (connection.io.connected) {
+    connection.io.emit(EVENTS.deleteAllFiles);
   }
   store.listedFiles = [];
 };
 
 const handleSubmitNewDeviceName = () => {
-  if (connection.connected && state.deviceName !== store.deviceName
-    && store.listedFiles.some((item) => item.ownerId === connection.id)) {
-    connection.emit(
+  if (connection.io.connected && state.deviceName !== store.deviceName
+    && store.listedFiles.some((item) => item.ownerId === connection.io.id)) {
+    connection.io.emit(
       EVENTS.updateDeviceName,
       {
         newDeviceName: state.deviceName,
-        ownerId: connection.id,
+        ownerId: connection.io.id,
       },
     );
   }
@@ -113,7 +113,7 @@ const handleAutoSaveSwitch = () => {
         </span>
         <StyledButtonComponent
           type="button"
-          :disabled="props.sharedFiles === 0 || !connection.connected"
+          :disabled="props.sharedFiles === 0 || !connection.io.connected"
           :global-classes="['mt-half']"
           :is-negative="true"
           @handle-click="handleDeleteAllFiles"

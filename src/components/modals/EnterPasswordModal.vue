@@ -58,12 +58,12 @@ const handleInput = ({ value }: { value: string }): void => {
 
 const handleSubmit = async (): Promise<null | Socket> => {
   const trimmedPassword = (state.password || '').trim();
-  if (!(connection.connected && trimmedPassword)) {
+  if (!(connection.io.connected && trimmedPassword)) {
     return null;
   }
   state.isLoading = true;
   await sleep(500);
-  return connection.emit(
+  return connection.io.emit(
     EVENTS.requestGrant,
     {
       fileId: props.listedFile.id,

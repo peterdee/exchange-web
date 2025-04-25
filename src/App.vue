@@ -7,7 +7,11 @@ import {
 import type { Socket } from 'socket.io-client';
 
 import type { AcknowledgementMessage, DownloadedItem, ListedFile } from './types';
-import connection, { handleDisconnect } from './connection';
+import connection, {
+  handleDisconnect,
+  registerEvents,
+  updateConnection,
+} from './connection';
 import DeviceNameModalComponent from './components/modals/DeviceNameModal.vue';
 import DownloadErrorModalComponent from './components/modals/DownloadErrorModal.vue';
 import EnterPasswordModalComponent from './components/modals/EnterPasswordModal.vue';
@@ -87,7 +91,7 @@ const handleDownloadFile = (
     grant?: string;
     ownerId: string;
   },
-): Socket => connection.emit(
+): Socket => connection.io.emit(
   EVENTS.downloadFile,
   {
     fileId,
@@ -172,12 +176,12 @@ onMounted((): void => {
     const isLocal = queryParams.get('local') === 'true';
     const serverAddress = decodeURIComponent(queryParams.get('server') || '');
     if (isLocal && serverAddress && isValidURL(serverAddress)) {
-      // TODO: set server address & open connection
-      console.log(isLocal, serverAddress);
+      updateConnection(serverAddress);
     }
   }
 
-  connection.open();
+  registerEvents();
+  connection.io.open();
 });
 </script>
 
@@ -244,19 +248,19 @@ onMounted((): void => {
       <SettingsModalComponent
         v-if="state.showSettingsModal"
         :shared-files="store.listedFiles.filter(
-          (item: ListedFile): boolean => item.ownerId === connection.id,
+          (item: ListedFile): boolean => item.ownerId === connection.io.id,
         ).length"
         @close-modal="(): void => toggleModal('settings')"
         @update-device-name="handleUpdateDeviceName"
       />
       <HeaderComponent
         :listed-files="store.listedFiles"
-        :owner-id="connection.id || ''"
+        :owner-id="connection.io.id || ''"
         @toggle-settings-modal="(): void => toggleModal('settings')"
       />
       <FileListComponent
         :listed-files="store.listedFiles"
-        :owner-id="connection.id || ''"
+        :owner-id="connection.io.id || ''"
         @handle-abort-downloading="handleAbortDownloading"
         @handle-download-file="handleDownloadFile"
         @handle-open-file-details="handleFileDetails"
