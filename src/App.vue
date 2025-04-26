@@ -7,7 +7,11 @@ import {
 import type { Socket } from 'socket.io-client';
 
 import type { AcknowledgementMessage, DownloadedItem, ListedFile } from './types';
-import connection, { handleDisconnect } from './connection';
+import connection, {
+  handleDisconnect,
+  registerEvents,
+  updateConnection,
+} from './connection';
 import DeviceNameModalComponent from './components/modals/DeviceNameModal.vue';
 import DownloadErrorModalComponent from './components/modals/DownloadErrorModal.vue';
 import EnterPasswordModalComponent from './components/modals/EnterPasswordModal.vue';
@@ -17,11 +21,12 @@ import FileDetailsModalComponent from './components/modals/FileDetailsModal.vue'
 import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
+import isValidURL from './utilities/is-valid-url';
+import LoadingComponent from './components/Loading.vue';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
 import { requestWakeLock } from './utilities/wakelock';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
 import store from './store';
-import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
 
 interface ComponentState {
   downloadErrorMessage: string;
@@ -86,7 +91,7 @@ const handleDownloadFile = (
     grant?: string;
     ownerId: string;
   },
-): Socket => connection.emit(
+): Socket => connection.io.emit(
   EVENTS.downloadFile,
   {
     fileId,
@@ -166,7 +171,19 @@ onMounted((): void => {
     store.deviceName = deviceName;
   }
 
-  connection.open();
+  const queryParams = new URLSearchParams(window.location.search);
+  if (queryParams.size > 0) {
+    const isLocal = queryParams.get('local') === 'true';
+    const serverAddress = decodeURIComponent(queryParams.get('server') || '');
+    if (isLocal && serverAddress && isValidURL(serverAddress)) {
+      updateConnection(serverAddress);
+      store.isLocalServer = true;
+      store.localServerAddress = serverAddress;
+    }
+  }
+
+  registerEvents();
+  connection.io.open();
 });
 </script>
 
@@ -180,14 +197,7 @@ onMounted((): void => {
       v-if="!(store.connected && store.receivedConfiguration)"
       class="f ai-center"
     >
-      <div class="f d-col ns">
-        <span class="t-center input-title">
-          Connecting to the server...
-        </span>
-        <div class="f ai-center j-center mt-1 mh-auto spinner-background">
-          <StyledSpinnerComponent />
-        </div>
-      </div>
+      <LoadingComponent :local="store.isLocalServer" />
     </div>
     <DeviceNameModalComponent
       v-if="state.showDeviceNameModal"
@@ -227,25 +237,25 @@ onMounted((): void => {
       @close-modal="(): void => closeModal('password')"
     />
     <div
-      v-if="store.connected"
+      v-if="store.connected && store.receivedConfiguration"
       class="f d-col w-100"
     >
       <SettingsModalComponent
         v-if="state.showSettingsModal"
         :shared-files="store.listedFiles.filter(
-          (item: ListedFile): boolean => item.ownerId === connection.id,
+          (item: ListedFile): boolean => item.ownerId === connection.io.id,
         ).length"
         @close-modal="(): void => toggleModal('settings')"
         @update-device-name="handleUpdateDeviceName"
       />
       <HeaderComponent
         :listed-files="store.listedFiles"
-        :owner-id="connection.id || ''"
+        :owner-id="connection.io.id || ''"
         @toggle-settings-modal="(): void => toggleModal('settings')"
       />
       <FileListComponent
         :listed-files="store.listedFiles"
-        :owner-id="connection.id || ''"
+        :owner-id="connection.io.id || ''"
         @handle-abort-downloading="handleAbortDownloading"
         @handle-download-file="handleDownloadFile"
         @handle-open-file-details="handleFileDetails"
@@ -264,11 +274,5 @@ onMounted((): void => {
 .height-mobile {
   height: fill-available;
   height: -webkit-fill-available;
-}
-.spinner-background {
-  background-color: var(--accent);
-  border-radius: 50%;
-  height: calc(var(--spacer) * 3);
-  width: calc(var(--spacer) * 3);
 }
 </style>

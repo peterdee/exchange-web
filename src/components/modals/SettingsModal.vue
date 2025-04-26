@@ -5,6 +5,7 @@ import connection from '../../connection';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import formatFileSize from '../../utilities/format-file-size';
 import { EVENTS, SPACER } from '../../configuration';
+import isValidURL from '../../utilities/is-valid-url';
 import { setValue } from '../../utilities/storage';
 import SettingsIconComponent from '../icons/SettingsIcon.vue';
 import store from '../../store';
@@ -15,6 +16,7 @@ import StyledSwitchComponent from '../elements/StyledSwitch.vue';
 interface ComponentState {
   deviceName: string;
   isClosing: boolean;
+  serverAddress: string;
 }
 
 const emit = defineEmits([
@@ -29,10 +31,22 @@ const props = defineProps<{
 const state = reactive<ComponentState>({
   deviceName: store.deviceName,
   isClosing: false,
+  serverAddress: store.localServerAddress,
 });
 
-const handleInput = ({ value }: { value: string }) => {
-  state.deviceName = value;
+const handleAutoSaveSwitch = () => {
+  const newValue = !store.autoSaveDownloadedFiles;
+  setValue('autoSaveDownloadedFiles', newValue);
+  store.autoSaveDownloadedFiles = newValue;
+};
+
+const handleInput = ({ value }: { value: string }, name: string) => {
+  if (name === 'deviceName') {
+    state.deviceName = value;
+  }
+  if (name === 'serverAddress') {
+    state.serverAddress = value;
+  }
 };
 
 const handleCloseModal = () => {
@@ -44,20 +58,20 @@ const handleCloseModal = () => {
 };
 
 const handleDeleteAllFiles = () => {
-  if (connection.connected) {
-    connection.emit(EVENTS.deleteAllFiles);
+  if (connection.io.connected) {
+    connection.io.emit(EVENTS.deleteAllFiles);
   }
   store.listedFiles = [];
 };
 
 const handleSubmitNewDeviceName = () => {
-  if (connection.connected && state.deviceName !== store.deviceName
-    && store.listedFiles.some((item) => item.ownerId === connection.id)) {
-    connection.emit(
+  if (connection.io.connected && state.deviceName !== store.deviceName
+    && store.listedFiles.some((item) => item.ownerId === connection.io.id)) {
+    connection.io.emit(
       EVENTS.updateDeviceName,
       {
         newDeviceName: state.deviceName,
-        ownerId: connection.id,
+        ownerId: connection.io.id,
       },
     );
   }
@@ -68,10 +82,12 @@ const handleSubmitNewDeviceName = () => {
   );
 };
 
-const handleAutoSaveSwitch = () => {
-  const newValue = !store.autoSaveDownloadedFiles;
-  setValue('autoSaveDownloadedFiles', newValue);
-  store.autoSaveDownloadedFiles = newValue;
+const handleSubmitServerAddress = () => {
+  let address = state.serverAddress;
+  if (address[address.length - 1] === '/') {
+    address = address.substring(0, address.length - 1);
+  }
+  return window.location.replace(`${address}/?callback=${window.location.origin}`);
 };
 </script>
 
@@ -113,7 +129,7 @@ const handleAutoSaveSwitch = () => {
         </span>
         <StyledButtonComponent
           type="button"
-          :disabled="props.sharedFiles === 0 || !connection.connected"
+          :disabled="props.sharedFiles === 0 || !connection.io.connected"
           :global-classes="['mt-half']"
           :is-negative="true"
           @handle-click="handleDeleteAllFiles"
@@ -134,7 +150,7 @@ const handleAutoSaveSwitch = () => {
           placeholder="Device name"
           type="text"
           :value="state.deviceName"
-          @handle-input="handleInput"
+          @handle-input="(event) => handleInput(event, 'deviceName')"
         />
         <StyledButtonComponent
           type="submit"
@@ -153,8 +169,36 @@ const handleAutoSaveSwitch = () => {
       />
       <div class="mv-1 divider" />
       <div class="ns title fw-500">
-        Server configuration
+        Local server address
       </div>
+      <form
+        class="f d-col mt-half"
+        @submit.prevent="handleSubmitServerAddress"
+      >
+        <StyledInputComponent
+          name="serverAddress"
+          placeholder="https://"
+          type="text"
+          :value="state.serverAddress"
+          @handle-input="(event) => handleInput(event, 'serverAddress')"
+        />
+        <StyledButtonComponent
+          type="submit"
+          :disabled="state.serverAddress.length === 0 || !isValidURL(state.serverAddress)"
+          :globalClasses="['mt-half']"
+        >
+          Connect to the server
+        </StyledButtonComponent>
+      </form>
+      <div class="mv-1 divider" />
+      <div class="ns title fw-500">
+        Server configuration {{ store.isLocalServer ? '(local)' : '' }}
+      </div>
+      <template v-if="store.isLocalServer">
+        <span class="mt-half input-title ns">
+          Server address: {{ store.localServerAddress.split('//').reverse()[0] }}
+        </span>
+      </template>
       <span class="mt-half input-title ns">
         Chunk size: {{ formatFileSize(store.serverConfiguration.chunkSizeBytes) }}
       </span>
