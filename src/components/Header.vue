@@ -64,8 +64,8 @@ const handleUploadButton = (): void => {
 
 const handleShareFiles = (files: ListedFile[], password: string): void => {
   files.forEach((file: ListedFile): void => {
-    if (connection.connected) {
-      connection.emit(
+    if (connection.io.connected) {
+      connection.io.emit(
         EVENTS.listFile,
         {
           createdAt: file.createdAt,

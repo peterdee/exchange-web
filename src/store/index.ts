@@ -15,8 +15,10 @@ const store= reactive<{
   deviceName: string;
   downloadFileError: DownloadFileError | null;
   downloads: DownloadedItem[];
+  isLocalServer: boolean;
   isMobile: boolean;
   listedFiles: ListedFile[];
+  localServerAddress: string;
   receivedConfiguration: boolean;
   serverConfiguration: ServerConfiguration;
 }>({
@@ -25,8 +27,10 @@ const store= reactive<{
   deviceName: '',
   downloadFileError: null,
   downloads: [],
+  isLocalServer: false,
   isMobile: isMobile(),
   listedFiles: [],
+  localServerAddress: '',
   receivedConfiguration: false,
   serverConfiguration: DEFAULT_SERVER_CONFIGURATION,
 });
