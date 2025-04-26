@@ -31,7 +31,7 @@ const props = defineProps<{
 const state = reactive<ComponentState>({
   deviceName: store.deviceName,
   isClosing: false,
-  serverAddress: '',
+  serverAddress: store.localServerAddress,
 });
 
 const handleAutoSaveSwitch = () => {
@@ -192,8 +192,13 @@ const handleSubmitServerAddress = () => {
       </form>
       <div class="mv-1 divider" />
       <div class="ns title fw-500">
-        Server configuration
+        Server configuration {{ store.isLocalServer ? '(local)' : '' }}
       </div>
+      <template v-if="store.isLocalServer">
+        <span class="mt-half input-title ns">
+          Server address: {{ store.localServerAddress.split('//').reverse()[0] }}
+        </span>
+      </template>
       <span class="mt-half input-title ns">
         Chunk size: {{ formatFileSize(store.serverConfiguration.chunkSizeBytes) }}
       </span>

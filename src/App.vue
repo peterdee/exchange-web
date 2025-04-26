@@ -22,11 +22,11 @@ import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
 import isValidURL from './utilities/is-valid-url';
+import LoadingComponent from './components/Loading.vue';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
 import { requestWakeLock } from './utilities/wakelock';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
 import store from './store';
-import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
 
 interface ComponentState {
   downloadErrorMessage: string;
@@ -177,6 +177,8 @@ onMounted((): void => {
     const serverAddress = decodeURIComponent(queryParams.get('server') || '');
     if (isLocal && serverAddress && isValidURL(serverAddress)) {
       updateConnection(serverAddress);
+      store.isLocalServer = true;
+      store.localServerAddress = serverAddress;
     }
   }
 
@@ -195,14 +197,7 @@ onMounted((): void => {
       v-if="!(store.connected && store.receivedConfiguration)"
       class="f ai-center"
     >
-      <div class="f d-col ns">
-        <span class="t-center input-title">
-          Connecting to the server...
-        </span>
-        <div class="f ai-center j-center mt-1 mh-auto spinner-background">
-          <StyledSpinnerComponent />
-        </div>
-      </div>
+      <LoadingComponent :local="store.isLocalServer" />
     </div>
     <DeviceNameModalComponent
       v-if="state.showDeviceNameModal"
@@ -242,7 +237,7 @@ onMounted((): void => {
       @close-modal="(): void => closeModal('password')"
     />
     <div
-      v-if="store.connected"
+      v-if="store.connected && store.receivedConfiguration"
       class="f d-col w-100"
     >
       <SettingsModalComponent
@@ -279,11 +274,5 @@ onMounted((): void => {
 .height-mobile {
   height: fill-available;
   height: -webkit-fill-available;
-}
-.spinner-background {
-  background-color: var(--accent);
-  border-radius: 50%;
-  height: calc(var(--spacer) * 3);
-  width: calc(var(--spacer) * 3);
 }
 </style>
