@@ -65,6 +65,11 @@ const handleDelete = (fileId: string): void => {
 
 const handleDownload = (file: ListedFile): void => {
   if (!file.withPassword) {
+    store.listedFiles.forEach((item) => {
+      if (item.id === file.id) {
+        item.isRequestedDownload = true;
+      }
+    });
     return emit(
       'handle-download-file',
       {
@@ -74,6 +79,11 @@ const handleDownload = (file: ListedFile): void => {
     );
   }
   if (file.withPassword && file.grant) {
+    store.listedFiles.forEach((item) => {
+      if (item.id === file.id) {
+        item.isRequestedDownload = true;
+      }
+    });
     return emit(
       'handle-download-file',
       {
@@ -234,9 +244,9 @@ const togglePrepareFilesModal = (): void => {
         </StyledButtonComponent>
         <template v-if="!file.isOwner">
           <StyledButtonComponent
-            v-if="!file.isDownloading && file.downloadPercent === 0"
             title="Download file"
             :custom-styles="{ height: `${SPACER * 2}px` }"
+            :disabled="file.isRequestedDownload"
             :with-icon="true"
             @handle-click="() => handleDownload(file)"
           >

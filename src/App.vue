@@ -4,7 +4,6 @@ import {
   onMounted,
   reactive,
 } from 'vue';
-import type { Socket } from 'socket.io-client';
 
 import type { AcknowledgementMessage, DownloadedItem, ListedFile } from './types';
 import connection, {
@@ -79,7 +78,7 @@ const handleDeviceName = (value: string) => {
   state.showDeviceNameModal = false;
   setValue('deviceName', value);
   return setValue('deviceNameSet', true);
-}
+};
 
 const handleDownloadFile = (
   {
@@ -91,14 +90,14 @@ const handleDownloadFile = (
     grant?: string;
     ownerId: string;
   },
-): Socket => connection.io.emit(
+) => connection.io.emit(
   EVENTS.downloadFile,
   {
     fileId,
     grant,
     ownerId,
   },
-  (response: AcknowledgementMessage): null | void => {
+  (response: AcknowledgementMessage) => {
     const { info, status } = response;
     if (status === 400) {
       if (info === MESSAGES.fileNotFound) {

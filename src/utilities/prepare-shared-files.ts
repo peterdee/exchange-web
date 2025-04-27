@@ -37,6 +37,7 @@ export default async function prepareSharedFiles(
         id: hashes[index],
         isDownloading: false,
         isOwner: true,
+        isRequestedDownload: false,
         isSavedOnDisk: false,
         ownerId,
         totalDownloads: 0,

@@ -48,6 +48,7 @@ export interface ListedFile {
   id: string;
   isDownloading: boolean;
   isOwner: boolean;
+  isRequestedDownload: boolean;
   isSavedOnDisk: boolean;
   ownerId: string;
   totalDownloads: number;
