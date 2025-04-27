@@ -99,6 +99,7 @@ const handleSubmit = async (): Promise<null | Socket> => {
         store.listedFiles.forEach((item: ListedFile): void => {
           if (item.id === props.listedFile.id) {
             item.grant = data.grant;
+            item.isRequestedDownload = true;
           }
         });
         const delayedAction = (): void => emit(
