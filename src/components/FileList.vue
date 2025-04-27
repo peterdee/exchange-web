@@ -244,6 +244,7 @@ const togglePrepareFilesModal = (): void => {
         </StyledButtonComponent>
         <template v-if="!file.isOwner">
           <StyledButtonComponent
+            v-if="!file.isDownloading && file.downloadPercent === 0"
             title="Download file"
             :custom-styles="{ height: `${SPACER * 2}px` }"
             :disabled="file.isRequestedDownload"
