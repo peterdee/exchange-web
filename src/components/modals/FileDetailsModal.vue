@@ -185,7 +185,7 @@ const handleShowPasswordModal = () => {
           Owner: {{ props.listedFile.deviceName }}
         </div>
       </template>
-      <div class="divider mv-1" />
+      <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <template v-if="!props.listedFile.isOwner">
         <div class="ns input-title">
           {{

@@ -231,6 +231,7 @@ const ioHandlerUploadFileChunk = async (
           item.downloadCompleted = true;
           item.downloadPercent = 0;
           item.isDownloading = false;
+          item.isRequestedDownload = false;
           item.isSavedOnDisk = true;
         }
       });
@@ -244,6 +245,7 @@ const ioHandlerUploadFileChunk = async (
           item.downloadCompleted = true;
           item.downloadPercent = 100;
           item.isDownloading = false;
+          item.isRequestedDownload = false;
           item.isSavedOnDisk = false;
         }
       });
@@ -267,6 +269,7 @@ const ioHandlerUploadFileChunk = async (
         item.downloadCompleted = false;
         item.downloadPercent = Math.round(currentChunk / (totalChunks / 100));
         item.isDownloading = true;
+        item.isRequestedDownload = false;
         item.isSavedOnDisk = false;
       }
     });

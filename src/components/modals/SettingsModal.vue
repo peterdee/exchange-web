@@ -24,9 +24,7 @@ const emit = defineEmits([
   'update-device-name',
 ]);
 
-const props = defineProps<{
-  sharedFiles: number;
-}>();
+const props = defineProps<{ sharedFiles: number }>();
 
 const state = reactive<ComponentState>({
   deviceName: store.deviceName,
@@ -89,6 +87,8 @@ const handleSubmitServerAddress = () => {
   }
   return window.location.replace(`${address}/?callback=${window.location.origin}`);
 };
+
+const handleUsePublicServer = () => window.location.replace(window.location.origin);
 </script>
 
 <template>
@@ -137,7 +137,7 @@ const handleSubmitServerAddress = () => {
           Delte all of my shared files
         </StyledButtonComponent>
       </div>
-      <div class="mv-1 divider" />
+      <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <div class="ns title fw-500">
         Device name
       </div>
@@ -160,14 +160,14 @@ const handleSubmitServerAddress = () => {
           Update device name
         </StyledButtonComponent>
       </form>
-      <div class="mv-1 divider" />
+      <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <StyledSwitchComponent
         :checked="store.autoSaveDownloadedFiles"
         :global-classes="['input-title']"
         :labelText="'Auto-save downloaded files'"
         @handle-switch="handleAutoSaveSwitch"
       />
-      <div class="mv-1 divider" />
+      <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <div class="ns title fw-500">
         Local server address
       </div>
@@ -189,8 +189,19 @@ const handleSubmitServerAddress = () => {
         >
           Connect to the server
         </StyledButtonComponent>
+        <template v-if="store.isLocalServer">
+          <div class="f j-center mt-half">
+            <button
+              class="link ns"
+              type="button"
+              @click="handleUsePublicServer"
+            >
+              Use public server
+            </button>
+          </div>
+        </template>
       </form>
-      <div class="mv-1 divider" />
+      <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <div class="ns title fw-500">
         Server configuration {{ store.isLocalServer ? '(local)' : '' }}
       </div>
@@ -212,6 +223,21 @@ const handleSubmitServerAddress = () => {
 </template>
 
 <style scoped>
+.link {
+  background-color: transparent;
+  border: none;
+  color: var(--error);
+  cursor: pointer;
+  font-size: var(--spacer);
+  margin: 0;
+  outline: none;
+  padding: 0;
+  transition: color var(--transition) ease-out;
+}
+.link:hover {
+  color: var(--error-light);
+  transition: color var(--transition) ease-in;
+}
 .title {
   font-size: calc(var(--spacer) * 1.25);
 }
