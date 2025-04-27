@@ -180,7 +180,7 @@ const handleSubmit = async (): Promise<null | Socket | void> => {
         </StyledButtonComponent>
       </form>
       <template v-if="props.listedFile.withPassword">
-        <div class="mv-1 divider" />
+        <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
         <StyledButtonComponent
           :disabled="state.isLoading"
           :is-loading="state.isLoading"

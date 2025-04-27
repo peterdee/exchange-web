@@ -137,7 +137,7 @@ const handleSubmitServerAddress = () => {
           Delte all of my shared files
         </StyledButtonComponent>
       </div>
-      <div class="mv-1 divider" />
+      <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <div class="ns title fw-500">
         Device name
       </div>
@@ -160,14 +160,14 @@ const handleSubmitServerAddress = () => {
           Update device name
         </StyledButtonComponent>
       </form>
-      <div class="mv-1 divider" />
+      <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <StyledSwitchComponent
         :checked="store.autoSaveDownloadedFiles"
         :global-classes="['input-title']"
         :labelText="'Auto-save downloaded files'"
         @handle-switch="handleAutoSaveSwitch"
       />
-      <div class="mv-1 divider" />
+      <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <div class="ns title fw-500">
         Local server address
       </div>
@@ -190,7 +190,7 @@ const handleSubmitServerAddress = () => {
           Connect to the server
         </StyledButtonComponent>
       </form>
-      <div class="mv-1 divider" />
+      <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <div class="ns title fw-500">
         Server configuration {{ store.isLocalServer ? '(local)' : '' }}
       </div>
