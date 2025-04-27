@@ -29,6 +29,7 @@
 .modal-content {
   background-color: var(--background);
   border-radius: var(--spacer-half);
+  overflow-y: scroll;
   min-height: var(--spacer);
   z-index: 11;
 }
