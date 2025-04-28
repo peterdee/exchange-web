@@ -8,6 +8,7 @@ import type {
   ServerConfiguration,
 } from '../types';
 import isMobile from '../utilities/is-mobile';
+import isStandalone from '../utilities/is-standalone';
 
 const store= reactive<{
   autoSaveDownloadedFiles: boolean;
@@ -17,6 +18,7 @@ const store= reactive<{
   downloads: DownloadedItem[];
   isLocalServer: boolean;
   isMobile: boolean;
+  isStandalone: boolean;
   listedFiles: ListedFile[];
   localServerAddress: string;
   receivedConfiguration: boolean;
@@ -29,6 +31,7 @@ const store= reactive<{
   downloads: [],
   isLocalServer: false,
   isMobile: isMobile(),
+  isStandalone: isStandalone(),
   listedFiles: [],
   localServerAddress: '',
   receivedConfiguration: false,

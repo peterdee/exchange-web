@@ -7,6 +7,7 @@ import type { ListedFile } from '../types';
 import LogoIconComponent from './icons/LogoIcon.vue';
 import PrepareFilesModalComponent from './modals/PrepareFilesModal.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
+import RefreshIconComponent from './icons/RefreshIcon.vue';
 import SettingsIconComponent from './icons/SettingsIcon.vue';
 import store from '../store';
 import StyledButtonComponent from './elements/StyledButton.vue';
@@ -28,6 +29,8 @@ const state = reactive<ComponentState>({
   preparedFiles: [],
   showPrepareFilesModal: false,
 });
+
+const handleRefresh = () => window.location.reload();
 
 const handleUploadButton = (): void => {
   state.preparedFiles = [];
@@ -113,9 +116,20 @@ const togglePrepareFilesModal = (): void => {
       </div>
     </div>
     <div class="f ai-center ml-1">
+      <template v-if="store.isStandalone">
+        <StyledButtonComponent
+          title="Refresh page"
+          :custom-styles="{ height: `${SPACER * 2}px` }"
+          :with-icon="true"
+          @handle-click="handleRefresh"
+        >
+          <RefreshIconComponent />
+        </StyledButtonComponent>
+      </template>
       <StyledButtonComponent
         title="Add files"
         :custom-styles="{ height: `${SPACER * 2}px` }"
+        :global-classes="[`${store.isMobile ? 'ml-half' : 'ml-1'}`]"
         :with-icon="true"
         @handle-click="handleUploadButton"
       >
