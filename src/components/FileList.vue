@@ -35,10 +35,7 @@ const emit = defineEmits([
   'handle-show-file-password-modal',
 ]);
 
-const props = defineProps<{
-  listedFiles: ListedFile[];
-  ownerId: string;
-}>();
+const props = defineProps<{ ownerId: string }>();
 
 const state = reactive<ComponentState>({
   deleteFileId: '',
@@ -63,7 +60,7 @@ const handleDelete = (fileId: string): void => {
   );
 };
 
-const handleDownload = (file: ListedFile): void => {
+const handleDownload = (file: ListedFile) => {
   if (!file.withPassword) {
     store.listedFiles.forEach((item) => {
       if (item.id === file.id) {
@@ -113,7 +110,7 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
   const files = await getFilesFromDroppedItems(dataTransfer);
   state.preparedFiles = await prepareSharedFiles(
     files,
-    props.listedFiles,
+    store.listedFiles,
     store.deviceName,
     props.ownerId,
     store.serverConfiguration.chunkSizeBytes,
@@ -192,7 +189,7 @@ const togglePrepareFilesModal = (): void => {
   <div
     :class="`f d-col mh-auto file-list ${state.drag
       ? 'drag'
-      : ''} ${props.listedFiles.length === 0
+      : ''} ${store.listedFiles.length === 0
       ? 'j-center'
       : ''} ${store.isMobile ? 'list-mobile' : ''}`"
     @dragenter.prevent="handleDrag"
@@ -201,14 +198,14 @@ const togglePrepareFilesModal = (): void => {
     @drop.prevent="handleFileDrop"
   >
     <div
-      v-if="props.listedFiles.length === 0"
+      v-if="store.listedFiles.length === 0"
       class="t-center ns fade-in drop-files-text"
     >
       {{ store.isMobile ? 'No files shared' : 'Drop files here...' }}
     </div>
     <div
-      v-if="props.listedFiles.length > 0"
-      v-for="file in props.listedFiles"
+      v-if="store.listedFiles.length > 0"
+      v-for="file in store.listedFiles"
       :class="`f j-space-between ai-center fade-in ${state.deleteFileId === file.id
         ? 'fade-out'
         : ''} ${store.isMobile
@@ -252,7 +249,7 @@ const togglePrepareFilesModal = (): void => {
             @handle-click="() => handleDownload(file)"
           >
             <DownloadIconComponent
-              :color="COLORS.accent"
+              :color="file.isRequestedDownload ? COLORS.muted : COLORS.accent"
             />
           </StyledButtonComponent>
           <StyledButtonComponent
