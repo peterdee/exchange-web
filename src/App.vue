@@ -253,7 +253,6 @@ onMounted((): void => {
         @toggle-settings-modal="(): void => toggleModal('settings')"
       />
       <FileListComponent
-        :listed-files="store.listedFiles"
         :owner-id="connection.io.id || ''"
         @handle-abort-downloading="handleAbortDownloading"
         @handle-download-file="handleDownloadFile"
@@ -261,6 +260,7 @@ onMounted((): void => {
         @handle-show-file-password-modal="handleShowEnterPasswordModal"
       />
       <FooterComponent
+        v-if="!(store.isMobile && store.isStandalone)"
         :backend-status="store.connected
           ? 'connected'
           : 'inaccessible'"
