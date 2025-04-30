@@ -34,6 +34,11 @@ export interface DownloadedItem extends GenericFileData {
   type: string;
 }
 
+export interface DownloadFileError {
+  errorText: string;
+  file: ListedFile;
+}
+
 export interface ListedFile {
   chunks: ArrayBuffer[];
   createdAt: number;
@@ -55,15 +60,26 @@ export interface ListedFile {
   withPassword: boolean;
 }
 
-export interface DownloadFileError {
-  errorText: string;
-  file: ListedFile;
+export interface Palette {
+  accent: string;
+  accentLight: string;
+  background: string;
+  error: string;
+  errorLight: string;
+  muted: string;
+  mutedLight: string;
+  mutedSuperLight: string;
+  success: string;
+  successLight: string;
+  text: string;
 }
 
 export interface ServerConfiguration {
   chunkSizeBytes: number;
   maxFileSizeBytes: number;
 }
+
+export type Theme = 'light' | 'dark';
 
 export interface UpdateDeviceName {
   newDeviceName: string;

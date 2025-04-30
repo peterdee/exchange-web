@@ -172,7 +172,7 @@ onUpdated((): void => {
 
 <style scoped>
 .error {
-  color: var(--negative);
+  color: var(--error);
 }
 .file-name {
   overflow: hidden;

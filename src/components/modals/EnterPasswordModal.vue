@@ -197,7 +197,7 @@ const handleSubmit = async (): Promise<null | Socket> => {
   height: calc(var(--spacer) * 3);
 }
 .error-text {
-  color: var(--negative);
+  color: var(--error);
   font-size: calc(var(--spacer) * 1.25);
   font-weight: 300;
 }

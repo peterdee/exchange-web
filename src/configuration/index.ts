@@ -1,4 +1,4 @@
-import type { ServerConfiguration } from '../types';
+import type { Palette, ServerConfiguration } from '../types';
 
 export const COLORS = {
   accent: '#1e7878',
@@ -7,7 +7,20 @@ export const COLORS = {
   muted: '#999999',
   mutedLight: '#bbbbbb',
   mutedSuperLight: '#dfdfdf',
-  positive: '#60be60',
+};
+
+export const CSS_VARIABLES: Palette = {
+  accent: '--accent',
+  accentLight: '--accent-light',
+  background: '--background',
+  error: '--error',
+  errorLight: '--error-light',
+  muted: '--muted',
+  mutedLight: '--muted-light',
+  mutedSuperLight: '--muted-super-light',
+  success: '--success',
+  successLight: '--success-light',
+  text: '--text',
 };
 
 export const DEFAULT_SERVER_CONFIGURATION: ServerConfiguration = {
@@ -42,6 +55,34 @@ export const MESSAGES = {
   invalidData: 'INVALID_DATA',
   invalidPassword: 'INVALID_PASSWORD',
   missingRequiredData: 'MISSING_REQUIRED_DATA',
+};
+
+export const PALETTE_DARK: Palette = {
+  accent: '#1e7878',
+  accentLight: '#53acac',
+  background: '#000000',
+  error: '#aa2111',
+  errorLight: '#ff5647',
+  muted: '#999999',
+  mutedLight: '#bbbbbb',
+  mutedSuperLight: '#dfdfdf',
+  success: '#60be60',
+  successLight: '#90e890',
+  text: '#fdfdfd',
+};
+
+export const PALETTE_LIGHT: Palette = {
+  accent: '#1e7878',
+  accentLight: '#53acac',
+  background: '#ffffff',
+  error: '#aa2111',
+  errorLight: '#ff5647',
+  muted: '#999999',
+  mutedLight: '#bbbbbb',
+  mutedSuperLight: '#dfdfdf',
+  success: '#60be60',
+  successLight: '#90e890',
+  text: '#151515',
 };
 
 export const SPACER = 16;

@@ -5,7 +5,12 @@ import {
   reactive,
 } from 'vue';
 
-import type { AcknowledgementMessage, DownloadedItem, ListedFile } from './types';
+import type {
+  AcknowledgementMessage,
+  DownloadedItem,
+  ListedFile,
+  Theme,
+} from './types';
 import connection, {
   handleDisconnect,
   registerEvents,
@@ -23,6 +28,7 @@ import HeaderComponent from './components/Header.vue';
 import isValidURL from './utilities/is-valid-url';
 import LoadingComponent from './components/Loading.vue';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
+import { preparePalette, prepareVariables } from './utilities/prepare-theme';
 import { requestWakeLock } from './utilities/wakelock';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
 import store from './store';
@@ -143,12 +149,24 @@ const toggleModal = (modalName: string): void => {
 onBeforeUnmount(handleDisconnect);
 
 onMounted((): void => {
+  let theme: Theme = 'light';
+  const storedTheme = getValue<Theme>('theme');
+  if (storedTheme) {
+    theme = storedTheme;
+  }
+
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     const faviconLink = document.querySelector<HTMLLinkElement>(`link[rel~='${'icon'}']`);
     if (faviconLink) {
       faviconLink.href = 'favicon-light.svg';
+      if (!storedTheme) {
+        theme = 'dark';
+      }
     }
   }
+
+  store.palette = preparePalette(theme);
+  store.theme = theme;
 
   const wakeLock = () => {
     requestWakeLock();
@@ -180,6 +198,8 @@ onMounted((): void => {
       store.localServerAddress = serverAddress;
     }
   }
+
+  console.log(prepareVariables(theme));
 
   registerEvents();
   connection.io.open();
@@ -267,6 +287,11 @@ onMounted((): void => {
       />
     </div>
   </div>
+  <component is="style">
+    :root {
+      {{ prepareVariables(store.theme) }}
+    }
+  </component>
 </template>
 
 <style scoped>

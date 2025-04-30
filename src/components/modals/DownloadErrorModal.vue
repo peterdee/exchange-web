@@ -77,6 +77,6 @@ const handleCloseModal = (): void => {
 
 <style scoped>
 .error-title {
-  color: var(--negative);
+  color: var(--error);
 }
 </style>
