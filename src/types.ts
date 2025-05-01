@@ -67,6 +67,7 @@ export interface Palette {
   error: string;
   errorLight: string;
   muted: string;
+  mutedDark: string;
   mutedLight: string;
   mutedSuperLight: string;
   success: string;

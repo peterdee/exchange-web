@@ -1,10 +1,3 @@
-:root {
-  --accent: #1e7878;
-  --accent-light: #53acac;
-  --error: #aa2111;
-  --muted-super-light: #dfdfdf;
-}
-
 .divider {
   background-color: var(--muted-light);
   height: calc(var(--spacer-quarter) / 4);
@@ -17,7 +10,7 @@
 }
 
 .modal-background {
-  background-color: rgba(0, 0, 0, .6);
+  background-color: rgba(80, 80, 80, .6);
   height: 100%;
   left: 0;
   position: fixed;
@@ -28,6 +21,7 @@
 .modal-content {
   background-color: var(--background);
   border-radius: var(--spacer-half);
+  box-shadow: 0 0 var(--spacer-half) 0 var(--background);
   overflow-y: scroll;
   min-height: var(--spacer);
   z-index: 11;

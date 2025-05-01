@@ -12,6 +12,7 @@ import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
 import StyledSwitchComponent from '../elements/StyledSwitch.vue';
+import type { Theme } from '../../types';
 
 interface ComponentState {
   deviceName: string;
@@ -53,6 +54,12 @@ const handleCloseModal = () => {
     () => emit('close-modal'),
     240,
   );
+};
+
+const handleDarkTheme = () => {
+  const newTheme: Theme = store.theme === 'dark' ? 'light' : 'dark';
+  store.theme = newTheme;
+  setValue('theme', newTheme);
 };
 
 const handleDeleteAllFiles = () => {
@@ -162,10 +169,18 @@ const handleUsePublicServer = () => window.location.replace(window.location.orig
       </form>
       <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <StyledSwitchComponent
+        id="auto-save"
         :checked="store.autoSaveDownloadedFiles"
         :global-classes="['input-title']"
         :labelText="'Auto-save downloaded files'"
         @handle-switch="handleAutoSaveSwitch"
+      />
+      <StyledSwitchComponent
+        id="theme"
+        :checked="store.theme === 'dark'"
+        :global-classes="['mt-half input-title']"
+        :labelText="'Use dark theme'"
+        @handle-switch="handleDarkTheme"
       />
       <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <div class="ns title fw-500">

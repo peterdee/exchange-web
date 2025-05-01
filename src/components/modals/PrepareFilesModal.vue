@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { onUpdated, reactive } from 'vue';
 
-import { COLORS, SPACER } from '../../configuration';
 import CrossIconComponent from '../icons/CrossIcon.vue';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import formatFileSize from '../../utilities/format-file-size';
 import InfoIconComponent from '../icons/InfoIcon.vue';
 import type { ListedFile } from '../../types';
+import { SPACER } from '../../configuration';
 import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
@@ -119,7 +119,11 @@ onUpdated((): void => {
       <div class="mt-half ns input-title">
         These files are going to be shared:
       </div>
-      <div class="mt-half p-1 ns list">
+      <div
+        :class="`mt-half p-1 ns list ${store.theme === 'dark'
+          ? 'list-dark'
+          : 'list-light'}`"
+      >
         <div
           v-for="item in state.listedFiles"
           class="f ai-center j-space-between"
@@ -137,7 +141,7 @@ onUpdated((): void => {
             @handle-click="(): void => handleRemoveFile(item.id)"
           >
             <CrossIconComponent
-              :color="COLORS.error"
+              :color="store.palette.error"
               :size="SPACER * 1.5"
             />
           </StyledButtonComponent>
@@ -184,10 +188,15 @@ onUpdated((): void => {
   width: calc(var(--spacer) * 1.75);
 }
 .list {
-  background-color: var(--muted-super-light);
   border-radius: var(--spacer-half);
   height: calc(var(--spacer) * 10);
   overflow-y: scroll;
+}
+.list-light {
+  background-color: var(--muted-super-light);
+}
+.list-dark {
+  background-color: var(--muted-dark);
 }
 .ok {
   color: var(--success);

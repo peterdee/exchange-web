@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import { COLORS, SPACER } from '../../configuration';
 import EyeClosedIconComponent from '../icons/EyeClosedIcon.vue';
 import EyeOpenedIconComponent from '../icons/EyeOpenedIcon.vue';
 import StyledButtonComponent from './StyledButton.vue';
+import { SPACER } from '../../configuration';
+import store from '../../store';
 
 const emit = defineEmits(['handle-input']);
 
@@ -109,14 +110,14 @@ const togglePasswordVisibility = (): void => {
       <EyeClosedIconComponent
         v-if="!state.showPassword"
         :color="props.disabled || props.value.length === 0
-          ? COLORS.muted
-          : COLORS.accent"
+          ? store.palette.muted
+          : store.palette.accent"
       />
       <EyeOpenedIconComponent
         v-if="state.showPassword"
         :color="props.disabled || props.value.length === 0
-          ? COLORS.muted
-          : COLORS.accent"
+          ? store.palette.muted
+          : store.palette.accent"
       />
     </StyledButtonComponent>
   </div>

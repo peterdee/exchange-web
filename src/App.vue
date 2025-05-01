@@ -167,6 +167,9 @@ onMounted((): void => {
 
   store.palette = preparePalette(theme);
   store.theme = theme;
+  if (!storedTheme) {
+    setValue('theme', theme);
+  }
 
   const wakeLock = () => {
     requestWakeLock();
@@ -198,8 +201,6 @@ onMounted((): void => {
       store.localServerAddress = serverAddress;
     }
   }
-
-  console.log(prepareVariables(theme));
 
   registerEvents();
   connection.io.open();

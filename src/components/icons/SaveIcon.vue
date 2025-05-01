@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { COLORS, SPACER } from '../../configuration';
+import { SPACER } from '../../configuration';
+import store from '../../store';
 
 const props = defineProps({
   color: {
-    default: COLORS.accent,
+    default: store.palette.accent,
     required: false,
     type: String,
   },

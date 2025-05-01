@@ -1,14 +1,5 @@
 import type { Palette, ServerConfiguration } from '../types';
 
-export const COLORS = {
-  accent: '#1e7878',
-  accentLight: '#53acac',
-  error: '#aa2111',
-  muted: '#999999',
-  mutedLight: '#bbbbbb',
-  mutedSuperLight: '#dfdfdf',
-};
-
 export const CSS_VARIABLES: Palette = {
   accent: '--accent',
   accentLight: '--accent-light',
@@ -16,6 +7,7 @@ export const CSS_VARIABLES: Palette = {
   error: '--error',
   errorLight: '--error-light',
   muted: '--muted',
+  mutedDark: '--muted-dark',
   mutedLight: '--muted-light',
   mutedSuperLight: '--muted-super-light',
   success: '--success',
@@ -64,6 +56,7 @@ export const PALETTE_DARK: Palette = {
   error: '#aa2111',
   errorLight: '#ff5647',
   muted: '#999999',
+  mutedDark: '#3b3b3b',
   mutedLight: '#bbbbbb',
   mutedSuperLight: '#dfdfdf',
   success: '#60be60',
@@ -78,6 +71,7 @@ export const PALETTE_LIGHT: Palette = {
   error: '#aa2111',
   errorLight: '#ff5647',
   muted: '#999999',
+  mutedDark: '#5b5b5b',
   mutedLight: '#bbbbbb',
   mutedSuperLight: '#dfdfdf',
   success: '#60be60',
