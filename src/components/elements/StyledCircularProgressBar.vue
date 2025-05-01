@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { COLORS } from '../../configuration';
+import store from '../../store';
 
 const props = defineProps({
   emptyColor: {
-    default: COLORS.mutedSuperLight,
+    default: store.palette.mutedSuperLight,
     required: false,
     type: String,
   },
   fillColor: {
-    default: COLORS.accent,
+    default: store.palette.accent,
     required: false,
     type: String,
   },
@@ -17,7 +17,7 @@ const props = defineProps({
     type: Number,
   },
 });
-</script>ååå
+</script>
 
 <template>
   <div

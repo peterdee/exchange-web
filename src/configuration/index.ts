@@ -1,13 +1,19 @@
-import type { ServerConfiguration } from '../types';
+import type { Palette, ServerConfiguration } from '../types';
 
-export const COLORS = {
-  accent: '#1e7878',
-  accentLight: '#53acac',
-  error: '#aa2111',
-  muted: '#999999',
-  mutedLight: '#bbbbbb',
-  mutedSuperLight: '#dfdfdf',
-  positive: '#60be60',
+export const CSS_VARIABLES: Palette = {
+  accent: '--accent',
+  accentLight: '--accent-light',
+  background: '--background',
+  error: '--error',
+  errorLight: '--error-light',
+  muted: '--muted',
+  mutedDark: '--muted-dark',
+  mutedLight: '--muted-light',
+  mutedSuperLight: '--muted-super-light',
+  success: '--success',
+  successLight: '--success-light',
+  text: '--text',
+  textInverted: '--text-inverted',
 };
 
 export const DEFAULT_SERVER_CONFIGURATION: ServerConfiguration = {
@@ -42,6 +48,38 @@ export const MESSAGES = {
   invalidData: 'INVALID_DATA',
   invalidPassword: 'INVALID_PASSWORD',
   missingRequiredData: 'MISSING_REQUIRED_DATA',
+};
+
+export const PALETTE_DARK: Palette = {
+  accent: '#53acac',
+  accentLight: '#7fe1e1',
+  background: '#000000',
+  error: '#ff5647',
+  errorLight: '#ff7669',
+  muted: '#999999',
+  mutedDark: '#3b3b3b',
+  mutedLight: '#bbbbbb',
+  mutedSuperLight: '#dfdfdf',
+  success: '#60be60',
+  successLight: '#90e890',
+  text: '#fdfdfd',
+  textInverted: '#2b2b2b',
+};
+
+export const PALETTE_LIGHT: Palette = {
+  accent: '#1e7878',
+  accentLight: '#53acac',
+  background: '#ffffff',
+  error: '#aa2111',
+  errorLight: '#ff5647',
+  muted: '#999999',
+  mutedDark: '#5b5b5b',
+  mutedLight: '#bbbbbb',
+  mutedSuperLight: '#dfdfdf',
+  success: '#60be60',
+  successLight: '#90e890',
+  text: '#151515',
+  textInverted: '#ffffff',
 };
 
 export const SPACER = 16;

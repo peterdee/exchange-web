@@ -4,7 +4,7 @@ import { reactive } from 'vue';
 import connection from '../../connection';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
 import formatFileSize from '../../utilities/format-file-size';
-import { EVENTS, SPACER } from '../../configuration';
+import { EVENTS, PALETTE_DARK, PALETTE_LIGHT, SPACER } from '../../configuration';
 import isValidURL from '../../utilities/is-valid-url';
 import { setValue } from '../../utilities/storage';
 import SettingsIconComponent from '../icons/SettingsIcon.vue';
@@ -12,6 +12,7 @@ import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 import StyledInputComponent from '../elements/StyledInput.vue';
 import StyledSwitchComponent from '../elements/StyledSwitch.vue';
+import type { Theme } from '../../types';
 
 interface ComponentState {
   deviceName: string;
@@ -55,6 +56,13 @@ const handleCloseModal = () => {
   );
 };
 
+const handleDarkTheme = () => {
+  const newTheme: Theme = store.theme === 'dark' ? 'light' : 'dark';
+  store.palette = newTheme === 'dark' ? PALETTE_DARK : PALETTE_LIGHT;
+  store.theme = newTheme;
+  setValue('theme', newTheme);
+};
+
 const handleDeleteAllFiles = () => {
   if (connection.io.connected) {
     connection.io.emit(EVENTS.deleteAllFiles);
@@ -63,6 +71,9 @@ const handleDeleteAllFiles = () => {
 };
 
 const handleSubmitNewDeviceName = () => {
+  if (state.deviceName === store.deviceName) {
+    return null;
+  }
   if (connection.io.connected && state.deviceName !== store.deviceName
     && store.listedFiles.some((item) => item.ownerId === connection.io.id)) {
     connection.io.emit(
@@ -73,11 +84,7 @@ const handleSubmitNewDeviceName = () => {
       },
     );
   }
-  state.isClosing = true;
-  setTimeout(
-    () => emit('update-device-name', state.deviceName),
-    240,
-  );
+  emit('update-device-name', state.deviceName);
 };
 
 const handleSubmitServerAddress = () => {
@@ -106,7 +113,10 @@ const handleUsePublicServer = () => window.location.replace(window.location.orig
     >
       <div class="f ai-center j-space-between ns">
         <div class="f ai-center">
-          <SettingsIconComponent :size="SPACER * 2" />
+          <SettingsIconComponent
+            :color="store.palette.accent"
+            :size="SPACER * 2"
+          />
           <span class="mh-1 modal-title">
             Settings
           </span>
@@ -118,7 +128,7 @@ const handleUsePublicServer = () => window.location.replace(window.location.orig
           @handle-click="handleCloseModal"
         >
           <DeleteIconComponent
-            :color="'gray'"
+            :color="store.palette.muted"
             :size="SPACER * 2.25"
           />
         </StyledButtonComponent>
@@ -134,7 +144,7 @@ const handleUsePublicServer = () => window.location.replace(window.location.orig
           :is-negative="true"
           @handle-click="handleDeleteAllFiles"
         >
-          Delte all of my shared files
+          Remove all of my shared files
         </StyledButtonComponent>
       </div>
       <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
@@ -154,7 +164,7 @@ const handleUsePublicServer = () => window.location.replace(window.location.orig
         />
         <StyledButtonComponent
           type="submit"
-          :disabled="state.deviceName.length === 0"
+          :disabled="state.deviceName.length === 0 || state.deviceName === store.deviceName"
           :globalClasses="['mt-half']"
         >
           Update device name
@@ -162,10 +172,18 @@ const handleUsePublicServer = () => window.location.replace(window.location.orig
       </form>
       <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <StyledSwitchComponent
+        id="auto-save"
         :checked="store.autoSaveDownloadedFiles"
         :global-classes="['input-title']"
         :labelText="'Auto-save downloaded files'"
         @handle-switch="handleAutoSaveSwitch"
+      />
+      <StyledSwitchComponent
+        id="theme"
+        :checked="store.theme === 'dark'"
+        :global-classes="['mt-half input-title']"
+        :labelText="'Use dark theme'"
+        @handle-switch="handleDarkTheme"
       />
       <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <div class="ns title fw-500">

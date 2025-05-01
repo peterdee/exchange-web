@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import { COLORS, EVENTS, SPACER } from '../configuration';
 import connection from '../connection';
+import { EVENTS, SPACER } from '../configuration';
 import type { ListedFile } from '../types';
 import LogoIconComponent from './icons/LogoIcon.vue';
 import PrepareFilesModalComponent from './modals/PrepareFilesModal.vue';
@@ -109,7 +109,7 @@ const togglePrepareFilesModal = (): void => {
   >
     <div class="f ai-center">
       <div class="f ai-center">
-        <LogoIconComponent :color="COLORS.accent" />
+        <LogoIconComponent :color="store.palette.accent" />
       </div>
       <div :class="`ns title ${store.isMobile ? 'ml-half' : 'ml-1'}`">
         EXCHANGE
@@ -123,7 +123,7 @@ const togglePrepareFilesModal = (): void => {
           :with-icon="true"
           @handle-click="handleRefresh"
         >
-          <RefreshIconComponent />
+          <RefreshIconComponent :color="store.palette.accent" />
         </StyledButtonComponent>
       </template>
       <StyledButtonComponent
@@ -133,7 +133,7 @@ const togglePrepareFilesModal = (): void => {
         :with-icon="true"
         @handle-click="handleUploadButton"
       >
-        <UplaodIconComponent />
+        <UplaodIconComponent :color="store.palette.accent" />
       </StyledButtonComponent>
       <StyledButtonComponent
         title="Settings"
@@ -142,7 +142,7 @@ const togglePrepareFilesModal = (): void => {
         :with-icon="true"
         @handle-click="emit('toggle-settings-modal')"
       >
-        <SettingsIconComponent />
+        <SettingsIconComponent :color="store.palette.accent" />
       </StyledButtonComponent>
     </div>
   </header>

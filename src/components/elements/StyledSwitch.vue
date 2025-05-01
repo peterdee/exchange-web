@@ -17,6 +17,10 @@ const props = defineProps({
     required: false,
     type: Array<string>,
   },
+  id: {
+    required: true,
+    type: String,
+  },
   labelText: {
     default: '',
     required: true,
@@ -32,12 +36,12 @@ const additionalClasses = props.globalClasses.length > 0
 <template>
   <div :class="`f ai-center ns ${additionalClasses}`">
     <input
-      id="switch"
       type="checkbox"
       :checked="checked"
+      :id="`${props.id}-switch`"
       @input="emit('handle-switch')"
     />
-    <label for="switch">Toggle</label>
+    <label :for="`${props.id}-switch`">Toggle</label>
     <span
       class="ml-1 ns"
       @click="emit('handle-switch')"

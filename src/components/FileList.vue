@@ -3,12 +3,12 @@ import { reactive } from 'vue';
 
 import CheckFilledIconComponent from './icons/CheckFilledIcon.vue';
 import CheckIconComponent from './icons/CheckIcon.vue';
-import { COLORS, EVENTS, SPACER } from '../configuration';
 import { convertArrayBufferChunksToBlob } from '../utilities/binary';
 import connection from '../connection';
 import CrossIconComponent from './icons/CrossIcon.vue';
 import DeleteIconComponent from './icons/DeleteIcon.vue';
 import DownloadIconComponent from './icons/DownloadIcon.vue';
+import { EVENTS, SPACER } from '../configuration';
 import getFilesFromDroppedItems from '../utilities/get-files-from-dropped-items';
 import type { ListedFile } from '../types';
 import LockIconComponent from './icons/LockIcon.vue';
@@ -227,17 +227,21 @@ const togglePrepareFilesModal = (): void => {
           :with-icon="true"
           @handle-click="() => emit('handle-open-file-details', file.id)"
         >
-          <MenuDotsIconComponent :color="COLORS.muted" />
+          <MenuDotsIconComponent
+            :color="store.theme === 'dark'
+              ? store.palette.mutedLight
+              : store.palette.muted"
+          />
         </StyledButtonComponent>
         <StyledButtonComponent
           v-if="file.isOwner"
-          title="Delete file"
+          title="Remove file"
           :custom-styles="{ height: `${SPACER * 2}px` }"
           :disabled="state.deleteFileId === file.id"
           :with-icon="true"
           @handle-click="() => handleDelete(file.id)"
         >
-          <DeleteIconComponent :color="COLORS.error" />
+          <DeleteIconComponent :color="store.palette.error" />
         </StyledButtonComponent>
         <template v-if="!file.isOwner">
           <StyledButtonComponent
@@ -249,7 +253,9 @@ const togglePrepareFilesModal = (): void => {
             @handle-click="() => handleDownload(file)"
           >
             <DownloadIconComponent
-              :color="file.isRequestedDownload ? COLORS.muted : COLORS.accent"
+              :color="file.isRequestedDownload
+                ? store.palette.muted
+                : store.palette.accent"
             />
           </StyledButtonComponent>
           <StyledButtonComponent
@@ -259,7 +265,7 @@ const togglePrepareFilesModal = (): void => {
             :with-icon="true"
             @handle-click="() => handleSaveOnDisk(file.id)"
           >
-            <SaveIconComponent :color="COLORS.accent" />
+            <SaveIconComponent :color="store.palette.accent" />
           </StyledButtonComponent>
           <StyledButtonComponent
             v-if="file.isDownloading"
@@ -268,7 +274,7 @@ const togglePrepareFilesModal = (): void => {
             :with-icon="true"
             @handle-click="() => emit('handle-abort-downloading', file.id)"
           >
-            <CrossIconComponent :color="COLORS.error" />
+            <CrossIconComponent :color="store.palette.error" />
           </StyledButtonComponent>
         </template>
         <div
@@ -280,8 +286,10 @@ const togglePrepareFilesModal = (): void => {
         >
           <LockIconComponent
             :color="!file.withPassword
-              ? COLORS.mutedLight
-              : COLORS.accent"
+              ? store.theme === 'dark'
+                ? store.palette.mutedDark
+                : store.palette.mutedLight
+              : store.palette.accent"
           />
         </div>
         <div
@@ -296,14 +304,14 @@ const togglePrepareFilesModal = (): void => {
           :class="`f ai-center j-center icon ml-${store.isMobile ? 'quarter' : 'half'}`"
           title="Download completed"
         >
-          <CheckIconComponent :color="COLORS.accent" />
+          <CheckIconComponent :color="store.palette.accent" />
         </div>
         <div
           v-if="file.downloadCompleted && !file.isDownloading && file.isSavedOnDisk"
           :class="`f ai-center j-center icon ml-${store.isMobile ? 'quarter' : 'half'}`"
           title="File saved on disk"
         >
-          <CheckFilledIconComponent :color="COLORS.accent" />
+          <CheckFilledIconComponent :color="store.palette.accent" />
         </div>
       </div>
     </div>
