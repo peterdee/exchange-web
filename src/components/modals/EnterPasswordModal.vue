@@ -133,7 +133,10 @@ const handleSubmit = async (): Promise<null | Socket> => {
     >
     <div class="f ai-center j-space-between ns">
       <div class="f ai-center">
-        <LockIconComponent :size="SPACER * 2" />
+        <LockIconComponent
+          :color="store.palette.accent"
+          :size="SPACER * 2"
+        />
         <span class="mh-1 modal-title">
           Protected
         </span>
@@ -145,7 +148,7 @@ const handleSubmit = async (): Promise<null | Socket> => {
           @handle-click="handleCloseModal"
         >
           <DeleteIconComponent
-            :color="'gray'"
+            :color="store.palette.muted"
             :size="SPACER * 2.25"
           />
         </StyledButtonComponent>

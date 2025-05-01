@@ -227,11 +227,15 @@ const togglePrepareFilesModal = (): void => {
           :with-icon="true"
           @handle-click="() => emit('handle-open-file-details', file.id)"
         >
-          <MenuDotsIconComponent :color="store.palette.muted" />
+          <MenuDotsIconComponent
+            :color="store.theme === 'dark'
+              ? store.palette.mutedLight
+              : store.palette.muted"
+          />
         </StyledButtonComponent>
         <StyledButtonComponent
           v-if="file.isOwner"
-          title="Delete file"
+          title="Remove file"
           :custom-styles="{ height: `${SPACER * 2}px` }"
           :disabled="state.deleteFileId === file.id"
           :with-icon="true"
@@ -282,7 +286,9 @@ const togglePrepareFilesModal = (): void => {
         >
           <LockIconComponent
             :color="!file.withPassword
-              ? store.palette.mutedLight
+              ? store.theme === 'dark'
+                ? store.palette.mutedDark
+                : store.palette.mutedLight
               : store.palette.accent"
           />
         </div>

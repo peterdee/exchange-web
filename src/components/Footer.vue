@@ -1,22 +1,7 @@
 <script setup lang="ts">
-import type { BackendStatus } from '../types';
+import LogoIconComponent from './icons/LogoIcon.vue';
+import { SPACER } from '../configuration';
 import store from '../store';
-
-const props = defineProps<{
-  backendStatus: BackendStatus;
-}>();
-
-const statusClass = props.backendStatus === 'connected'
-  ? 'ok'
-  : props.backendStatus === 'connecting'
-    ? 'loading'
-    : 'error';
-
-const statusTitle = statusClass === 'ok'
-  ? 'Connected to the backend'
-  : statusClass === 'error'
-    ? 'Backend is inaccessible'
-    : 'Connecting...';
 
 const year = new Date().getFullYear();
 </script>
@@ -27,10 +12,11 @@ const year = new Date().getFullYear();
       ? 'mh-1'
       : 'mh-2'}`"
   >
-    <span>
-      © {{ year }}
-    </span>
-    <span class="ml-1">
+    <LogoIconComponent
+      :color="store.palette.accent"
+      :size="store.isMobile ? SPACER * 1.25 : SPACER * 1.5"
+    />
+    <span class="mh-1">
       <a
         href="https://github.com/peterdee/exchange-web"
         target="_blank"
@@ -38,7 +24,7 @@ const year = new Date().getFullYear();
         EXCHANGE
       </a>
     </span>
-    <span class="ml-1">
+    <span class="mr-1">
       <a
         href="https://dyum.in"
         target="_blank"
@@ -46,13 +32,9 @@ const year = new Date().getFullYear();
         Peter Dyumin
       </a>
     </span>
-    <span class="ml-1">
-      Backend status
+    <span>
+      © {{ year }}
     </span>
-    <div
-      :class="`ml-half status ${statusClass}`"
-      :title="statusTitle"
-    />
   </footer>
 </template>
 
@@ -60,28 +42,5 @@ const year = new Date().getFullYear();
 footer {
   font-size: calc(var(--spacer) * .75);
   height: calc(var(--spacer) * 3);
-}
-.error, .loading, .ok {
-  transition: background-color var(--transition) ease;
-}
-.error {
-  background-color: var(--error);
-}
-.loading {
-  background-color: var(--muted-light);
-}
-.ok {
-  background-color: var(--success);
-}
-.status {
-  border-radius: 50%;
-  height: calc(var(--spacer) * .75);
-  width: calc(var(--spacer) * .75);
-  transition: opacity var(--transition) ease-out;
-}
-.status:hover {
-  cursor: pointer;
-  opacity: .6;
-  transition: opacity var(--transition) ease-in;
 }
 </style>

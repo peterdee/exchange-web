@@ -56,7 +56,7 @@ const handleCloseModal = (): void => {
           @handle-click="handleCloseModal"
         >
           <DeleteIconComponent
-            :color="'gray'"
+            :color="store.palette.muted"
             :size="SPACER * 2.25"
           />
         </StyledButtonComponent>

@@ -1,5 +1,3 @@
-export type BackendStatus = 'connected' | 'connecting' | 'inaccessible';
-
 export interface AcknowledgementMessage<T = null> {
   data?: T;
   info: string;
@@ -73,6 +71,7 @@ export interface Palette {
   success: string;
   successLight: string;
   text: string;
+  textInverted: string;
 }
 
 export interface ServerConfiguration {

@@ -69,6 +69,8 @@ const additionalClasses = props.globalClasses.length > 0
       ? 'positive'
       : ''} ${props.withIcon
       ? 'icon-button'
+      : ''} ${props.disabled
+      ? 'cursor-disabled'
       : ''} ${additionalClasses}`"
     :disabled="props.disabled"
     :style="{ ...customStyles }"
@@ -86,6 +88,9 @@ const additionalClasses = props.globalClasses.length > 0
 </template>
 
 <style scoped>
+.cursor-disabled {
+  cursor: not-allowed;
+}
 .icon-button {
   background-color: transparent;
   opacity: .6;

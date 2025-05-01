@@ -208,6 +208,11 @@ onMounted((): void => {
 </script>
 
 <template>
+  <component is="style">
+    :root {
+      {{ prepareVariables(store.theme) }}
+    }
+  </component>
   <div
     :class="`f j-center ${store.isMobile
       ? 'height-mobile'
@@ -288,11 +293,6 @@ onMounted((): void => {
       />
     </div>
   </div>
-  <component is="style">
-    :root {
-      {{ prepareVariables(store.theme) }}
-    }
-  </component>
 </template>
 
 <style scoped>

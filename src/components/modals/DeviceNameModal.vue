@@ -44,7 +44,10 @@ const handleSubmit = (): void => {
         : 'modal-content-web'}`"
     >
       <div class="f ai-center">
-        <LogoIconComponent :size="SPACER * 2.25" />
+        <LogoIconComponent
+          :color="store.palette.accent"
+          :size="SPACER * 2.25"
+        />
         <span class="mh-1 modal-title">
           EXCHANGE
         </span>

@@ -94,7 +94,10 @@ onUpdated((): void => {
     >
     <div class="f ai-center j-space-between ns">
       <div class="f ai-center">
-        <InfoIconComponent :size="SPACER * 2" />
+        <InfoIconComponent
+          :color="store.palette.accent"
+          :size="SPACER * 2"
+        />
         <span class="mh-1 modal-title">
           {{ `Prepare${!store.isMobile ? ' files' : ''}` }}
         </span>
@@ -106,7 +109,7 @@ onUpdated((): void => {
           @handle-click="handleCloseModal"
         >
           <DeleteIconComponent
-            :color="'gray'"
+            :color="store.palette.muted"
             :size="SPACER * 2.25"
           />
         </StyledButtonComponent>
@@ -120,7 +123,7 @@ onUpdated((): void => {
         These files are going to be shared:
       </div>
       <div
-        :class="`mt-half p-1 ns list ${store.theme === 'dark'
+        :class="`mt-half p-half ns list ${store.theme === 'dark'
           ? 'list-dark'
           : 'list-light'}`"
       >

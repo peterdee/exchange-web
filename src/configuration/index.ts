@@ -13,6 +13,7 @@ export const CSS_VARIABLES: Palette = {
   success: '--success',
   successLight: '--success-light',
   text: '--text',
+  textInverted: '--text-inverted',
 };
 
 export const DEFAULT_SERVER_CONFIGURATION: ServerConfiguration = {
@@ -50,11 +51,11 @@ export const MESSAGES = {
 };
 
 export const PALETTE_DARK: Palette = {
-  accent: '#1e7878',
-  accentLight: '#53acac',
+  accent: '#53acac',
+  accentLight: '#7fe1e1',
   background: '#000000',
-  error: '#aa2111',
-  errorLight: '#ff5647',
+  error: '#ff5647',
+  errorLight: '#ff7669',
   muted: '#999999',
   mutedDark: '#3b3b3b',
   mutedLight: '#bbbbbb',
@@ -62,6 +63,7 @@ export const PALETTE_DARK: Palette = {
   success: '#60be60',
   successLight: '#90e890',
   text: '#fdfdfd',
+  textInverted: '#2b2b2b',
 };
 
 export const PALETTE_LIGHT: Palette = {
@@ -77,6 +79,7 @@ export const PALETTE_LIGHT: Palette = {
   success: '#60be60',
   successLight: '#90e890',
   text: '#151515',
+  textInverted: '#ffffff',
 };
 
 export const SPACER = 16;

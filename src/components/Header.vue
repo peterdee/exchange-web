@@ -123,7 +123,7 @@ const togglePrepareFilesModal = (): void => {
           :with-icon="true"
           @handle-click="handleRefresh"
         >
-          <RefreshIconComponent />
+          <RefreshIconComponent :color="store.palette.accent" />
         </StyledButtonComponent>
       </template>
       <StyledButtonComponent
@@ -133,7 +133,7 @@ const togglePrepareFilesModal = (): void => {
         :with-icon="true"
         @handle-click="handleUploadButton"
       >
-        <UplaodIconComponent />
+        <UplaodIconComponent :color="store.palette.accent" />
       </StyledButtonComponent>
       <StyledButtonComponent
         title="Settings"
@@ -142,7 +142,7 @@ const togglePrepareFilesModal = (): void => {
         :with-icon="true"
         @handle-click="emit('toggle-settings-modal')"
       >
-        <SettingsIconComponent />
+        <SettingsIconComponent :color="store.palette.accent" />
       </StyledButtonComponent>
     </div>
   </header>
