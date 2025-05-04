@@ -297,7 +297,10 @@ const togglePrepareFilesModal = (): void => {
           :class="`f ai-center j-center icon ml-${store.isMobile ? 'quarter' : 'half'}`"
           :title="`Downloading file (${file.downloadPercent}%)`"
         >
-          <StyledCircularProgressBarComponent :percent="file.downloadPercent" />
+          <StyledCircularProgressBarComponent
+            :fill-color="store.palette.accent"
+            :percent="file.downloadPercent"
+          />
         </div>
         <div
           v-if="file.downloadCompleted && !file.isDownloading && !file.isSavedOnDisk"
@@ -333,8 +336,9 @@ const togglePrepareFilesModal = (): void => {
   border-radius: var(--spacer-quarter);
   height: calc(100vh - var(--spacer) * 6);
   overflow-y: scroll;
-  width: calc(100% - var(--spacer) * 4);
+  scrollbar-width: none;
   transition: box-shadow var(--transition) ease-out;
+  width: calc(100% - var(--spacer) * 4);
 }
 .file-name {
   overflow: hidden;
