@@ -22,8 +22,9 @@
   background-color: var(--background);
   border-radius: var(--spacer-half);
   box-shadow: 0 0 var(--spacer-half) 0 var(--background);
-  overflow-y: scroll;
   min-height: var(--spacer);
+  overflow-y: scroll;
+  scrollbar-width: none;
   z-index: 11;
 }
 .modal-content-mobile {

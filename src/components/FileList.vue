@@ -336,8 +336,9 @@ const togglePrepareFilesModal = (): void => {
   border-radius: var(--spacer-quarter);
   height: calc(100vh - var(--spacer) * 6);
   overflow-y: scroll;
-  width: calc(100% - var(--spacer) * 4);
+  scrollbar-width: none;
   transition: box-shadow var(--transition) ease-out;
+  width: calc(100% - var(--spacer) * 4);
 }
 .file-name {
   overflow: hidden;

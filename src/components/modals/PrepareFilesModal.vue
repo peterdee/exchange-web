@@ -194,6 +194,7 @@ onUpdated((): void => {
   border-radius: var(--spacer-half);
   height: calc(var(--spacer) * 10);
   overflow-y: scroll;
+  scrollbar-width: none;
 }
 .list-light {
   background-color: var(--muted-super-light);
