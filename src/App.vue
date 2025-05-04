@@ -4,10 +4,18 @@ import {
   onMounted,
   reactive,
 } from 'vue';
-import type { Socket } from 'socket.io-client';
 
-import type { AcknowledgementMessage, DownloadedItem, ListedFile } from './types';
-import connection, { handleDisconnect } from './connection';
+import type {
+  AcknowledgementMessage,
+  DownloadedItem,
+  ListedFile,
+  Theme,
+} from './types';
+import connection, {
+  handleDisconnect,
+  registerEvents,
+  updateConnection,
+} from './connection';
 import DeviceNameModalComponent from './components/modals/DeviceNameModal.vue';
 import DownloadErrorModalComponent from './components/modals/DownloadErrorModal.vue';
 import EnterPasswordModalComponent from './components/modals/EnterPasswordModal.vue';
@@ -17,11 +25,13 @@ import FileDetailsModalComponent from './components/modals/FileDetailsModal.vue'
 import FooterComponent from './components/Footer.vue';
 import { getValue, setValue } from './utilities/storage';
 import HeaderComponent from './components/Header.vue';
+import isValidURL from './utilities/is-valid-url';
+import LoadingComponent from './components/Loading.vue';
 import PasswordModalComponent from './components/modals/PasswordModal.vue';
+import { preparePalette, prepareVariables } from './utilities/prepare-theme';
 import { requestWakeLock } from './utilities/wakelock';
 import SettingsModalComponent from './components/modals/SettingsModal.vue';
 import store from './store';
-import StyledSpinnerComponent from './components/elements/StyledSpinner.vue';
 
 interface ComponentState {
   downloadErrorMessage: string;
@@ -74,7 +84,7 @@ const handleDeviceName = (value: string) => {
   state.showDeviceNameModal = false;
   setValue('deviceName', value);
   return setValue('deviceNameSet', true);
-}
+};
 
 const handleDownloadFile = (
   {
@@ -86,14 +96,14 @@ const handleDownloadFile = (
     grant?: string;
     ownerId: string;
   },
-): Socket => connection.emit(
+) => connection.io.emit(
   EVENTS.downloadFile,
   {
     fileId,
     grant,
     ownerId,
   },
-  (response: AcknowledgementMessage): null | void => {
+  (response: AcknowledgementMessage) => {
     const { info, status } = response;
     if (status === 400) {
       if (info === MESSAGES.fileNotFound) {
@@ -139,11 +149,26 @@ const toggleModal = (modalName: string): void => {
 onBeforeUnmount(handleDisconnect);
 
 onMounted((): void => {
+  let theme: Theme = 'light';
+  const storedTheme = getValue<Theme>('theme');
+  if (storedTheme) {
+    theme = storedTheme;
+  }
+
   if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     const faviconLink = document.querySelector<HTMLLinkElement>(`link[rel~='${'icon'}']`);
     if (faviconLink) {
       faviconLink.href = 'favicon-light.svg';
+      if (!storedTheme) {
+        theme = 'dark';
+      }
     }
+  }
+
+  store.palette = preparePalette(theme);
+  store.theme = theme;
+  if (!storedTheme) {
+    setValue('theme', theme);
   }
 
   const wakeLock = () => {
@@ -166,11 +191,28 @@ onMounted((): void => {
     store.deviceName = deviceName;
   }
 
-  connection.open();
+  const queryParams = new URLSearchParams(window.location.search);
+  if (queryParams.size > 0) {
+    const isLocal = queryParams.get('local') === 'true';
+    const serverAddress = decodeURIComponent(queryParams.get('server') || '');
+    if (isLocal && serverAddress && isValidURL(serverAddress)) {
+      updateConnection(serverAddress);
+      store.isLocalServer = true;
+      store.localServerAddress = serverAddress;
+    }
+  }
+
+  registerEvents();
+  connection.io.open();
 });
 </script>
 
 <template>
+  <component is="style">
+    :root {
+      {{ prepareVariables(store.theme) }}
+    }
+  </component>
   <div
     :class="`f j-center ${store.isMobile
       ? 'height-mobile'
@@ -180,14 +222,7 @@ onMounted((): void => {
       v-if="!(store.connected && store.receivedConfiguration)"
       class="f ai-center"
     >
-      <div class="f d-col ns">
-        <span class="t-center input-title">
-          Connecting to the server...
-        </span>
-        <div class="f ai-center j-center mt-1 mh-auto spinner-background">
-          <StyledSpinnerComponent />
-        </div>
-      </div>
+      <LoadingComponent :local="store.isLocalServer" />
     </div>
     <DeviceNameModalComponent
       v-if="state.showDeviceNameModal"
@@ -227,31 +262,31 @@ onMounted((): void => {
       @close-modal="(): void => closeModal('password')"
     />
     <div
-      v-if="store.connected"
+      v-if="store.connected && store.receivedConfiguration"
       class="f d-col w-100"
     >
       <SettingsModalComponent
         v-if="state.showSettingsModal"
         :shared-files="store.listedFiles.filter(
-          (item: ListedFile): boolean => item.ownerId === connection.id,
+          (item: ListedFile): boolean => item.ownerId === connection.io.id,
         ).length"
         @close-modal="(): void => toggleModal('settings')"
         @update-device-name="handleUpdateDeviceName"
       />
       <HeaderComponent
         :listed-files="store.listedFiles"
-        :owner-id="connection.id || ''"
+        :owner-id="connection.io.id || ''"
         @toggle-settings-modal="(): void => toggleModal('settings')"
       />
       <FileListComponent
-        :listed-files="store.listedFiles"
-        :owner-id="connection.id || ''"
+        :owner-id="connection.io.id || ''"
         @handle-abort-downloading="handleAbortDownloading"
         @handle-download-file="handleDownloadFile"
         @handle-open-file-details="handleFileDetails"
         @handle-show-file-password-modal="handleShowEnterPasswordModal"
       />
       <FooterComponent
+        v-if="!(store.isMobile && store.isStandalone)"
         :backend-status="store.connected
           ? 'connected'
           : 'inaccessible'"
@@ -264,11 +299,5 @@ onMounted((): void => {
 .height-mobile {
   height: fill-available;
   height: -webkit-fill-available;
-}
-.spinner-background {
-  background-color: var(--accent);
-  border-radius: 50%;
-  height: calc(var(--spacer) * 3);
-  width: calc(var(--spacer) * 3);
 }
 </style>

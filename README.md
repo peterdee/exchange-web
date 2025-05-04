@@ -28,7 +28,7 @@ mkdir certificates && cd certificates
 
 Generate certificate files for HTTPS
 
-*MacOS*
+*MacOS / Ubuntu / Windows*
 
 ```shell script
 # Generate key file

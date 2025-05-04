@@ -51,14 +51,14 @@ const handleInput = ({ value = '' }: { value: string }): void => {
 };
 
 const handleRemovePassword = async (): Promise<null | Socket | void> => {
-  if (connection.connected) {
+  if (connection.io.connected) {
     state.isLoading = true;
     await sleep();
-    connection.emit(
+    connection.io.emit(
       EVENTS.removePassword,
       {
         fileId: props.listedFile.id,
-        ownerId: connection.id,
+        ownerId: connection.io.id,
       },
     );
     const delayedAction = (): void => {
@@ -80,14 +80,14 @@ const handleSubmit = async (): Promise<null | Socket | void> => {
     state.passwordError = true;
     return null;
   }
-  if (connection.connected) {
+  if (connection.io.connected) {
     state.isLoading = true;
     await sleep();
-    return connection.emit(
+    return connection.io.emit(
       EVENTS.changePassword,
       {
         fileId: props.listedFile.id,
-        ownerId: connection.id,
+        ownerId: connection.io.id,
         password: trimmedPassword,
       },
       (response: AcknowledgementMessage): null | void => {
@@ -128,7 +128,10 @@ const handleSubmit = async (): Promise<null | Socket | void> => {
     >
       <div class="f ai-center j-space-between ns">
         <div class="f ai-center">
-          <LockIconComponent :size="SPACER * 2" />
+          <LockIconComponent
+            :color="store.palette.accent"
+            :size="SPACER * 2"
+          />
           <span class="mh-1 modal-title">
             Password
           </span>
@@ -140,7 +143,7 @@ const handleSubmit = async (): Promise<null | Socket | void> => {
           @handle-click="handleCloseModal"
         >
           <DeleteIconComponent
-            :color="'gray'"
+            :color="store.palette.muted"
             :size="SPACER * 2.25"
           />
         </StyledButtonComponent>
@@ -180,7 +183,7 @@ const handleSubmit = async (): Promise<null | Socket | void> => {
         </StyledButtonComponent>
       </form>
       <template v-if="props.listedFile.withPassword">
-        <div class="mv-1 divider" />
+        <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
         <StyledButtonComponent
           :disabled="state.isLoading"
           :is-loading="state.isLoading"

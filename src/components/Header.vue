@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import { COLORS, EVENTS, SPACER } from '../configuration';
 import connection from '../connection';
+import { EVENTS, SPACER } from '../configuration';
 import type { ListedFile } from '../types';
 import LogoIconComponent from './icons/LogoIcon.vue';
 import PrepareFilesModalComponent from './modals/PrepareFilesModal.vue';
 import prepareSharedFiles from '../utilities/prepare-shared-files';
+import RefreshIconComponent from './icons/RefreshIcon.vue';
 import SettingsIconComponent from './icons/SettingsIcon.vue';
 import store from '../store';
 import StyledButtonComponent from './elements/StyledButton.vue';
@@ -28,6 +29,8 @@ const state = reactive<ComponentState>({
   preparedFiles: [],
   showPrepareFilesModal: false,
 });
+
+const handleRefresh = () => window.location.reload();
 
 const handleUploadButton = (): void => {
   state.preparedFiles = [];
@@ -64,8 +67,8 @@ const handleUploadButton = (): void => {
 
 const handleShareFiles = (files: ListedFile[], password: string): void => {
   files.forEach((file: ListedFile): void => {
-    if (connection.connected) {
-      connection.emit(
+    if (connection.io.connected) {
+      connection.io.emit(
         EVENTS.listFile,
         {
           createdAt: file.createdAt,
@@ -106,20 +109,31 @@ const togglePrepareFilesModal = (): void => {
   >
     <div class="f ai-center">
       <div class="f ai-center">
-        <LogoIconComponent :color="COLORS.accent" />
+        <LogoIconComponent :color="store.palette.accent" />
       </div>
       <div :class="`ns title ${store.isMobile ? 'ml-half' : 'ml-1'}`">
         EXCHANGE
       </div>
     </div>
     <div class="f ai-center ml-1">
+      <template v-if="store.isStandalone">
+        <StyledButtonComponent
+          title="Refresh page"
+          :custom-styles="{ height: `${SPACER * 2}px` }"
+          :with-icon="true"
+          @handle-click="handleRefresh"
+        >
+          <RefreshIconComponent :color="store.palette.accent" />
+        </StyledButtonComponent>
+      </template>
       <StyledButtonComponent
         title="Add files"
         :custom-styles="{ height: `${SPACER * 2}px` }"
+        :global-classes="[`${store.isMobile ? 'ml-half' : 'ml-1'}`]"
         :with-icon="true"
         @handle-click="handleUploadButton"
       >
-        <UplaodIconComponent />
+        <UplaodIconComponent :color="store.palette.accent" />
       </StyledButtonComponent>
       <StyledButtonComponent
         title="Settings"
@@ -128,7 +142,7 @@ const togglePrepareFilesModal = (): void => {
         :with-icon="true"
         @handle-click="emit('toggle-settings-modal')"
       >
-        <SettingsIconComponent />
+        <SettingsIconComponent :color="store.palette.accent" />
       </StyledButtonComponent>
     </div>
   </header>

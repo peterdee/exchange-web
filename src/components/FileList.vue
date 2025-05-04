@@ -3,12 +3,12 @@ import { reactive } from 'vue';
 
 import CheckFilledIconComponent from './icons/CheckFilledIcon.vue';
 import CheckIconComponent from './icons/CheckIcon.vue';
-import { COLORS, EVENTS, SPACER } from '../configuration';
 import { convertArrayBufferChunksToBlob } from '../utilities/binary';
 import connection from '../connection';
 import CrossIconComponent from './icons/CrossIcon.vue';
 import DeleteIconComponent from './icons/DeleteIcon.vue';
 import DownloadIconComponent from './icons/DownloadIcon.vue';
+import { EVENTS, SPACER } from '../configuration';
 import getFilesFromDroppedItems from '../utilities/get-files-from-dropped-items';
 import type { ListedFile } from '../types';
 import LockIconComponent from './icons/LockIcon.vue';
@@ -35,10 +35,7 @@ const emit = defineEmits([
   'handle-show-file-password-modal',
 ]);
 
-const props = defineProps<{
-  listedFiles: ListedFile[];
-  ownerId: string;
-}>();
+const props = defineProps<{ ownerId: string }>();
 
 const state = reactive<ComponentState>({
   deleteFileId: '',
@@ -49,8 +46,8 @@ const state = reactive<ComponentState>({
 
 const handleDelete = (fileId: string): void => {
   state.deleteFileId = fileId;
-  if (connection.connected) {
-    connection.emit(EVENTS.deleteFile, { fileId });
+  if (connection.io.connected) {
+    connection.io.emit(EVENTS.deleteFile, { fileId });
   }
   setTimeout(
     (): void => {
@@ -63,8 +60,13 @@ const handleDelete = (fileId: string): void => {
   );
 };
 
-const handleDownload = (file: ListedFile): void => {
+const handleDownload = (file: ListedFile) => {
   if (!file.withPassword) {
+    store.listedFiles.forEach((item) => {
+      if (item.id === file.id) {
+        item.isRequestedDownload = true;
+      }
+    });
     return emit(
       'handle-download-file',
       {
@@ -74,6 +76,11 @@ const handleDownload = (file: ListedFile): void => {
     );
   }
   if (file.withPassword && file.grant) {
+    store.listedFiles.forEach((item) => {
+      if (item.id === file.id) {
+        item.isRequestedDownload = true;
+      }
+    });
     return emit(
       'handle-download-file',
       {
@@ -103,7 +110,7 @@ const handleFileDrop = async (event: DragEvent): Promise<null | void> => {
   const files = await getFilesFromDroppedItems(dataTransfer);
   state.preparedFiles = await prepareSharedFiles(
     files,
-    props.listedFiles,
+    store.listedFiles,
     store.deviceName,
     props.ownerId,
     store.serverConfiguration.chunkSizeBytes,
@@ -144,8 +151,8 @@ const handleSaveOnDisk = (fileId: string) => {
 
 const handleShareFiles = (files: ListedFile[], password: string): void => {
   files.forEach((file: ListedFile): void => {
-    if (connection.connected) {
-      connection.emit(
+    if (connection.io.connected) {
+      connection.io.emit(
         EVENTS.listFile,
         {
           createdAt: file.createdAt,
@@ -182,7 +189,7 @@ const togglePrepareFilesModal = (): void => {
   <div
     :class="`f d-col mh-auto file-list ${state.drag
       ? 'drag'
-      : ''} ${props.listedFiles.length === 0
+      : ''} ${store.listedFiles.length === 0
       ? 'j-center'
       : ''} ${store.isMobile ? 'list-mobile' : ''}`"
     @dragenter.prevent="handleDrag"
@@ -191,14 +198,14 @@ const togglePrepareFilesModal = (): void => {
     @drop.prevent="handleFileDrop"
   >
     <div
-      v-if="props.listedFiles.length === 0"
+      v-if="store.listedFiles.length === 0"
       class="t-center ns fade-in drop-files-text"
     >
       {{ store.isMobile ? 'No files shared' : 'Drop files here...' }}
     </div>
     <div
-      v-if="props.listedFiles.length > 0"
-      v-for="file in props.listedFiles"
+      v-if="store.listedFiles.length > 0"
+      v-for="file in store.listedFiles"
       :class="`f j-space-between ai-center fade-in ${state.deleteFileId === file.id
         ? 'fade-out'
         : ''} ${store.isMobile
@@ -220,28 +227,35 @@ const togglePrepareFilesModal = (): void => {
           :with-icon="true"
           @handle-click="() => emit('handle-open-file-details', file.id)"
         >
-          <MenuDotsIconComponent :color="COLORS.muted" />
+          <MenuDotsIconComponent
+            :color="store.theme === 'dark'
+              ? store.palette.mutedLight
+              : store.palette.muted"
+          />
         </StyledButtonComponent>
         <StyledButtonComponent
           v-if="file.isOwner"
-          title="Delete file"
+          title="Remove file"
           :custom-styles="{ height: `${SPACER * 2}px` }"
           :disabled="state.deleteFileId === file.id"
           :with-icon="true"
           @handle-click="() => handleDelete(file.id)"
         >
-          <DeleteIconComponent :color="COLORS.error" />
+          <DeleteIconComponent :color="store.palette.error" />
         </StyledButtonComponent>
         <template v-if="!file.isOwner">
           <StyledButtonComponent
             v-if="!file.isDownloading && file.downloadPercent === 0"
             title="Download file"
             :custom-styles="{ height: `${SPACER * 2}px` }"
+            :disabled="file.isRequestedDownload"
             :with-icon="true"
             @handle-click="() => handleDownload(file)"
           >
             <DownloadIconComponent
-              :color="COLORS.accent"
+              :color="file.isRequestedDownload
+                ? store.palette.muted
+                : store.palette.accent"
             />
           </StyledButtonComponent>
           <StyledButtonComponent
@@ -251,7 +265,7 @@ const togglePrepareFilesModal = (): void => {
             :with-icon="true"
             @handle-click="() => handleSaveOnDisk(file.id)"
           >
-            <SaveIconComponent :color="COLORS.accent" />
+            <SaveIconComponent :color="store.palette.accent" />
           </StyledButtonComponent>
           <StyledButtonComponent
             v-if="file.isDownloading"
@@ -260,7 +274,7 @@ const togglePrepareFilesModal = (): void => {
             :with-icon="true"
             @handle-click="() => emit('handle-abort-downloading', file.id)"
           >
-            <CrossIconComponent :color="COLORS.error" />
+            <CrossIconComponent :color="store.palette.error" />
           </StyledButtonComponent>
         </template>
         <div
@@ -272,8 +286,10 @@ const togglePrepareFilesModal = (): void => {
         >
           <LockIconComponent
             :color="!file.withPassword
-              ? COLORS.mutedLight
-              : COLORS.accent"
+              ? store.theme === 'dark'
+                ? store.palette.mutedDark
+                : store.palette.mutedLight
+              : store.palette.accent"
           />
         </div>
         <div
@@ -288,14 +304,14 @@ const togglePrepareFilesModal = (): void => {
           :class="`f ai-center j-center icon ml-${store.isMobile ? 'quarter' : 'half'}`"
           title="Download completed"
         >
-          <CheckIconComponent :color="COLORS.accent" />
+          <CheckIconComponent :color="store.palette.accent" />
         </div>
         <div
           v-if="file.downloadCompleted && !file.isDownloading && file.isSavedOnDisk"
           :class="`f ai-center j-center icon ml-${store.isMobile ? 'quarter' : 'half'}`"
           title="File saved on disk"
         >
-          <CheckFilledIconComponent :color="COLORS.accent" />
+          <CheckFilledIconComponent :color="store.palette.accent" />
         </div>
       </div>
     </div>

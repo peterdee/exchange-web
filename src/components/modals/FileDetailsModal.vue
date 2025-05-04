@@ -146,7 +146,10 @@ const handleShowPasswordModal = () => {
     >
       <div class="f ai-center j-space-between ns">
         <div class="f ai-center">
-          <FileIconComponent :size="SPACER * 2" />
+          <FileIconComponent
+            :color="store.palette.accent"
+            :size="SPACER * 2"
+          />
           <span class="mh-1 modal-title">
             Details
           </span>
@@ -158,7 +161,7 @@ const handleShowPasswordModal = () => {
           @handle-click="handleCloseModal"
         >
           <DeleteIconComponent
-            :color="'gray'"
+            :color="store.palette.muted"
             :size="SPACER * 2.25"
           />
         </StyledButtonComponent>
@@ -185,7 +188,7 @@ const handleShowPasswordModal = () => {
           Owner: {{ props.listedFile.deviceName }}
         </div>
       </template>
-      <div class="divider mv-1" />
+      <div :class="`${store.isMobile ? 'mv-half' : 'mv-1'} divider`" />
       <template v-if="!props.listedFile.isOwner">
         <div class="ns input-title">
           {{

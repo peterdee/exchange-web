@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 
-import { COLORS, SPACER } from '../../configuration';
 import DangerIconComponent from '../icons/DangerIcon.vue';
 import DeleteIconComponent from '../icons/DeleteIcon.vue';
+import { SPACER } from '../../configuration';
 import store from '../../store';
 import StyledButtonComponent from '../elements/StyledButton.vue';
 
@@ -42,7 +42,7 @@ const handleCloseModal = (): void => {
     <div class="f ai-center j-space-between ns">
       <div class="f ai-center">
         <DangerIconComponent
-          :color="COLORS.error"
+          :color="store.palette.error"
           :size="SPACER * 2"
         />
         <span class="mh-1 modal-title error-title">
@@ -56,7 +56,7 @@ const handleCloseModal = (): void => {
           @handle-click="handleCloseModal"
         >
           <DeleteIconComponent
-            :color="'gray'"
+            :color="store.palette.muted"
             :size="SPACER * 2.25"
           />
         </StyledButtonComponent>
@@ -77,6 +77,6 @@ const handleCloseModal = (): void => {
 
 <style scoped>
 .error-title {
-  color: var(--negative);
+  color: var(--error);
 }
 </style>

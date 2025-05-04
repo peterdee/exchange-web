@@ -58,12 +58,12 @@ const handleInput = ({ value }: { value: string }): void => {
 
 const handleSubmit = async (): Promise<null | Socket> => {
   const trimmedPassword = (state.password || '').trim();
-  if (!(connection.connected && trimmedPassword)) {
+  if (!(connection.io.connected && trimmedPassword)) {
     return null;
   }
   state.isLoading = true;
   await sleep(500);
-  return connection.emit(
+  return connection.io.emit(
     EVENTS.requestGrant,
     {
       fileId: props.listedFile.id,
@@ -99,6 +99,7 @@ const handleSubmit = async (): Promise<null | Socket> => {
         store.listedFiles.forEach((item: ListedFile): void => {
           if (item.id === props.listedFile.id) {
             item.grant = data.grant;
+            item.isRequestedDownload = true;
           }
         });
         const delayedAction = (): void => emit(
@@ -132,7 +133,10 @@ const handleSubmit = async (): Promise<null | Socket> => {
     >
     <div class="f ai-center j-space-between ns">
       <div class="f ai-center">
-        <LockIconComponent :size="SPACER * 2" />
+        <LockIconComponent
+          :color="store.palette.accent"
+          :size="SPACER * 2"
+        />
         <span class="mh-1 modal-title">
           Protected
         </span>
@@ -144,7 +148,7 @@ const handleSubmit = async (): Promise<null | Socket> => {
           @handle-click="handleCloseModal"
         >
           <DeleteIconComponent
-            :color="'gray'"
+            :color="store.palette.muted"
             :size="SPACER * 2.25"
           />
         </StyledButtonComponent>
@@ -196,7 +200,7 @@ const handleSubmit = async (): Promise<null | Socket> => {
   height: calc(var(--spacer) * 3);
 }
 .error-text {
-  color: var(--negative);
+  color: var(--error);
   font-size: calc(var(--spacer) * 1.25);
   font-weight: 300;
 }

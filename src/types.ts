@@ -1,5 +1,3 @@
-export type BackendStatus = 'connected' | 'connecting' | 'inaccessible';
-
 export interface AcknowledgementMessage<T = null> {
   data?: T;
   info: string;
@@ -34,6 +32,11 @@ export interface DownloadedItem extends GenericFileData {
   type: string;
 }
 
+export interface DownloadFileError {
+  errorText: string;
+  file: ListedFile;
+}
+
 export interface ListedFile {
   chunks: ArrayBuffer[];
   createdAt: number;
@@ -48,21 +51,35 @@ export interface ListedFile {
   id: string;
   isDownloading: boolean;
   isOwner: boolean;
+  isRequestedDownload: boolean;
   isSavedOnDisk: boolean;
   ownerId: string;
   totalDownloads: number;
   withPassword: boolean;
 }
 
-export interface DownloadFileError {
-  errorText: string;
-  file: ListedFile;
+export interface Palette {
+  accent: string;
+  accentLight: string;
+  background: string;
+  error: string;
+  errorLight: string;
+  muted: string;
+  mutedDark: string;
+  mutedLight: string;
+  mutedSuperLight: string;
+  success: string;
+  successLight: string;
+  text: string;
+  textInverted: string;
 }
 
 export interface ServerConfiguration {
   chunkSizeBytes: number;
   maxFileSizeBytes: number;
 }
+
+export type Theme = 'light' | 'dark';
 
 export interface UpdateDeviceName {
   newDeviceName: string;
