@@ -2,11 +2,6 @@
 import store from '../../store';
 
 const props = defineProps({
-  emptyColor: {
-    default: store.palette.mutedSuperLight,
-    required: false,
-    type: String,
-  },
   fillColor: {
     default: store.palette.accent,
     required: false,
@@ -23,8 +18,9 @@ const props = defineProps({
   <div
     class="progress-bar"
     :style="{ background: `
-      radial-gradient(closest-side, white 60%, transparent 60% 100%),
-      conic-gradient(${props.fillColor} ${props.percent}%, ${props.emptyColor} 0)
+      radial-gradient(closest-side, ${store.palette.background} 60%, transparent 60% 100%),
+      conic-gradient(${props.fillColor} ${props.percent}%, ${store.theme === 'dark'
+        ? store.palette.mutedDark : store.palette.mutedSuperLight} 0)
     `}"
   >
     <progress
