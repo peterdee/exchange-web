@@ -297,7 +297,10 @@ const togglePrepareFilesModal = (): void => {
           :class="`f ai-center j-center icon ml-${store.isMobile ? 'quarter' : 'half'}`"
           :title="`Downloading file (${file.downloadPercent}%)`"
         >
-          <StyledCircularProgressBarComponent :percent="file.downloadPercent" />
+          <StyledCircularProgressBarComponent
+            :fill-color="store.palette.accent"
+            :percent="file.downloadPercent"
+          />
         </div>
         <div
           v-if="file.downloadCompleted && !file.isDownloading && !file.isSavedOnDisk"
