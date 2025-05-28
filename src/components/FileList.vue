@@ -205,12 +205,16 @@ const togglePrepareFilesModal = (): void => {
     </div>
     <div
       v-if="store.listedFiles.length > 0"
-      v-for="file in store.listedFiles"
+      v-for="file, index in store.listedFiles"
       :class="`f j-space-between ai-center fade-in ${state.deleteFileId === file.id
         ? 'fade-out'
         : ''} ${store.isMobile
         ? 'm-quarter'
-        : 'm-half'}`"
+        : 'm-half'} ${index === 0
+        ? 'mt-half'
+        : ''} ${index === store.listedFiles.length - 1
+        ? 'mb-half'
+        : ''}`"
       :key="file.id"
     >
       <div class="f ai-center name-container">
