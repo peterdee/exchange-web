@@ -12,11 +12,13 @@ Backend project is available here: https://github.com/peterdee/exchange-backend
 
 ### Deploy
 
+Node **v24** is required
+
 Clone repository and install dependencies
 
 ```shell script
 cd ./exchange-web
-nvm use 22
+nvm use 24
 npm ci
 ```
 
@@ -56,12 +58,6 @@ npm run dev
 ```
 
 Local WEB application will be available at https://localhost:3000
-
-### Possible improvements
-
-1. Improve data transfer security for password-proteced files: check grant for every requested file chunk
-
-2. Allow sharing private files: make it possible to share files that are not publicly visible
 
 ### Vercel deployment
 
