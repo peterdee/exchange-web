@@ -12,13 +12,13 @@ Backend project is available here: https://github.com/peterdee/exchange-backend
 
 ### Deploy
 
-Node **v24** is required
+Node **v22** is required
 
 Clone repository and install dependencies
 
 ```shell script
 cd ./exchange-web
-nvm use 24
+nvm use 22
 npm ci
 ```
 
